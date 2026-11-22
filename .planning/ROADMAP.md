@@ -81,14 +81,16 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 **Wave 1**
 - [ ] 196-01-PLAN.md — `fixtures/scrypath_fixtures` project and the Logistify tracer through the fake client to a rendered `/ops/health`; the single `scrypath_ops/mix.exs` edit (path dependency, `scrypath_fixtures.check_fixtures` first in the `test` alias, `preferred_envs`); DB-free check skeleton with cause-pinned plants; FixtureEnv
 
-**Wave 2** *(blocked on Wave 1 completion; 02 and 03 run in parallel, no shared files)*
+**Wave 2** *(blocked on Wave 1 completion; waves are strictly sequential)*
 - [ ] 196-02-PLAN.md — root accounting: compat classifier inventory, formatter, namespace fence, non-vacuous tarball refute, path-dependency boundary row and probes, archive list, Docker script, Dockerfile COPY lines, `.dockerignore`; fixtures README with the exit rule, second-consumer definition and phase173 deletion trigger, pinned by a root contract test
+
+**Wave 3** *(blocked on 196-02)*
 - [ ] 196-03-PLAN.md — Meilisearch v1.15 payloads re-recorded once from a task-scoped container with provenance; builders and fake-client paging checked against them; closed failure table with `source:`; two-renders-differ-only-in-time test; finding F3 for the maintainer
 
-**Wave 3** *(blocked on 196-03)*
+**Wave 4** *(blocked on 196-02 and 196-03)*
 - [ ] 196-04-PLAN.md — Shopadelic (aligned, drift, failed journey), Wikily (unconfigured, missing backend, index not created, first delete failed), Logistify steady and the labelled F1 stress variation; scenario registry; Posture round trip for every scenario; one planted failure per check invariant; child-mix DB-free proof
 
-**Wave 4** *(blocked on 196-02 and 196-04)*
+**Wave 5** *(blocked on 196-04)*
 - [ ] 196-05-PLAN.md — hostile text as escapes in one stress variation rendered escaped; bulk pick with a golden digest; provenance, denylist and source lints; local mirror of every required lane, the `test(ops-ui)` phase PR, hosted cold/warm cost against a same-day control, squash-merge, main-run cold sample, CI-EFFICIENCY record in a post-merge docs PR
 
 ### Phase 197: Pilot JOB-03, unhealthy verdict to verified retry

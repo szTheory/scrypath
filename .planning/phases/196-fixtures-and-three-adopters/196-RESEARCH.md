@@ -656,6 +656,8 @@ def pick(list, seed, n, tag), do: Enum.at(list, :erlang.phash2({seed, n, tag}, l
 
 ## Validation Architecture
 
+> Updated at planning (2026-11-21): command and file names below follow the plans (task `scrypath_fixtures.check_fixtures`, orchestrator ruling 2; the builder raises live in `fixtures_tracer_test.exs`). The narrative sections above keep the names the research ran with.
+
 `workflow.nyquist_validation` is `true` in `.planning/config.json`.
 
 ### Test Framework
@@ -663,7 +665,7 @@ def pick(list, seed, n, tag), do: Enum.at(list, :erlang.phash2({seed, n, tag}, l
 |----------|-------|
 | Framework | ExUnit (Elixir 1.19) with `Phoenix.LiveViewTest` and `LazyHTML` in `scrypath_ops`; ExUnit at the root; `node --test` for CI scripts |
 | Config file | `scrypath_ops/test/test_helper.exs` (sandbox mode manual); root `test/test_helper.exs` |
-| Quick run (check, no DB) | `cd scrypath_ops && MIX_ENV=test mix scrypath_fixtures.check` (0.54 s warm; works with `PGPORT=1`) |
+| Quick run (check, no DB) | `cd scrypath_ops && MIX_ENV=test mix scrypath_fixtures.check_fixtures` (0.54 s warm; works with `PGPORT=1`) |
 | Quick run (ops tests) | `cd scrypath_ops && mix test test/scrypath_ops/fixtures_*_test.exs test/scrypath_ops_web/live/fixtures_*_test.exs` (needs Postgres) |
 | Quick run (root contracts) | `mix test test/mix/tasks/dependency_boundary_contract_test.exs test/release/package_metadata_test.exs test/mix/tasks/verify_namespace_fence_test.exs` and `node --test scripts/ci/compat_path_classifier.test.cjs` |
 | Full suite | `mix verify.ops_ui` from the repo root (about 6 to 8 min; needs Postgres) |
@@ -672,12 +674,12 @@ def pick(list, seed, n, tag), do: Enum.at(list, :erlang.phash2({seed, n, tag}, l
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
 | FIX-01 | Logistify builders -> fake client -> real `Status`/`Posture` -> rendered `/ops/health`, deep queue, nothing failed | ops LiveViewTest | `cd scrypath_ops && mix test test/scrypath_ops_web/live/fixtures_tracer_test.exs` | Wave 0 (prototype ran) |
-| FIX-01 | Builders raise `FunctionClauseError` on an unknown status/state/worker | ops unit | `mix test test/scrypath_ops/fixtures_builders_test.exs` | Wave 0 |
+| FIX-01 | Builders raise `FunctionClauseError` on an unknown status/state/worker | ops unit | `mix test test/scrypath_ops_web/live/fixtures_tracer_test.exs` ("closed enums" describe; planned in 196-01 Task 2, no separate builders file) | Wave 0 |
 | FIX-01 | Exit rule and "fictional" provenance present in `fixtures/scrypath_fixtures/README.md` | root static | `mix test test/mix/tasks/fixtures_project_contract_test.exs` (README text, one row) | Wave 0 |
-| FIX-02 | Builder key sets and value types equal the recorded payloads; fake client list contract equals the recorded page | `check` + ops unit | `MIX_ENV=test mix scrypath_fixtures.check` and `mix test test/scrypath_ops/fixtures_recordings_test.exs` | Wave 0 |
+| FIX-02 | Builder key sets and value types equal the recorded payloads; fake client list contract equals the recorded page | `check` + ops unit | `MIX_ENV=test mix scrypath_fixtures.check_fixtures` and `mix test test/scrypath_ops/fixtures_recordings_test.exs` | Wave 0 |
 | FIX-02 | Every failure string is a closed-table entry with a resolving `source:`; no table entry is on the cannot-produce list | `check` | same | Wave 0 |
 | FIX-02 | Hostile text only as escapes; raw format-char lint with a planted file | `check` + ops unit | same | Wave 0 |
-| FIX-03 | Every scenario round-trips `sync_status/2`, `failed_sync_work/2`, `index_contract_drift/2` (check) and `Posture.summary/3` (ops) to `{:ok, _}` or a designed tag (`:task_history_truncated`, `:index_not_found`) | `check` + ops unit | `MIX_ENV=test mix scrypath_fixtures.check`; `mix test test/scrypath_ops/fixtures_round_trip_test.exs` | Wave 0 |
+| FIX-03 | Every scenario round-trips `sync_status/2`, `failed_sync_work/2`, `index_contract_drift/2` (check) and `Posture.summary/4` with a nil previous summary, as PostureLive's first render calls it (ops) to `{:ok, _}` or a designed tag (`:task_history_truncated`, `:index_not_found`) | `check` + ops unit | `MIX_ENV=test mix scrypath_fixtures.check_fixtures`; `mix test test/scrypath_ops/fixtures_round_trip_test.exs` | Wave 0 |
 | FIX-03 | Adopter labels contain "(fictional)"; denylist words absent | ops unit | `mix test test/scrypath_ops/fixtures_provenance_test.exs` | Wave 0 |
 | FIX-04 | Check runs first in the ops `test` alias (AST), DB-free (child `mix` with `PGPORT=1`, positive control `ecto.create` fails there) | root contract + ops unit (child mix, sync) | `mix test test/mix/tasks/fixtures_project_contract_test.exs`; `mix test test/scrypath_ops/fixtures_check_task_test.exs` | Wave 0 |
 | FIX-04 | One planted failure per invariant, each asserting its problem tag; positive control `{:ok, _}` | ops unit | `mix test test/scrypath_ops/fixtures_check_test.exs` | Wave 0 |
@@ -690,7 +692,7 @@ def pick(list, seed, n, tag), do: Enum.at(list, :erlang.phash2({seed, n, tag}, l
 | FLOW-03 | No config file staged | pre-commit | `git diff --cached --name-only \| grep -E '^(\.planning/(config\|state)\.json\|\.impeccable/config\.json)$'` prints nothing | n/a |
 
 ### Sampling Rate
-- **Per task commit:** `mix format --check-formatted`, `MIX_ENV=test mix scrypath_fixtures.check`, the one changed test file, and for root edits `node --test scripts/ci/compat_path_classifier.test.cjs`.
+- **Per task commit:** `mix format --check-formatted`, `MIX_ENV=test mix scrypath_fixtures.check_fixtures`, the one changed test file, and for root edits `node --test scripts/ci/compat_path_classifier.test.cjs`.
 - **Per wave merge:** the root contract set and the ops fixtures tests above, plus `scripts/ci/pre_push.sh` (about a minute warm).
 - **Phase gate:** local mirror of every required lane on the committed head (below), then hosted CI green on the exact PR head.
 
@@ -716,7 +718,7 @@ Measured hosted costs are from Phase 195's GO-NO-GO (run 44955813968, head f9af1
 ### Wave 0 Gaps
 - [ ] `fixtures/scrypath_fixtures/{mix.exs,.formatter.exs,.gitignore,README.md,recordings/...,lib/...}`
 - [ ] `scrypath_ops/mix.exs` (dependency, alias, `preferred_envs`), `scrypath_ops/test/support/fixture_env.ex`
-- [ ] ops tests: `fixtures_tracer_test.exs`, `fixtures_determinism_test.exs`, `fixtures_builders_test.exs`, `fixtures_recordings_test.exs`, `fixtures_round_trip_test.exs`, `fixtures_provenance_test.exs`, `fixtures_check_test.exs`, `fixtures_check_task_test.exs` (child mix: keep it synchronous, `saved_searches_validate_test.exs` guards that rule)
+- [ ] ops tests: `fixtures_tracer_test.exs` (also holds the closed-enum and operator-key tests), `fixtures_determinism_test.exs`, `fixtures_hostile_render_test.exs`, `fixtures_recordings_test.exs`, `fixtures_round_trip_test.exs`, `fixtures_provenance_test.exs`, `fixtures_check_test.exs`, `fixtures_check_task_test.exs` (child mix: keep it synchronous, `saved_searches_validate_test.exs` guards that rule)
 - [ ] root: path-dependency reader and rows in `dependency_boundary_contract_test.exs`; `"fixtures"` in `archive_tracked_source!` and probe additions in `ops_dependency_boundary_test.exs`; `fixtures` in `compat_path_classifier.test.cjs` `IRRELEVANT_ENTRIES`; `.formatter.exs`; namespace fence rule and test line 43; `.dockerignore` and (optional) Dockerfile COPY lines; script `forbidden_deps`/`forbidden_modules`; strengthened `package_metadata_test`; `fixtures_project_contract_test.exs`
 - [ ] Framework install: none
 
