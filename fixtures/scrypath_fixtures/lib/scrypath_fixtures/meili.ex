@@ -11,6 +11,8 @@ defmodule ScrypathFixtures.Meili do
   cancelled status `"canceled"` (one l); Oban spells it `"cancelled"`.
   """
 
+  alias ScrypathFixtures.Failures
+
   # The five types Scrypath reads (lib/scrypath/meilisearch/tasks.ex).
   @types ~w(documentAdditionOrUpdate documentDeletion indexCreation settingsUpdate indexSwap)
   @statuses ~w(enqueued processing succeeded failed canceled)
@@ -32,8 +34,13 @@ defmodule ScrypathFixtures.Meili do
   Builds one task map.
 
   Required: `:type`, `:status`, `:uid`, `:index_uid`, `:now`, `:enqueued_ago` (seconds before
-  `now`), and `:canceled_by` (the uid of the cancelation task) when the status is `"canceled"`.
-  Optional: `:batch_uid`, `:error`, `:details`, `:documents`, `:primary_key`, `:swap`.
+  `now`), `:canceled_by` (the uid of the cancelation task) when the status is `"canceled"`, and
+  `:failure` when it is `"failed"`. Optional: `:batch_uid`, `:details`, `:documents`,
+  `:primary_key`, `:swap`.
+
+  `:failure` is `{entry_id, bindings}` and the `error` object is rendered from that entry of
+  `ScrypathFixtures.Failures`. A task never takes an `:error` of its own, and only a failed task
+  takes a `:failure`, so no failure text can be typed into a builder call.
 
   `details` has the key set the recording shows for the type, counted from `:documents` (default 1):
   `documentAdditionOrUpdate` reports `receivedDocuments` and `indexedDocuments`, `documentDeletion`
@@ -51,7 +58,9 @@ defmodule ScrypathFixtures.Meili do
       when type in @types and status in @statuses and
              ((type == "indexSwap" and is_nil(index_uid)) or
                 (type != "indexSwap" and is_binary(index_uid))) and
-             (status != "canceled" or is_map_key(attrs, :canceled_by)) do
+             (status != "canceled" or is_map_key(attrs, :canceled_by)) and
+             not is_map_key(attrs, :error) and
+             status == "failed" == is_map_key(attrs, :failure) do
     now = Map.fetch!(attrs, :now)
     enqueued = Map.fetch!(attrs, :enqueued_ago)
     uid = Map.fetch!(attrs, :uid)
@@ -66,13 +75,16 @@ defmodule ScrypathFixtures.Meili do
       "type" => type,
       "canceledBy" => Map.get(attrs, :canceled_by),
       "details" => Map.get_lazy(attrs, :details, fn -> details(type, status, attrs) end),
-      "error" => Map.get(attrs, :error),
+      "error" => error(attrs),
       "duration" => if(finished?, do: "PT0.1S"),
       "enqueuedAt" => stamp(now, enqueued),
       "startedAt" => if(started?, do: stamp(now, enqueued - 1)),
       "finishedAt" => if(finished?, do: stamp(now, enqueued - 2))
     }
   end
+
+  defp error(%{failure: {entry_id, bindings}}), do: Failures.meili_error(entry_id, bindings)
+  defp error(_attrs), do: nil
 
   defp details("documentAdditionOrUpdate", status, attrs) do
     received = Map.get(attrs, :documents, 1)

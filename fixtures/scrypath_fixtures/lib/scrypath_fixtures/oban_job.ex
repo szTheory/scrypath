@@ -12,6 +12,8 @@ defmodule ScrypathFixtures.ObanJob do
   `"cancelled"` (two l); Meilisearch spells its status `"canceled"`.
   """
 
+  alias ScrypathFixtures.Failures
+
   @states ~w(available scheduled executing retryable completed discarded cancelled)
   @workers %{
     upsert: "Scrypath.Oban.UpsertWorker",
@@ -34,6 +36,11 @@ defmodule ScrypathFixtures.ObanJob do
   `:now`, `:ago` (seconds before `now`), `:max_attempts`. Optional: `:attempt` (default 0),
   `:errors` (default `[]`), `:scheduled_in` (seconds after `now`; default is `ago` before it).
 
+  `:errors` is a list of `{entry_id, attempt, bindings}` tuples. Each is rendered from that entry
+  of `ScrypathFixtures.Failures.oban_error/2`; `bindings` are its other options (`:worker` here
+  defaults to the job's own worker, and `:at` to the time of the last attempt). A raw error map is
+  rejected, so no failure text can be typed into a builder call.
+
   There is no default for `:queue` or `:max_attempts`: Scrypath has no default queue and takes
   `max_attempts` from its config, so the caller states both.
   """
@@ -43,6 +50,7 @@ defmodule ScrypathFixtures.ObanJob do
     now = Map.fetch!(attrs, :now)
     ago = Map.fetch!(attrs, :ago)
     attempt = Map.get(attrs, :attempt, 0)
+    attempted_at = if attempt > 0, do: DateTime.add(now, -ago, :second)
 
     %{
       id: Map.fetch!(attrs, :id),
@@ -50,12 +58,20 @@ defmodule ScrypathFixtures.ObanJob do
       worker: Map.fetch!(@workers, worker),
       queue: Map.fetch!(attrs, :queue),
       args: Map.fetch!(attrs, :args),
-      errors: Map.get(attrs, :errors, []),
+      errors: attrs |> Map.get(:errors, []) |> Enum.map(&error_entry(&1, attrs, attempted_at)),
       attempt: attempt,
       max_attempts: Map.fetch!(attrs, :max_attempts),
-      attempted_at: if(attempt > 0, do: DateTime.add(now, -ago, :second)),
+      attempted_at: attempted_at,
       scheduled_at: DateTime.add(now, Map.get(attrs, :scheduled_in, -ago), :second),
       completed_at: if(state == "completed", do: DateTime.add(now, -ago + 2, :second))
     }
+  end
+
+  defp error_entry({entry_id, attempt, bindings}, %{worker: worker}, attempted_at)
+       when is_atom(entry_id) and is_integer(attempt) and is_list(bindings) do
+    Failures.oban_error(
+      entry_id,
+      Keyword.merge([attempt: attempt, at: attempted_at, worker: worker], bindings)
+    )
   end
 end

@@ -4,16 +4,22 @@ defmodule ScrypathFixtures.Check do
   development and tests only.
 
   `run/1` returns `{:ok, %{scenarios: n}}` or `{:error, problems}`. A problem is a
-  `{scenario_id, tag_tuple}` pair whose tag tuple starts with one of `invariants/0`. Callers can
-  pass `:scenarios` and `:now`, so a test can plant a broken scenario without a special mode.
+  `{scenario_id, tag_tuple}` pair whose tag tuple starts with one of `invariants/0`. A problem in
+  the failure table itself has `:failures` where the scenario id would be. Callers can pass
+  `:scenarios`, `:now` and `:failures` (a list of table entries), so a test can plant a broken
+  scenario or a broken table without a special mode.
 
-  The check never reads the operator UI and never touches a database. It does two kinds of work:
+  The check never reads the operator UI and never touches a database. It does these kinds of work:
 
     * invariants on the raw data (key sets, index names, time order, Oban attempt rules), taken from
       Meilisearch's documented behaviour and Oban's executor;
     * shape checks against the recorded Meilisearch v1.15 payloads (`ScrypathFixtures.Recordings`):
       every task's value types equal the recorded task of its status, and its `details` keys equal
       the recorded ones for its type. Key sets and types only, never values;
+    * failure text: every task `error` and every Oban `errors` entry must be what an entry of the
+      closed table (`ScrypathFixtures.Failures`) renders, every table entry's `:source` must
+      resolve to a recording or an existing repository path, and no entry may be on the table's
+      `cannot_produce/0` list;
     * a round trip through the real Scrypath code: every task map must pass
       `Scrypath.Meilisearch.TaskPayload.normalize/2`, and `Scrypath.sync_status/2` and
       `Scrypath.failed_sync_work/2` must answer as the scenario's `:expect` says.
@@ -24,6 +30,7 @@ defmodule ScrypathFixtures.Check do
   """
 
   alias Scrypath.Meilisearch.TaskPayload
+  alias ScrypathFixtures.Failures
   alias ScrypathFixtures.Meili
   alias ScrypathFixtures.Recordings
   alias ScrypathFixtures.Scenario
@@ -38,6 +45,9 @@ defmodule ScrypathFixtures.Check do
     :meili_cancelled_spelling,
     :task_shape,
     :details_keys,
+    :unknown_failure,
+    :failure_source_missing,
+    :forbidden_failure,
     :job_index,
     :retryable_attempts,
     :discarded_attempts,
@@ -64,19 +74,52 @@ defmodule ScrypathFixtures.Check do
   @doc """
   Checks scenarios and returns `{:ok, %{scenarios: n}}` or `{:error, [problem]}`.
 
-  Options: `:now` (default `ScrypathFixtures.preview_epoch/0`) and `:scenarios` (default
-  `scenarios/1` at `now`).
+  Options: `:now` (default `ScrypathFixtures.preview_epoch/0`), `:scenarios` (default
+  `scenarios/1` at `now`) and `:failures` (default `ScrypathFixtures.Failures.all/0`).
   """
   @spec run(keyword()) :: {:ok, %{scenarios: non_neg_integer()}} | {:error, [problem()]}
   def run(opts \\ []) do
     now = Keyword.get(opts, :now, ScrypathFixtures.preview_epoch())
     scenarios = Keyword.get_lazy(opts, :scenarios, fn -> scenarios(now) end)
 
-    case Enum.flat_map(scenarios, &check_scenario/1) do
+    failures = Keyword.get_lazy(opts, :failures, &Failures.all/0)
+
+    case table_problems(failures) ++ Enum.flat_map(scenarios, &check_scenario/1) do
       [] -> {:ok, %{scenarios: length(scenarios)}}
       problems -> {:error, problems}
     end
   end
+
+  # -- the failure table ---------------------------------------------------------------------
+
+  # `lib/scrypath/...` paths in a `:source` are from the repository root, computed here once.
+  @repo_root Path.expand("../../../..", __DIR__)
+
+  defp table_problems(failures) do
+    names = Enum.map(Failures.cannot_produce(), & &1.id)
+
+    Enum.flat_map(failures, fn entry ->
+      source_problem =
+        if source_resolves?(Map.get(entry, :source)),
+          do: [],
+          else: [{:failures, {:failure_source_missing, entry.id}}]
+
+      forbidden_problem =
+        if to_string(entry.id) in names or Map.get(entry, :code) in names,
+          do: [{:failures, {:forbidden_failure, entry.id}}],
+          else: []
+
+      source_problem ++ forbidden_problem
+    end)
+  end
+
+  defp source_resolves?(source) when is_binary(source) do
+    source in Recordings.files() or
+      (Path.type(source) == :relative and not String.contains?(source, "..") and
+         File.exists?(Path.join(@repo_root, source)))
+  end
+
+  defp source_resolves?(_source), do: false
 
   defp check_scenario(%Scenario{} = scenario) do
     tasks = list_opt(scenario, :meilisearch_tasks)
@@ -117,6 +160,7 @@ defmodule ScrypathFixtures.Check do
       task_keys(task, uid),
       task_shape(task, uid),
       details_keys(task, uid),
+      task_failure(task, uid),
       task_index(task, uid, indexes),
       task_times(scenario, task, uid),
       meili_spelling(task, uid)
@@ -177,6 +221,13 @@ defmodule ScrypathFixtures.Check do
 
   defp details_keys(_task, _uid), do: []
 
+  # A task without an error has nothing to check here; an error must be a table entry's text.
+  defp task_failure(%{"error" => error, "type" => type}, uid) when is_map(error) do
+    if Failures.meili_error?(error, type), do: [], else: [{:unknown_failure, uid}]
+  end
+
+  defp task_failure(_task, _uid), do: []
+
   defp task_index(%{"type" => "indexSwap", "indexUid" => nil}, _uid, _indexes), do: []
 
   defp task_index(%{"indexUid" => value}, uid, indexes) do
@@ -225,11 +276,18 @@ defmodule ScrypathFixtures.Check do
   defp job_problems(scenario, job, indexes) do
     List.flatten([
       job_index(job, indexes),
+      job_failures(job),
       job_attempts(scenario, job),
       job_times(scenario, job)
     ])
     |> tag(scenario)
   end
+
+  defp job_failures(%{id: id, errors: errors}) when is_list(errors) do
+    if Enum.all?(errors, &Failures.oban_error?/1), do: [], else: [{:unknown_failure, id}]
+  end
+
+  defp job_failures(_job), do: []
 
   defp job_index(%{id: id, args: args}, indexes) do
     if args["index"] in indexes, do: [], else: [{:job_index, id}]
