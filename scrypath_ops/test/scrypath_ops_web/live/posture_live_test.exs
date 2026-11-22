@@ -7,6 +7,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias ScrypathOps.Test.FixtureEnv
+  alias ScrypathOps.Test.HtmlCanon
+  alias ScrypathOpsWeb.Components.SearchHealth
   alias ScrypathOps.Test.CopyStubs.Posture, as: PostureStubs
   alias ScrypathOps.Test.CopyStubs.Posture.FakeClient, as: PostureFakeClient
   alias ScrypathOps.Test.OpsPostA
@@ -387,7 +390,12 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
 
       row = {ScrypathOps.Phase173FixtureSchema, {:ok, status(mode: :oban, observed?: false)}}
-      put_live_assigns(lv, posture_rows: {:ok, [row]})
+
+      # The verdict reads the posture summary (the shared component takes one view-model), so the
+      # injected state is a coherent summary built by the pure builder, with the ranked row list
+      # the rows section reads alongside it.
+      summary = Posture.build([row], ScrypathOps.Clock.utc_now(), nil)
+      put_live_assigns(lv, posture_rows: {:ok, [row]}, posture_summary: summary)
       render_patch(lv, ~p"/ops/phase173/health?scenario=healthy")
 
       html = lv |> element(@fixture_row) |> render()
@@ -876,6 +884,93 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert flash_value(updated_socket, "error") =~ "allowlisted"
     assert updated_socket.assigns.local_ui_state == :keep
+  end
+
+  describe "HtmlCanon (the canonical tree the seam tests compare)" do
+    test "ignores attribute order, generated ids, session tokens and whitespace, but not text" do
+      a =
+        ~s(<div id="phx-F1abc" data-phx-session="s1" class=" a  b" phx-click="x" title="t">) <>
+          ~s(<span id="ops-time-12">Hello   world</span></div>)
+
+      b =
+        ~s(<div title="t" phx-click="x" class="a b" data-phx-session="OTHER" id="phx-F9zzz">) <>
+          ~s(<span id="ops-time-99">Hello world</span></div>)
+
+      assert HtmlCanon.canon(a) == HtmlCanon.canon(b)
+      assert HtmlCanon.digest(a) == HtmlCanon.digest(b)
+      # Same input twice is stable.
+      assert HtmlCanon.canon(a) == HtmlCanon.canon(a)
+
+      # Controls: the equality above is not vacuous. A changed text node, a changed ordinary id and
+      # a changed ordinary attribute each change the tree, and the text is in the canonical form.
+      assert HtmlCanon.canon(a) =~ "Hello world"
+      refute HtmlCanon.canon(a) == HtmlCanon.canon(String.replace(b, "Hello", "Goodbye"))
+      refute HtmlCanon.canon(a) == HtmlCanon.canon(String.replace(b, "phx-F9zzz", "main"))
+
+      refute HtmlCanon.canon(a) ==
+               HtmlCanon.canon(String.replace(b, ~s(title="t"), ~s(title="u")))
+
+      refute HtmlCanon.digest(a) == HtmlCanon.digest(String.replace(b, "Hello", "Goodbye"))
+    end
+
+    test "takes a parsed selection as well as a string" do
+      html = ~s(<main><p class="x">One</p><p>Two</p></main>)
+      selection = html |> LazyHTML.from_fragment() |> LazyHTML.query("main")
+      assert HtmlCanon.canon(selection) == HtmlCanon.canon(html)
+    end
+  end
+
+  # The story renders the same function components the page does. Each area gets one seam test: the
+  # mounted page contains exactly the component's own output for the page's own view-model.
+  describe "seam: health_verdict (story output equals production output)" do
+    setup do
+      scenario =
+        ScrypathFixtures.Scenarios.get!(
+          :shopadelic_failed_journey,
+          ScrypathFixtures.preview_epoch()
+        )
+
+      on_exit(FixtureEnv.put(scenario))
+      :ok
+    end
+
+    test "the mounted verdict for shopadelic_failed_journey canonicalizes equal to the component",
+         %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/ops/health")
+      _ = render_async(view)
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      summary = assigns.posture_summary
+      sync_mode = Keyword.get(assigns.scrypath_opts, :sync_mode, :inline)
+
+      # The cause is real data: the page is the degraded failed journey, not an empty state.
+      assert summary.state == :degraded
+      assert summary.queue_failed_count == 3
+
+      verdict_root = "section[aria-labelledby='posture-summary-heading']"
+      mounted = view |> render() |> LazyHTML.from_fragment() |> LazyHTML.query(verdict_root)
+
+      component =
+        verdict_component_root(summary, sync_mode, verdict_root)
+
+      assert Enum.count(mounted) == 1
+      assert Enum.count(component) == 1
+      assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component)
+      assert HtmlCanon.canon(mounted) =~ "Sync jobs and Meilisearch tasks failed"
+
+      # Control: a different summary does not canonicalize equal, so the comparison can fail.
+      changed =
+        verdict_component_root(%{summary | headline: "Changed headline"}, sync_mode, verdict_root)
+
+      refute HtmlCanon.canon(mounted) == HtmlCanon.canon(changed)
+    end
+  end
+
+  defp verdict_component_root(summary, sync_mode, selector) do
+    html =
+      render_component(&SearchHealth.health_verdict/1, summary: summary, sync_mode: sync_mode)
+
+    html |> LazyHTML.from_fragment() |> LazyHTML.query(selector)
   end
 
   # Row ids in page order, e.g. "posture-ScrypathOps.Test.OpsPostA".

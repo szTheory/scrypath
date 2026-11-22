@@ -10,6 +10,7 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   alias ScrypathOps.OperatorSelection
   alias ScrypathOps.Posture
+  alias ScrypathOpsWeb.Components.SearchHealth
 
   @impl true
   def mount(params, _session, socket) do
@@ -278,40 +279,14 @@ defmodule ScrypathOpsWeb.PostureLive do
         </select>
       </form>
 
-      <section
-        :if={match?({:ok, _}, @posture_rows)}
-        aria-labelledby="posture-summary-heading"
-        class="space-y-ops-4"
-      >
-        <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
-        <.ops_verdict
-          kind={Posture.verdict_kind(posture_rows(@posture_rows))}
-          status={Posture.worst_status(posture_rows(@posture_rows))}
-          class="ops-posture-verdict"
-          headline={@posture_headline}
-        >
-          {@posture_evidence}
-        </.ops_verdict>
-        <p class="text-ops-sm ops-muted">
-          {posture_schema_count(@posture_rows)} {if posture_schema_count(@posture_rows) == 1,
-            do: "schema",
-            else: "schemas"} · {sync_summary(@scrypath_opts)}
-          <span :if={@aggregate_error_count > 0}>
-            · {@aggregate_error_count} {if @aggregate_error_count == 1, do: "check", else: "checks"} unavailable
-          </span>
-        </p>
-      </section>
+      <SearchHealth.health_verdict
+        summary={@posture_summary}
+        sync_mode={Keyword.get(@scrypath_opts, :sync_mode, :inline)}
+      />
 
       <p :if={@auto_refresh} class="mt-ops-2 text-ops-body ops-muted">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
       </p>
-
-      <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-ops-4" />
-      <.ops_config_empty
-        :if={@posture_rows == :missing_backend}
-        kind={:missing_backend}
-        class="mt-ops-4"
-      />
 
       <section
         :if={match?({:ok, _}, @posture_rows)}
@@ -574,18 +549,6 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp failed_work_present?(status) do
     status.backend.failed != [] or status.queue.failed != []
-  end
-
-  defp posture_schema_count({:ok, rows}), do: length(rows)
-  defp posture_schema_count(_), do: 0
-
-  defp sync_summary(opts) do
-    case Keyword.get(opts, :sync_mode, :inline) do
-      :oban -> "Background sync with Oban"
-      :inline -> "Inline sync"
-      :manual -> "Manual sync"
-      _ -> "Sync mode unavailable"
-    end
   end
 
   defp state_at(%Scrypath.Operator.State{at: at}), do: at
