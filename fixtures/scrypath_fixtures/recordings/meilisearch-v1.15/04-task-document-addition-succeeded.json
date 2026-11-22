@@ -1,0 +1,1 @@
+{"uid":1,"batchUid":1,"indexUid":"logistify_shipment","status":"succeeded","type":"documentAdditionOrUpdate","canceledBy":null,"details":{"receivedDocuments":1,"indexedDocuments":1},"error":null,"duration":"PT0.011312750S","enqueuedAt":"2026-11-22T01:53:29.309241596Z","startedAt":"2026-11-22T01:53:29.309315471Z","finishedAt":"2026-11-22T01:53:29.320628221Z"}

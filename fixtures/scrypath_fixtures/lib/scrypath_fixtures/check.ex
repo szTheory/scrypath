@@ -11,6 +11,9 @@ defmodule ScrypathFixtures.Check do
 
     * invariants on the raw data (key sets, index names, time order, Oban attempt rules), taken from
       Meilisearch's documented behaviour and Oban's executor;
+    * shape checks against the recorded Meilisearch v1.15 payloads (`ScrypathFixtures.Recordings`):
+      every task's value types equal the recorded task of its status, and its `details` keys equal
+      the recorded ones for its type. Key sets and types only, never values;
     * a round trip through the real Scrypath code: every task map must pass
       `Scrypath.Meilisearch.TaskPayload.normalize/2`, and `Scrypath.sync_status/2` and
       `Scrypath.failed_sync_work/2` must answer as the scenario's `:expect` says.
@@ -22,6 +25,7 @@ defmodule ScrypathFixtures.Check do
 
   alias Scrypath.Meilisearch.TaskPayload
   alias ScrypathFixtures.Meili
+  alias ScrypathFixtures.Recordings
   alias ScrypathFixtures.Scenario
 
   @invariants [
@@ -32,6 +36,8 @@ defmodule ScrypathFixtures.Check do
     :time_order,
     :unparsable_time,
     :meili_cancelled_spelling,
+    :task_shape,
+    :details_keys,
     :job_index,
     :retryable_attempts,
     :discarded_attempts,
@@ -109,6 +115,8 @@ defmodule ScrypathFixtures.Check do
     List.flatten([
       wire_guard(task, uid),
       task_keys(task, uid),
+      task_shape(task, uid),
+      details_keys(task, uid),
       task_index(task, uid, indexes),
       task_times(scenario, task, uid),
       meili_spelling(task, uid)
@@ -126,6 +134,48 @@ defmodule ScrypathFixtures.Check do
   defp task_keys(task, uid) do
     if Enum.sort(Map.keys(task)) == Enum.sort(Meili.keys()), do: [], else: [{:task_keys, uid}]
   end
+
+  # The three stamps may each be a string or null (a waiting task has no start). Everything else
+  # must have the JSON type the recorded task of the same status has. A swap has a null index.
+  @stamp_keys ~w(enqueuedAt startedAt finishedAt)
+
+  defp task_shape(%{"status" => status} = task, uid) when is_binary(status) do
+    if status in Recordings.statuses() do
+      exemplar = Recordings.task_exemplar!(status)
+
+      for key <- Meili.keys(),
+          Map.has_key?(task, key),
+          not shape_matches?(key, task, exemplar),
+          do: {:task_shape, uid, key}
+    else
+      # an unknown status is the wire guard's problem, not a shape problem
+      []
+    end
+  end
+
+  defp task_shape(_task, _uid), do: []
+
+  defp shape_matches?(key, task, _exemplar) when key in @stamp_keys,
+    do: Recordings.value_type(task[key]) in [:string, :null]
+
+  defp shape_matches?("indexUid", %{"type" => "indexSwap"} = task, _exemplar),
+    do: is_nil(task["indexUid"])
+
+  defp shape_matches?(key, task, exemplar),
+    do: Recordings.value_type(task[key]) == Recordings.value_type(exemplar[key])
+
+  defp details_keys(%{"type" => type, "details" => details}, uid)
+       when is_binary(type) and is_map(details) do
+    case Recordings.details_keys(type) do
+      expected when is_list(expected) ->
+        if Enum.sort(Map.keys(details)) == expected, do: [], else: [{:details_keys, uid}]
+
+      _any_or_unrecorded ->
+        []
+    end
+  end
+
+  defp details_keys(_task, _uid), do: []
 
   defp task_index(%{"type" => "indexSwap", "indexUid" => nil}, _uid, _indexes), do: []
 
