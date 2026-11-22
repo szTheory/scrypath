@@ -42,5 +42,19 @@
     "security_docs_pr": 112,
     "release": "scrypath 0.3.16 (PR #100)"
   },
-  "feedback_session_2026_11_21": ".planning/research/storybook-catalog/FEEDBACK-SESSION-2026-11-21.md"
+  "feedback_session_2026_11_21": ".planning/research/storybook-catalog/FEEDBACK-SESSION-2026-11-21.md",
+  "storybook": {
+    "url": "http://127.0.0.1:4003",
+    "port": 4003,
+    "port_env": "CATALOG_PORT",
+    "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
+    "branch": "ui/next",
+    "base_main": "9b6ec9110eef96fc803ce564b78b98507ac301f4",
+    "landing": "/storybook/welcome",
+    "start": "cd /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops && mkdir -p tmp && { ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.5 nohup mix scrypath_ops.catalog.serve > tmp/catalog.log 2>&1 & echo $! > tmp/catalog.pid; }",
+    "stop": "kill $(cat /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops/tmp/catalog.pid)",
+    "seed": "code: fixtures at ScrypathFixtures.preview_epoch/0, 2026-11-20T14:00:00Z; no database",
+    "status": "Not started yet. Phase 197 Plan 05 Task 3 starts it from the named checkout at current origin/main and records the result here. Check it with npm run ui:preflight from that checkout's examples/scrypath_ecommerce directory. When 4003 is held by another project's process, start with CATALOG_PORT=<free port> and record the port and holder in a deviation field; never stop the other process.",
+    "runtime_checked_at": null
+  }
 }

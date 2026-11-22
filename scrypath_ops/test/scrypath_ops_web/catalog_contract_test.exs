@@ -3,6 +3,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
   import Phoenix.LiveViewTest
 
+  alias Mix.Tasks.ScrypathOps.Catalog.Serve
   alias ScrypathOps.Catalog.RenderAll
   alias ScrypathOps.Test.CatalogChecks
   alias ScrypathOps.Test.CopyRules
@@ -32,6 +33,9 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   ]
   @themes ["light", "dark"]
   @repo_root Path.expand("../../..", __DIR__)
+  @build_info_key {ScrypathOps.Catalog, :build_info}
+  @storybook_bundle Path.expand("../../priv/static/assets/js/storybook.js", __DIR__)
+  @font_assignment "document.body.style.fontFamily = \"var(--font-sans)\""
   @quality_doc ".planning/reference/OPERATOR-UI-QUALITY.md"
   @journey_test "scrypath_ops/test/scrypath_ops_web/live/catalog_journey_test.exs"
 
@@ -111,7 +115,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   # One render of every variation in both themes, shared by the checks below. The LiveViews it starts
   # are linked to this process and end with the module.
   setup_all do
-    %{rendered: render_every_variation()}
+    %{rendered: render_every_variation(), pages: render_every_page()}
   end
 
   describe "mount" do
@@ -136,7 +140,8 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
   describe "render-all" do
     test "every variation of every story renders non-empty with real css, js and theme", %{
-      rendered: rendered
+      rendered: rendered,
+      pages: pages
     } do
       targets = RenderAll.targets(ScrypathOps.Catalog.Storybook)
       paths = targets |> Enum.map(&elem(&1, 0)) |> Enum.uniq()
@@ -145,10 +150,28 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
         assert story in paths, "missing story #{story}"
       end
 
+      # A page story is rendered through the shell below; any other kind of story would be skipped
+      # by the checks, so none may exist unnoticed.
       refute Enum.any?(targets, &match?({_, {:unsupported, _}}, &1))
 
-      # The shared pass covered every target in both themes.
-      assert length(rendered) == length(targets) * length(@themes)
+      {page_targets, variation_targets} = Enum.split_with(targets, &match?({_, :page}, &1))
+
+      # The shared pass covered every variation in both themes and every page once.
+      assert length(rendered) == length(variation_targets) * length(@themes)
+      assert Enum.map(pages, &elem(&1, 0)) == Enum.map(page_targets, &elem(&1, 0))
+      assert "/welcome" in Enum.map(pages, &elem(&1, 0))
+
+      page_failures =
+        for {path, {:ok, html}} <- pages,
+            problems = RenderAll.page_problems(html),
+            problems != [] do
+          {path, problems}
+        end
+
+      assert page_failures == [], "page render failures: #{inspect(page_failures)}"
+
+      assert Enum.all?(pages, &match?({_, {:ok, _}}, &1)),
+             "a page story crashed: #{inspect(pages)}"
 
       failures =
         for {path, variation_id, theme, document} <- rendered,
@@ -178,7 +201,8 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
   describe "DOM hygiene" do
     test "every rendered story has unique ids, resolvable ARIA references and named controls", %{
-      rendered: rendered
+      rendered: rendered,
+      pages: pages
     } do
       problems =
         for {path, variation_id, theme, document} <- rendered,
@@ -186,7 +210,18 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
           {path, variation_id, theme, problem}
         end
 
+      # A page story is checked over its own content (not the upstream shell around it), with no
+      # main-landmark rule: the shell owns the page's main.
+      page_problems =
+        for {path, {:ok, html}} <- pages,
+            problem <- CatalogChecks.dom_problems(page(RenderAll.page_markup(html)), :other) do
+          {path, problem}
+        end
+
       assert problems == [], "DOM hygiene problems: #{inspect(problems)}"
+
+      assert page_problems == [],
+             "DOM hygiene problems on a page story: #{inspect(page_problems)}"
     end
   end
 
@@ -255,7 +290,10 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   end
 
   describe "copy rules over every rendered variation" do
-    test "no rendered story spells text a global copy row forbids", %{rendered: rendered} do
+    test "no rendered story spells text a global copy row forbids", %{
+      rendered: rendered,
+      pages: pages
+    } do
       rows = CatalogChecks.copy_rows(CopyRules.load!())
 
       problems =
@@ -264,7 +302,14 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
           {path, variation_id, theme, problem}
         end
 
+      page_problems =
+        for {path, {:ok, html}} <- pages,
+            problem <- CatalogChecks.copy_problems(RenderAll.page_markup(html), rows) do
+          {path, problem}
+        end
+
       assert problems == [], "copy problems: #{inspect(problems)}"
+      assert page_problems == [], "copy problems on a page story: #{inspect(page_problems)}"
 
       # The cause is real data: rows govern the stories, and rendered text was read.
       refute rows == []
@@ -765,6 +810,241 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     end
   end
 
+  describe "start here page" do
+    # These tests put a build-info term in the VM-wide persistent_term. No other test in this module
+    # renders the welcome page while one of them runs (the shared pass finished in setup_all), and
+    # each restores what it found.
+    setup do
+      previous = :persistent_term.get(@build_info_key, :none)
+
+      on_exit(fn ->
+        case previous do
+          :none -> :persistent_term.erase(@build_info_key)
+          info -> :persistent_term.put(@build_info_key, info)
+        end
+      end)
+
+      :ok
+    end
+
+    test "/storybook opens on the welcome page", %{conn: conn} do
+      assert {:error, {kind, %{to: to}}} = live(conn, "/storybook")
+      assert kind in [:redirect, :live_redirect]
+      assert URI.parse(to).path == "/storybook/welcome"
+    end
+
+    test "the welcome page prints each marker once, reading 'unknown' when no build info is stored",
+         %{conn: conn} do
+      :persistent_term.erase(@build_info_key)
+
+      markers = welcome_markers(conn)
+
+      assert markers == %{
+               "data-catalog-main-sha" => "unknown",
+               "data-catalog-head-sha" => "unknown",
+               "data-catalog-dirty" => "unknown",
+               "data-catalog-checkout" => "unknown",
+               "data-catalog-epoch" => DateTime.to_iso8601(ScrypathFixtures.preview_epoch())
+             }
+    end
+
+    test "the welcome page prints the stored build info, and nothing else", %{conn: conn} do
+      info = %{
+        main_sha: "0123456789ab",
+        head_sha: "fedcba987654",
+        dirty: "true",
+        checkout: "/work/some checkout",
+        epoch: DateTime.to_iso8601(ScrypathFixtures.preview_epoch())
+      }
+
+      :persistent_term.put(@build_info_key, info)
+
+      assert welcome_markers(conn) == %{
+               "data-catalog-main-sha" => "0123456789ab",
+               "data-catalog-head-sha" => "fedcba987654",
+               "data-catalog-dirty" => "true",
+               "data-catalog-checkout" => "/work/some checkout",
+               "data-catalog-epoch" => info.epoch
+             }
+    end
+
+    test "the welcome page says what the screens are and claims no approval", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/storybook/welcome")
+      text = html |> RenderAll.page_markup() |> LazyHTML.from_fragment() |> LazyHTML.text()
+
+      # The title comes from the root index, outside the page's own content.
+      title =
+        html
+        |> LazyHTML.from_document()
+        |> LazyHTML.query("#psb-story-live h2")
+        |> LazyHTML.text()
+
+      assert title =~ "Start here"
+
+      for phrase <- [
+            "same components as the real app",
+            "made up",
+            "Logistify",
+            "Shopadelic",
+            "Wikily",
+            "Buttons and links do nothing",
+            "2026-11-20 14:00 UTC",
+            "Primitives",
+            "Patterns",
+            "Areas",
+            "Surfaces",
+            "Jobs",
+            "on-call engineer (ROLE-OPS)",
+            "JOB-03",
+            "journey test",
+            "upstream storybook library",
+            "Nothing here is an approved design"
+          ] do
+        assert text =~ phrase, "the welcome page does not say: #{phrase}"
+      end
+    end
+
+    test "the welcome page sets the product font itself, because storybook.js does not load in the shell",
+         %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/storybook/welcome")
+
+      styles =
+        html
+        |> LazyHTML.from_document()
+        |> LazyHTML.query("[data-phx-main] .psb-sandbox style")
+        |> LazyHTML.text()
+
+      # The sandbox class sets a serif family on the page's container; without this rule the whole
+      # page reads in serif, as the iframe stories did before the bundle fix.
+      assert styles =~ "#catalog-start-here {"
+      assert styles =~ "font-family: var(--font-sans)"
+    end
+
+    test "build_info/1 reads 12-character shas, the dirty flag and the checkout from git" do
+      calls = :ets.new(:build_info_calls, [:public, :bag])
+
+      run = fn args ->
+        :ets.insert(calls, {args})
+
+        case args do
+          ["rev-parse", "--short=12", "refs/remotes/origin/main"] -> {"aaaaaaaaaaaa\n", 0}
+          # git may print a longer abbreviation when 12 is ambiguous; the page keeps 12.
+          ["rev-parse", "--short=12", "HEAD"] -> {"bbbbbbbbbbbbccc\n", 0}
+          ["status", "--porcelain"] -> {" M scrypath_ops/lib/x.ex\n", 0}
+          ["rev-parse", "--show-toplevel"] -> {"/work/checkout\n", 0}
+        end
+      end
+
+      assert Serve.build_info(run) == %{
+               main_sha: "aaaaaaaaaaaa",
+               head_sha: "bbbbbbbbbbbb",
+               dirty: "true",
+               checkout: "/work/checkout",
+               epoch: DateTime.to_iso8601(ScrypathFixtures.preview_epoch())
+             }
+
+      assert length(:ets.tab2list(calls)) == 4
+
+      # A clean tree reads "false".
+      clean = fn
+        ["status", "--porcelain"] -> {"", 0}
+        args -> run.(args)
+      end
+
+      assert %{dirty: "false", main_sha: "aaaaaaaaaaaa"} = Serve.build_info(clean)
+    end
+
+    test "build_info/1 reads 'unknown' for every git value when git fails, raises or prints junk" do
+      epoch = DateTime.to_iso8601(ScrypathFixtures.preview_epoch())
+      unknown = %{main_sha: "unknown", head_sha: "unknown", dirty: "unknown", checkout: "unknown"}
+
+      failing = fn _args -> {"fatal: not a git repository", 128} end
+      raising = fn _args -> raise "git is not installed" end
+
+      # Exit 0 with output that is not a sha: refs and the checkout must not be guessed.
+      junk = fn
+        ["rev-parse", "--short=12", _ref] -> {"not-a-sha\n", 0}
+        ["rev-parse", "--show-toplevel"] -> {"\n", 0}
+        ["status", "--porcelain"] -> {"", 1}
+      end
+
+      for run <- [failing, raising, junk] do
+        assert Serve.build_info(run) == Map.put(unknown, :epoch, epoch)
+      end
+    end
+
+    test "build_info/1 with the real git gives a sha or 'unknown' for every ref, never a guess" do
+      info = Serve.build_info()
+
+      # A shallow hosted checkout has no origin/main ref, so only the shape is asserted.
+      for key <- [:main_sha, :head_sha] do
+        assert info[key] == "unknown" or info[key] =~ ~r/\A[0-9a-f]{12}\z/
+      end
+
+      assert info.dirty in ["true", "false", "unknown"]
+      assert is_binary(info.checkout)
+    end
+
+    test "port_verdict/3 is :free with no listener, :ours for this catalog's landing page and held otherwise",
+         %{conn: conn} do
+      :persistent_term.put(@build_info_key, Serve.build_info(fn _args -> {"", 128} end))
+      {:ok, _view, rendered} = live(conn, "/storybook/welcome")
+
+      # The body the task would fetch: the dead render of the landing page.
+      ours = Phoenix.ConnTest.get(build_conn(), "/storybook/welcome").resp_body
+      assert has_marker?(ours)
+      assert has_marker?(rendered)
+
+      # Nothing listens: the holder and body are irrelevant.
+      assert Serve.port_verdict(false, nil, nil) == :free
+      assert Serve.port_verdict(false, "beam.smp (pid 1)", ours) == :free
+
+      # Something listens and its landing page carries the marker: this catalog is already serving.
+      assert Serve.port_verdict(true, nil, ours) == :ours
+      assert Serve.port_verdict(true, "beam.smp (pid 7)", ours) == :ours
+
+      # Something else listens: held, never ours, and the holder is named when it is known.
+      other = "<html><body><h1>Another app</h1></body></html>"
+      refute has_marker?(other)
+
+      assert Serve.port_verdict(true, "beam.smp (pid 22117)", other) ==
+               {:held, " by beam.smp (pid 22117)"}
+
+      assert Serve.port_verdict(true, nil, other) == {:held, ""}
+      assert Serve.port_verdict(true, "", other) == {:held, ""}
+
+      # It did not answer, or answered with something that is not a page.
+      assert Serve.port_verdict(true, "beam.smp (pid 22117)", nil) ==
+               {:held, " by beam.smp (pid 22117)"}
+
+      assert Serve.port_verdict(true, nil, false) == {:held, ""}
+
+      # Mentioning the marker in text is not carrying it as an attribute (the verdict agrees with a
+      # parsed document in every case above and here).
+      mention = "<p>The data-catalog-main-sha attribute is described here.</p>"
+      refute has_marker?(mention)
+      assert Serve.port_verdict(true, nil, mention) == {:held, ""}
+    end
+  end
+
+  describe "storybook bundle" do
+    test "the tracked bundle sets the product font on the iframe body, and the check fails without it" do
+      bundle = File.read!(@storybook_bundle)
+
+      # Control: the tracked bundle passes, so the failure below comes from the plant.
+      assert body_font_problem(bundle) == nil
+
+      planted = String.replace(bundle, @font_assignment, "")
+      refute planted == bundle
+      assert body_font_problem(planted) == :missing_body_font
+
+      # A different family does not satisfy it either.
+      serif = String.replace(bundle, "var(--font-sans)", "serif")
+      refute serif == bundle
+      assert body_font_problem(serif) == :missing_body_font
+    end
+  end
+
   describe "planted tree" do
     setup do
       start_supervised!(ScrypathOps.Catalog.PlantedEndpoint)
@@ -860,9 +1140,17 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   defp render_every_variation do
     for {path, variation_id} <- RenderAll.targets(ScrypathOps.Catalog.Storybook),
         not match?({:unsupported, _}, variation_id),
+        variation_id != :page,
         theme <- @themes do
       url = RenderAll.url("/storybook", path, variation_id, theme)
       {path, variation_id, theme, render_document(ScrypathOpsWeb.Endpoint, url)}
+    end
+  end
+
+  # Every page story through the storybook shell route, once, as `{path, {:ok, html} | {:crashed, ...}}`.
+  defp render_every_page do
+    for {path, :page} <- RenderAll.targets(ScrypathOps.Catalog.Storybook) do
+      {path, render_document(ScrypathOpsWeb.Endpoint, RenderAll.page_url("/storybook", path))}
     end
   end
 
@@ -870,6 +1158,41 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     do: CatalogChecks.dom_problems(html, CatalogChecks.tier(path))
 
   defp hygiene_problems(_path, {:crashed, kind, cause}), do: [{:crashed, kind, cause}]
+
+  # The five build markers of the rendered welcome page: attribute name => value. Each selector must
+  # match exactly one node.
+  defp welcome_markers(conn) do
+    {:ok, _view, html} = live(conn, "/storybook/welcome")
+    doc = LazyHTML.from_document(html)
+
+    for name <- [
+          "data-catalog-main-sha",
+          "data-catalog-head-sha",
+          "data-catalog-dirty",
+          "data-catalog-checkout",
+          "data-catalog-epoch"
+        ],
+        into: %{} do
+      nodes = LazyHTML.query(doc, "[#{name}]")
+      assert Enum.count(nodes) == 1, "expected exactly one [#{name}] node"
+      assert [value] = LazyHTML.attribute(nodes, name)
+      {name, value}
+    end
+  end
+
+  # Whether a parsed page carries the build marker the serve task looks for.
+  defp has_marker?(html) do
+    html |> LazyHTML.from_document() |> LazyHTML.query("[data-catalog-main-sha]") |> Enum.any?()
+  end
+
+  # What the storybook iframe needs from `storybook.js`: the product font on <body>. The sandbox class
+  # sets `font-family: serif` there and beats the product stylesheet, so without this assignment every
+  # story draws in a serif face. Reads the built bundle text; nil when the assignment is there.
+  defp body_font_problem(bundle) do
+    if Regex.match?(~r/document\.body\.style\.fontFamily\s*=\s*"var\(--font-sans\)"/, bundle),
+      do: nil,
+      else: :missing_body_font
+  end
 
   # ── Inventory ─────────────────────────────────────────────────────────────
 
