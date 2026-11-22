@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 milestone: v1.49
 milestone_name: Catalog foundation
-current_phase: 197
-current_phase_name: Pilot JOB-03, unhealthy verdict to verified retry
-status: executing
-stopped_at: Phase 197 plans 01-05 merged (PRs #177, #178); paused for Pause 1 (maintainer storybook look)
-last_updated: "2026-11-22T15:21:18.737Z"
+current_phase: 198
+current_phase_name: Scale
+status: paused
+stopped_at: Phase 197 complete (Pause 1 feedback recorded); Phase 198 cut by the maintainer 2026-11-22; milestone-end review (FLOW-05, Pause 2) next
+last_updated: "2026-11-22T22:22:00.840Z"
 last_activity: 2026-11-22
-last_activity_desc: Completed 197-04 (RecoveryView and recovery components with the D3 fix, the JOB-03 Job story, cumulative parity, coverage, provenance and copy checks, ledger row 11 of 12)
-state_head: 07ad2dfb7c22dccfbdbc4e319bc8f20d6d61b5bd
+last_activity_desc: Phase 197 complete; Phase 198 cut; storybook on 4013 accepted
+state_head: f0b39b319a31dbc19b3b78d37bfe11b001b0257c
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 17
   completed_plans: 13
   percent: 76
@@ -29,10 +29,10 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 ## Current Position
 
-Phase: 197 (Pilot JOB-03, unhealthy verdict to verified retry) — EXECUTING
-Plan: 5 of 5
-Status: Phase 197 plans 01-05 merged; paused for Pause 1 (maintainer storybook look)
-Last activity: 2026-11-22 — Completed 197-04 (RecoveryView and recovery components with the D3 fix, the JOB-03 Job story, cumulative parity, coverage, provenance and copy checks, ledger row 11 of 12)
+Phase: 198 — Scale (cut by the maintainer, 2026-11-22)
+Plan: None; not planned
+Status: Paused for the milestone-end review (FLOW-05, Pause 2)
+Last activity: 2026-11-22 — Phase 197 complete; Phase 198 cut; storybook port 4013 accepted
 
 
 ## Performance Metrics
@@ -131,8 +131,8 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 ## Session Continuity
 
 Last session: 2026-11-22T15:21:18.624Z
-Stopped at: Completed 197-04-PLAN.md
-Acting next: execute 197-05 (landing page with main@sha, the bundle-font and marker checks, the storybook block and preflight, the docs, the local mirror, the phase PR and the Pause 1 note) from the journey baseline d913b8b6; Plan 04 ended at 07ad2dfb. The run stops at Pause 1 after Plan 05. A Hex release still needs the maintainer's explicit yes.
+Stopped at: Phase 197 complete; Phase 198 cut
+Acting next: FLOW-05 milestone-end review (Pause 2): refresh the storybook to current main, say what UI changed and where to look, and wait for the maintainer; the audit, complete and cleanup steps have not run
 Resume file: None
 
 ## Operator Next Steps
