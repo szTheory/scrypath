@@ -985,45 +985,136 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       assert is_binary(info.checkout)
     end
 
-    test "port_verdict/3 is :free with no listener, :ours for this catalog's landing page and held otherwise",
-         %{conn: conn} do
-      :persistent_term.put(@build_info_key, Serve.build_info(fn _args -> {"", 128} end))
-      {:ok, _view, rendered} = live(conn, "/storybook/welcome")
+    test "port_verdict/4 is :free when nothing listens, whatever the holder or the page say" do
+      expected = build_facts("/work/checkout", "bbbbbbbbbbbb")
+      page = served_page(expected)
+      assert has_marker?(page)
 
-      # The body the task would fetch: the dead render of the landing page.
-      ours = Phoenix.ConnTest.get(build_conn(), "/storybook/welcome").resp_body
-      assert has_marker?(ours)
-      assert has_marker?(rendered)
+      assert Serve.port_verdict(false, nil, nil, expected) == :free
+      assert Serve.port_verdict(false, "beam.smp (pid 1)", page, expected) == :free
+    end
 
-      # Nothing listens: the holder and body are irrelevant.
-      assert Serve.port_verdict(false, nil, nil) == :free
-      assert Serve.port_verdict(false, "beam.smp (pid 1)", ours) == :free
+    test "port_verdict/4 is :ours for this checkout at this commit, read back from the real page" do
+      # The path holds characters the page escapes, so reading it back also exercises the unescaping.
+      expected = build_facts(~s(/work/a&b "c" <d>), "bbbbbbbbbbbb")
+      page = served_page(expected)
 
-      # Something listens and its landing page carries the marker: this catalog is already serving.
-      assert Serve.port_verdict(true, nil, ours) == :ours
-      assert Serve.port_verdict(true, "beam.smp (pid 7)", ours) == :ours
+      assert has_marker?(page)
+      refute page =~ expected.checkout, "the page was expected to escape the checkout path"
+      assert printed_attribute(page, "data-catalog-checkout") == expected.checkout
+      assert printed_attribute(page, "data-catalog-head-sha") == "bbbbbbbbbbbb"
+
+      assert Serve.port_verdict(true, nil, page, expected) == :ours
+      assert Serve.port_verdict(true, "beam.smp (pid 7)", page, expected) == :ours
+
+      # origin/main moving does not change the code a catalog serves: only the checkout and HEAD count.
+      moved = served_page(%{expected | main_sha: "cccccccccccc", dirty: "true"})
+      assert printed_attribute(moved, "data-catalog-main-sha") == "cccccccccccc"
+      assert Serve.port_verdict(true, nil, moved, expected) == :ours
+    end
+
+    test "port_verdict/4 holds the port for a catalog from another commit or checkout and names which" do
+      expected = build_facts("/work/checkout", "bbbbbbbbbbbb")
+
+      # Control: the same plant with this checkout's own facts is ours, so what follows is caused by
+      # the one value each plant changes.
+      control = served_page(expected)
+      assert Serve.port_verdict(true, nil, control, expected) == :ours
+
+      # A catalog started before a pull: this checkout, an older HEAD.
+      stale = served_page(build_facts("/work/checkout", "aaaaaaaaaaaa"))
+      assert has_marker?(stale)
+      assert printed_attribute(stale, "data-catalog-checkout") == "/work/checkout"
+      assert printed_attribute(stale, "data-catalog-head-sha") == "aaaaaaaaaaaa"
+
+      assert Serve.port_verdict(true, nil, stale, expected) ==
+               {:held,
+                " by a catalog from /work/checkout at HEAD aaaaaaaaaaaa " <>
+                  "(this checkout: /work/checkout at HEAD bbbbbbbbbbbb)"}
+
+      assert Serve.port_verdict(true, "beam.smp (pid 7)", stale, expected) ==
+               {:held,
+                " by beam.smp (pid 7), a catalog from /work/checkout at HEAD aaaaaaaaaaaa " <>
+                  "(this checkout: /work/checkout at HEAD bbbbbbbbbbbb)"}
+
+      # Another worktree at the very same commit is still not this checkout's catalog.
+      foreign = served_page(build_facts("/work/other", "bbbbbbbbbbbb"))
+      assert printed_attribute(foreign, "data-catalog-checkout") == "/work/other"
+      assert printed_attribute(foreign, "data-catalog-head-sha") == "bbbbbbbbbbbb"
+
+      assert Serve.port_verdict(true, nil, foreign, expected) ==
+               {:held,
+                " by a catalog from /work/other at HEAD bbbbbbbbbbbb " <>
+                  "(this checkout: /work/checkout at HEAD bbbbbbbbbbbb)"}
+    end
+
+    test "port_verdict/4 never calls a catalog ours when either side cannot say where it comes from" do
+      known = build_facts("/work/checkout", "bbbbbbbbbbbb")
+      unknown = Serve.build_info(fn _args -> {"", 128} end)
+      assert %{checkout: "unknown", head_sha: "unknown"} = unknown
+
+      known_page = served_page(known)
+      unknown_page = served_page(unknown)
+      assert printed_attribute(unknown_page, "data-catalog-checkout") == "unknown"
+      assert printed_attribute(unknown_page, "data-catalog-head-sha") == "unknown"
+
+      # "unknown" equals "unknown", which proves nothing about the checkout.
+      assert Serve.port_verdict(true, nil, unknown_page, unknown) ==
+               {:held,
+                " by a catalog from unknown at HEAD unknown (this checkout: unknown at HEAD unknown)"}
+
+      # The page cannot say, or this run cannot say.
+      assert Serve.port_verdict(true, nil, unknown_page, known) ==
+               {:held,
+                " by a catalog from unknown at HEAD unknown " <>
+                  "(this checkout: /work/checkout at HEAD bbbbbbbbbbbb)"}
+
+      assert Serve.port_verdict(true, nil, known_page, unknown) ==
+               {:held,
+                " by a catalog from /work/checkout at HEAD bbbbbbbbbbbb " <>
+                  "(this checkout: unknown at HEAD unknown)"}
+    end
+
+    test "port_verdict/4 holds the port for anything that is not a catalog page" do
+      expected = build_facts("/work/checkout", "bbbbbbbbbbbb")
 
       # Something else listens: held, never ours, and the holder is named when it is known.
       other = "<html><body><h1>Another app</h1></body></html>"
       refute has_marker?(other)
 
-      assert Serve.port_verdict(true, "beam.smp (pid 22117)", other) ==
+      assert Serve.port_verdict(true, "beam.smp (pid 22117)", other, expected) ==
                {:held, " by beam.smp (pid 22117)"}
 
-      assert Serve.port_verdict(true, nil, other) == {:held, ""}
-      assert Serve.port_verdict(true, "", other) == {:held, ""}
+      assert Serve.port_verdict(true, nil, other, expected) == {:held, ""}
+      assert Serve.port_verdict(true, "", other, expected) == {:held, ""}
 
       # It did not answer, or answered with something that is not a page.
-      assert Serve.port_verdict(true, "beam.smp (pid 22117)", nil) ==
+      assert Serve.port_verdict(true, "beam.smp (pid 22117)", nil, expected) ==
                {:held, " by beam.smp (pid 22117)"}
 
-      assert Serve.port_verdict(true, nil, false) == {:held, ""}
+      assert Serve.port_verdict(true, nil, false, expected) == {:held, ""}
 
-      # Mentioning the marker in text is not carrying it as an attribute (the verdict agrees with a
-      # parsed document in every case above and here).
+      # Mentioning the markers in text is not carrying them as attributes (the verdict agrees with a
+      # parsed document in every case here).
       mention = "<p>The data-catalog-main-sha attribute is described here.</p>"
       refute has_marker?(mention)
-      assert Serve.port_verdict(true, nil, mention) == {:held, ""}
+      assert Serve.port_verdict(true, nil, mention, expected) == {:held, ""}
+
+      quoted =
+        ~s(<p>data-catalog-main-sha="aaaaaaaaaaaa" data-catalog-checkout="/work/checkout" ) <>
+          ~s(data-catalog-head-sha="bbbbbbbbbbbb"</p>)
+
+      refute has_marker?(quoted)
+      assert Serve.port_verdict(true, nil, quoted, expected) == {:held, ""}
+
+      # A catalog page that lacks the checkout and HEAD markers cannot be placed, so it is not ours.
+      partial = ~s(<dl><dd data-catalog-main-sha="aaaaaaaaaaaa">main@aaaaaaaaaaaa</dd></dl>)
+      assert has_marker?(partial)
+
+      assert Serve.port_verdict(true, nil, partial, expected) ==
+               {:held,
+                " by a catalog from unknown at HEAD unknown " <>
+                  "(this checkout: /work/checkout at HEAD bbbbbbbbbbbb)"}
     end
   end
 
@@ -1183,6 +1274,32 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   # Whether a parsed page carries the build marker the serve task looks for.
   defp has_marker?(html) do
     html |> LazyHTML.from_document() |> LazyHTML.query("[data-catalog-main-sha]") |> Enum.any?()
+  end
+
+  # Build facts as the serve task stores them, for a checkout and a HEAD.
+  defp build_facts(checkout, head) do
+    %{
+      main_sha: "aaaaaaaaaaaa",
+      head_sha: head,
+      dirty: "false",
+      checkout: checkout,
+      epoch: DateTime.to_iso8601(ScrypathFixtures.preview_epoch())
+    }
+  end
+
+  # The body the serve task fetches from a listener: the dead render of the landing page of a catalog
+  # that stored `info` before it started.
+  defp served_page(info) do
+    :persistent_term.put(@build_info_key, info)
+    Phoenix.ConnTest.get(build_conn(), "/storybook/welcome").resp_body
+  end
+
+  # What a page prints for one marker, read from the parsed document (not by the serve task's own
+  # reader), so a plant is known to differ in exactly the value it claims to.
+  defp printed_attribute(html, name) do
+    nodes = html |> LazyHTML.from_document() |> LazyHTML.query("[#{name}]")
+    assert [value] = LazyHTML.attribute(nodes, name)
+    value
   end
 
   # What the storybook iframe needs from `storybook.js`: the product font on <body>. The sandbox class
