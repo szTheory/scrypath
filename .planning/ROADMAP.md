@@ -77,7 +77,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
   2. Real Meilisearch task payload shapes were recorded once from a task-scoped Docker run (container removed afterward), every fixture failure string comes from a closed table whose entries carry a `source:` pointing at a real Meilisearch error code or Scrypath path, hostile text is stored as escapes, and no failure the library cannot produce is present.
   3. Shopadelic (journey and settings drift), Logistify (deep queue, nothing failed) and Wikily (empty install) each have named states, ordinary data separate from stress variations, and nothing copied from the six sibling brand repos.
   4. The DB-free `check_fixtures` task runs first in its consumers' `test` alias and a planted failing case fails it; two renders with different `now` differ only in time-derived text; `package_metadata_test` asserts `fixtures/` never ships in the Hex tarball; the CI path classifier and `package_contents_test` decisions are recorded; the host's `phase173` fixtures and `?scenario=` branches remain with a recorded deletion trigger.
-**Plans**: 2/5 plans executed (cap 5; re-cut from the 4 estimated so each plan stays under 15 files and about 80k tokens; the one `scrypath_ops/mix.exs` edit is in 196-01):
+**Plans**: 3/5 plans executed (cap 5; re-cut from the 4 estimated so each plan stays under 15 files and about 80k tokens; the one `scrypath_ops/mix.exs` edit is in 196-01):
 **Wave 1**
 - [x] 196-01-PLAN.md — `fixtures/scrypath_fixtures` project and the Logistify tracer through the fake client to a rendered `/ops/health`; the single `scrypath_ops/mix.exs` edit (path dependency, `scrypath_fixtures.check_fixtures` first in the `test` alias, `preferred_envs`); DB-free check skeleton with cause-pinned plants; FixtureEnv
 
@@ -85,7 +85,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 - [x] 196-02-PLAN.md — root accounting: compat classifier inventory, formatter, namespace fence, non-vacuous tarball refute, path-dependency boundary row and probes, archive list, Docker script, Dockerfile COPY lines, `.dockerignore`; fixtures README with the exit rule, second-consumer definition and phase173 deletion trigger, pinned by a root contract test
 
 **Wave 3** *(blocked on 196-02)*
-- [ ] 196-03-PLAN.md — Meilisearch v1.15 payloads re-recorded once from a task-scoped container with provenance; builders and fake-client paging checked against them; closed failure table with `source:`; two-renders-differ-only-in-time test; finding F3 for the maintainer
+- [x] 196-03-PLAN.md — Meilisearch v1.15 payloads re-recorded once from a task-scoped container with provenance; builders and fake-client paging checked against them; closed failure table with `source:`; two-renders-differ-only-in-time test; finding F3 for the maintainer
 
 **Wave 4** *(blocked on 196-02 and 196-03)*
 - [ ] 196-04-PLAN.md — Shopadelic (aligned, drift, failed journey), Wikily (unconfigured, missing backend, index not created, first delete failed), Logistify steady and the labelled F1 stress variation; scenario registry; Posture round trip for every scenario; one planted failure per check invariant; child-mix DB-free proof
@@ -125,7 +125,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 195. Mount and prove | 3/3 | Complete    | 2026-11-21 |
-| 196. Fixtures and three adopters | 2/5 | In Progress | - |
+| 196. Fixtures and three adopters | 3/5 | In Progress | - |
 | 197. Pilot JOB-03 | 0/5 | Not started | - |
 | 198. Scale | 0/4 | Not started (cut by default) | - |
 

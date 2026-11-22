@@ -5,17 +5,17 @@ milestone_name: Catalog foundation
 current_phase: 196
 current_phase_name: Fixtures and three adopters
 status: executing
-stopped_at: Completed 196-02-PLAN.md
-last_updated: "2026-11-22T01:46:35.873Z"
+stopped_at: Completed 196-03-PLAN.md
+last_updated: "2026-11-22T02:13:02.524Z"
 last_activity: 2026-11-21
-last_activity_desc: Plan 196-02 complete (fixtures boundary: classifier, probes, Docker script, README exit rule)
-state_head: c6916447f35063223fe0f9bc680b50606415df9c
+last_activity_desc: "Plan 196-03 complete (recorded Meilisearch v1.15 payloads, closed failure table, render determinism, finding F3)"
+state_head: 5b0b61021b4953d6b0a2666bccf83a5979f87c8e
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 17
-  completed_plans: 5
-  percent: 29
+  completed_plans: 6
+  percent: 35
 ---
 
 # Project State
@@ -30,9 +30,9 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 ## Current Position
 
 Phase: 196 (Fixtures and three adopters) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
-Last activity: 2026-11-21 — Plan 196-02 complete (fixtures boundary: classifier, probes, Docker script, README exit rule)
+Last activity: 2026-11-21 — Plan 196-03 complete (recorded Meilisearch v1.15 payloads, closed failure table, render determinism, finding F3)
 
 
 ## Performance Metrics
@@ -49,6 +49,7 @@ Last activity: 2026-11-21 — Plan 196-02 complete (fixtures boundary: classifie
 | Phase 195 P03 | 95min | 3 tasks | 4 files |
 | Phase 196 P01 | 7 min | 2 tasks | 14 files |
 | Phase 196 P02 | 12 min | 3 tasks | 14 files |
+| Phase 196 P03 | 24 min | 3 tasks | 41 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 196]: Operator-only option keys live once in ScrypathFixtures.Scenario, pinned to lib/scrypath/operator.ex by an AST test — Scrypath.index_contract_drift/2 hands its options straight to Config.resolve!/1, which raises ArgumentError for operator keys, so every caller of resolve!/1 or index_contract_drift/2 passes Scenario.runtime_opts/1 while sync_status/2 and failed_sync_work/2 take the full options.
 - [Phase 196]: Each fixture-check plant changes one field of the real scenario and asserts its exact problem tag beside a positive control — A plant that fails in the builder or asserts only not-ok can pass for the wrong reason; four deliberate breakages (job_index, time_order, operator key list, FixtureEnv restore) each failed only their own control.
 - [Phase 196]: Plan 02: the fixtures Docker-script check is its own if block after the catalog block (the storybook regex needs a single statement), and the mounted probe asserts the .app list because the lock check is vacuous for a path dependency
+- [Phase 196]: Plan 196-03: failure text enters a fixture only through a ScrypathFixtures.Failures table entry (seven entries, each with a resolving source); builders reject an inline error and the check rejects text that is not a table render
+- [Phase 196]: Plan 196-03: recordings are compared by key set and value type only, never by value, so a re-record cannot fail a check for noise; re-record when the pinned image id or server version changes
 
 ### Pending Todos
 - Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
@@ -105,9 +108,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-22T01:46:35.813Z
-Stopped at: Completed 196-02-PLAN.md
-Acting next: execute 196-03-PLAN.md (recorded Meilisearch payloads and the failure table), then 196-04 and 196-05 on the phase branch; Plan 05 pushes it. A Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-22T02:13:02.466Z
+Stopped at: Completed 196-03-PLAN.md
+Acting next: execute 196-04-PLAN.md (Shopadelic, Wikily and the Logistify steady and stress states), then 196-05 on the phase branch; Plan 05 pushes it. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps
