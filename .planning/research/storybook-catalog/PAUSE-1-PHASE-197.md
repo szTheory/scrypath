@@ -60,7 +60,8 @@ Paste your words verbatim. Rules: quotes are never paraphrased; theme is `light`
 
 | # | Verbatim quote | Storybook path | Variation id | Theme | Viewport | Kind | Triage | Disposition |
 |---|----------------|----------------|--------------|-------|----------|------|--------|-------------|
-|   |                |                |              |       |          |      |        |             |
+| 1 | "there's this weird rounded card effect around the whole main panel" | /storybook/welcome | unknown | unknown | unknown | catalog | looked at it, keep as is | phoenix_storybook's own page chrome (rounded, bordered panel on a frame); it does not load our CSS there. Not overridden. |
+| 2 | "looks like the ops badges all styled the same way... css bug with phoenix storybook?" | /storybook/primitives/ops_badge | all seven (neutral, info, success, warning, error, partial, running) | unknown | unknown | catalog | fix now | Not a CSS bug: `.ops-badge` is plain muted text and `kind` has no visual effect, in the real app too. The story showed seven identical looks, so it is cut to one variation (`default`) and DESIGN-TOKENS.md says the kind table is for notice surfaces, not badges. |
 
 ## Fixtures fold: evidence and recommendation
 
@@ -135,3 +136,10 @@ Phase 198 (the remaining small screens, the Clinicly and Chatly sets, a local br
 - **Recommendation: cut**, as the roadmap defaults, unless your look asks for more. JOB-03 is covered end to end, the contract gate is in place, and the open findings (F1 to F4, D2) change what a further set should show, so building more stories before you decide them risks drawing states you then change.
 - **It would shrink or run if you ask for:** Search or Sync and index as whole surfaces (the roadmap adds them only on feedback); the Chatly cutover story (blocked by F3 unless you accept deriving it from the `__reindex` tasks); the local browser check over fixed iframe URLs (SCALE-03, not a required gate).
 - **If it is cut:** the milestone-end review (FLOW-05) runs next, before the audit, complete and cleanup steps, and this note's feedback folds into the v1.50 input. The run does not start Phase 198, the audit, complete or cleanup, or any release on its own, and no release PR is open (0 before and after the code PR merge; the count after the docs merge is in the hand-off).
+
+## Decisions (maintainer, 2026-11-22: "follow ur recs")
+
+- **Phase 198: cut.** FLOW-05 (the milestone-end review, Pause 2) is next; the audit, complete and cleanup steps have not run. PILOT-07 is closed.
+- **Fixtures project: keep separate**, revisit at the `phase173` host-spec port or v1.51.
+- **Badge story: one variation** (feedback row 2). Feedback row 1 stays as is.
+- **Port: still open.** The recommendation above (move back to 4003) needs the owner of the `fablebook` process holding 4003 to stop it, which is not something this run can do. PILOT-06 stays Pending until then, or until the recorded decision is changed to 4013.

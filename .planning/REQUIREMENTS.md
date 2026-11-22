@@ -31,7 +31,7 @@ Every criterion below is an executable check, a recorded number or a recorded de
 - [x] **PILOT-04**: Stories live in the glossary tiers `primitives/ patterns/ areas/ surfaces/ jobs/`, with the adopter as a variation dimension, JOB ids in file paths (the sidebar search reads only path and name), and both themes shown. Scrypath chrome keeps the Scrypath brand; adopter theming appears in one Hosting story only. Story descriptions claim no more than the linked test proves.
 - [x] **PILOT-05**: One test file (`catalog_contract_test.exs`) carries render-all, route and component coverage (no hard-coded counts; a literal `@no_story` map with reasons, stale entries failing), no-two-identical-variations, copy lint over rendered variations (the existing `CopyRules` forbidden lists), and DOM hygiene (unique ids, existing `aria-*` targets, accessible names, one `main` landmark per screen-tier story). Each check has one planted failing input. It runs inside the existing `ops-ui` job as required-gate ledger row 11 of 12, with a deletion trigger and expected churn recorded in `CONTRIBUTING.md`; no new required CI context is created.
 - [ ] **PILOT-06**: A stable seeded storybook runs on 127.0.0.1:4003 with its own `storybook` block in `.planning/UI-PREVIEW.json`, a landing page that shows `main@sha`, and an extension of `npm run ui:preflight` that checks it; the 4002 preview stays the mounted-behavior surface, and AGENTS.md "UI work" matches.
-- [ ] **PILOT-07**: Pause 1 happens: the run stops after Phase 197, the maintainer looks at the storybook, and their feedback is recorded verbatim in a dated note under `.planning/research/` as rows of storybook path, variation id, theme and viewport (or "unknown"). The feedback sizes Phase 198 (cut, shrink or run).
+- [x] **PILOT-07**: Pause 1 happens: the run stops after Phase 197, the maintainer looks at the storybook, and their feedback is recorded verbatim in a dated note under `.planning/research/` as rows of storybook path, variation id, theme and viewport (or "unknown"). The feedback sizes Phase 198 (cut, shrink or run).
 
 ### Scale (Phase 198, cut by default; sized after Pause 1)
 
@@ -93,7 +93,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PILOT-04 | Phase 197 | Complete |
 | PILOT-05 | Phase 197 | Complete |
 | PILOT-06 | Phase 197 | Pending |
-| PILOT-07 | Phase 197 | Pending |
+| PILOT-07 | Phase 197 | Complete |
 | SCALE-01 | Phase 198 | Pending |
 | SCALE-02 | Phase 198 | Pending |
 | SCALE-03 | Phase 198 | Pending |

@@ -399,7 +399,8 @@ the browser spec on the advisory lane; computed size stays browser-only.
 ## Status / tone: the notice rule scheme and the sync-status words
 
 Notices, statuses, verdicts and tone chips share one surface: `.ops-notice-surface` plus one
-modifier chosen by `notice_modifier/1` in `ops_ui.ex` (the single mapping authority):
+modifier chosen by `notice_modifier/1` in `ops_ui.ex` (the single mapping authority). The table is for those surfaces only. `ops_badge` is not one
+of them: its `kind` is only a data attribute with no visual effect:
 
 | Kind | Modifier | Rule (inline-start, 2px) | Title |
 | --- | --- | --- | --- |

@@ -4,18 +4,12 @@ defmodule ScrypathOps.Catalog.Stories.Primitives.OpsBadge do
   def function, do: &ScrypathOpsWeb.OpsUi.ops_badge/1
   def container, do: :iframe
 
-  # One variation per kind the component declares; the kind only sets `data-badge-kind`.
+  # A badge is plain muted text and its `kind` has no visual effect (see `ops_badge/1`), so one
+  # variation shows it. Seven kinds would render seven identical looks and imply states that do not
+  # exist; sync states are the `ops_sync_status` story.
   def variations do
-    for {kind, word} <- [
-          neutral: "Idle",
-          info: "Queued",
-          success: "Complete",
-          warning: "Slow",
-          error: "Failed",
-          partial: "Partly synced",
-          running: "Running"
-        ] do
-      %Variation{id: kind, attributes: %{kind: kind}, slots: [word]}
-    end
+    [
+      %Variation{id: :default, slots: ["Idle"]}
+    ]
   end
 end
