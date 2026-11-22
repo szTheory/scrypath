@@ -103,7 +103,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
   3. After extraction into pure view-models and shared function components (Search health first, then Failed sync and recovery), a before and after rendered-HTML parity capture shows no unintended change and the step-1 journey stays green unmodified.
   4. `catalog_contract_test.exs` carries render-all, route and component coverage (no hard-coded counts, literal `@no_story` map with reasons), no-identical-variations, copy lint and DOM hygiene checks, each with one planted failing input, runs inside the existing `ops-ui` job as required-gate ledger row 11 of 12 with a deletion trigger recorded in `CONTRIBUTING.md`, and creates no new required CI context.
   5. A seeded storybook runs on 127.0.0.1:4003 with a `storybook` block in `.planning/UI-PREVIEW.json` and a landing page showing `main@sha`, `npm run ui:preflight` checks it, AGENTS.md "UI work" matches, and stories live in the `primitives/ patterns/ areas/ surfaces/ jobs/` tiers with JOB ids in paths, adopter as a variation dimension, both themes shown, and descriptions claiming no more than their linked test proves.
-**Plans**: 3/5 plans executed (cap 5; each under 15 files and about 80k tokens; strictly sequential waves on one branch). PR and merge points: one code PR `test(ops-ui):` carrying Plans 01 to 05, squash-merged in 197-05 Task 2 with required checks green on the exact head (merge point 1; the body names the D1 and D3 defect fixes); one planning-only docs PR `docs(phase-197):` with the Pause 1 note and the CI cost record (merge point 2); then the run stops.
+**Plans**: 4/5 plans executed (cap 5; each under 15 files and about 80k tokens; strictly sequential waves on one branch). PR and merge points: one code PR `test(ops-ui):` carrying Plans 01 to 05, squash-merged in 197-05 Task 2 with required checks green on the exact head (merge point 1; the body names the D1 and D3 defect fixes); one planning-only docs PR `docs(phase-197):` with the Pause 1 note and the CI cost record (merge point 2); then the run stops.
 **Wave 1**
 - [x] 197-01-PLAN.md — JOB-03 mounted journey written first and green on current code (Search health to Failed sync to Retry queued and back, allowlist and stale-sudo denials with positive controls); repaired stale-sudo test; D1 `return_to` fix red-first; cut-able Recovery verified test; DB-free catalog server task on loopback with the port-holder check; sandbox font fix in `storybook.js` proven by the fidelity probe; catalog modules in both dependency-boundary probe lists, a loopback-bind config test and the endpoint in the Docker runtime probe's forbidden list
 
@@ -114,7 +114,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 - [x] 197-03-PLAN.md — pure `FailedSyncView` with closed enums; Failed sync components, pattern, area and surface stories; seam tests and parity; no-identical-variations and DOM-hygiene checks with planted inputs
 
 **Wave 4** *(blocked on Wave 3)*
-- [ ] 197-04-PLAN.md — `RecoveryView` and recovery components (D3 crash fixed by construction, red-first test); document freshness; the JOB-03 Job story; cumulative parity; coverage, provenance and copy checks; `CONTRIBUTING.md` ledger row 11 of 12
+- [x] 197-04-PLAN.md — `RecoveryView` and recovery components (D3 crash fixed by construction, red-first test); document freshness; the JOB-03 Job story; cumulative parity; coverage, provenance and copy checks; `CONTRIBUTING.md` ledger row 11 of 12
 
 **Wave 5** *(blocked on Wave 4)*
 - [ ] 197-05-PLAN.md — landing page with `main@sha`; standing bundle-font check; `storybook` block and preflight check (4013 as a recorded deviation while another project holds 4003, for the maintainer at Pause 1); AGENTS.md, UI-REVIEW.md, glossary and playbook tier wording; local mirror of every lane; phase PR merged; storybook and 4002 refreshed to `main`; Pause 1 note and CI cost record; stop
@@ -140,7 +140,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 |-------|----------------|--------|-----------|
 | 195. Mount and prove | 3/3 | Complete    | 2026-11-21 |
 | 196. Fixtures and three adopters | 5/5 | Complete    | 2026-11-22 |
-| 197. Pilot JOB-03 | 3/5 | In Progress | - |
+| 197. Pilot JOB-03 | 4/5 | In Progress | - |
 | 198. Scale | 0/4 | Not started (cut by default) | - |
 
 
