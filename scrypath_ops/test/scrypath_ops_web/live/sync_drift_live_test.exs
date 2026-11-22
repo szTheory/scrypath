@@ -10,11 +10,18 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
   alias ScrypathOps.RecoveryObservation
+  alias ScrypathOps.RecoveryView
+  alias ScrypathOps.Test.HtmlCanon
+  alias ScrypathOpsWeb.Components.Recovery
   alias ScrypathOpsWeb.SyncDriftLive
   alias Scrypath.Operations.Task, as: OperationTask
   alias ScrypathOps.Test.CopyStubs.SyncDrift, as: SyncDriftStubs
   alias ScrypathOps.Test.CopyStubs.SyncDrift.Client, as: SyncDriftClient
   alias ScrypathOps.Test.CopyStubs.SyncDrift.ObanInspector, as: SyncDriftObanInspector
+
+  @recovery_sections "section[aria-labelledby='document-freshness'], section[aria-labelledby='ordinary-recovery']"
+  @recovery_status_section "section[aria-labelledby='ordinary-recovery']"
+  @document_freshness_section "section[aria-labelledby='document-freshness']"
 
   setup do
     previous = SyncDriftStubs.put_env()
@@ -456,6 +463,467 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ "Expected effect: upsert"
     assert html =~ "sdv_ops_post_b"
     assert html =~ "post-6001"
+  end
+
+  # Defect D3 (Phase 197): a recovery handle that cannot be resolved (an expired 10-minute receipt,
+  # another node, a different organization) used to crash the page at render with
+  # `KeyError :replacement_job`, because the observer's "unknown" outcome left an empty evidence map
+  # that the template read as if it were a full one. The recovery view makes that shape impossible:
+  # an unresolved handle renders a closed "could not be checked" state with no evidence line.
+  test "an unresolved recovery handle renders a closed unavailable state", %{conn: conn} do
+    handle = "expired-or-other-node-handle"
+
+    {:ok, lv, _html} =
+      live(
+        conn,
+        "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA&recovery=#{handle}&recovery_generation=0"
+      )
+
+    html = render_async(lv)
+    doc = LazyHTML.from_fragment(html)
+
+    # Cause: the handle resolves to nothing, so the observer reports the receipt as unavailable.
+    assigns = :sys.get_state(lv.pid).socket.assigns
+    assert assigns.recovery_handle == handle
+    assert assigns.recovery_observation_error == :receipt_unavailable
+
+    # The Retry status section is on the page and says the outcome could not be checked.
+    status = LazyHTML.query(doc, "#recovery-observation")
+    assert Enum.count(status) == 1
+    assert doc |> LazyHTML.query("#recovery-observation [role='alert']") |> Enum.count() == 1
+    assert text_of(status) =~ "Recovery refresh could not be checked"
+    assert text_of(status) =~ "This operation's outcome could not be checked"
+    assert text_of(status) =~ "Check detail: :receipt_unavailable."
+
+    # It shows no evidence line, no queue job number, no attempt, no task and no handle.
+    assert doc |> LazyHTML.query("[data-testid='recovery-evidence']") |> Enum.empty?()
+
+    recovery_text =
+      doc
+      |> LazyHTML.query(@recovery_sections)
+      |> text_of()
+
+    # Both sections are on the page (the heading ids alone would not prove it).
+    assert doc |> LazyHTML.query(@recovery_sections) |> Enum.count() == 2
+
+    for fragment <- ["Queue job", "attempt", "Meilisearch task", "Active index", handle] do
+      refute recovery_text =~ fragment, "the unavailable state leaked #{inspect(fragment)}"
+    end
+
+    # The document freshness section is closed the same way: unavailable, with no effect details.
+    freshness = LazyHTML.query(doc, "#document-freshness-result")
+    assert text_of(freshness) =~ "Not checked"
+    assert text_of(freshness) =~ "Expected-document evidence is unavailable"
+    refute recovery_text =~ "Expected effect:"
+    refute recovery_text =~ "Expected document identities"
+
+    # The page stays usable: the schema's other sections and the way back to Failed sync render.
+    assert has_element?(lv, "h2#sync-pipeline-heading", "Is sync keeping up?")
+
+    assert has_element?(
+             lv,
+             "section[aria-labelledby='ordinary-recovery'] a[href*='/ops/failed-sync']",
+             "Review failed sync"
+           )
+
+    # Control: the same page with a resolved receipt's evidence does show the line, so the
+    # refutations above can fail.
+    resolved =
+      assigns
+      |> Map.put(:recovery_status, :accepted)
+      |> Map.put(:recovery_observation_error, nil)
+      |> Map.put(:recovery_evidence, %{
+        replacement_job: 991,
+        attempt: 1,
+        task_uid: nil,
+        index: "sdv_ops_post_a"
+      })
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+      |> LazyHTML.from_fragment()
+
+    assert resolved
+           |> LazyHTML.query("[data-testid='recovery-evidence']")
+           |> text_of() =~ "Queue job 991 · attempt 1"
+  end
+
+  # `RecoveryView` is pure: the observer's results in, a closed status and complete-or-nil evidence out.
+  describe "RecoveryView.build/1" do
+    @full_evidence %{replacement_job: 991, attempt: 1, task_uid: 44, index: "sdv_ops_post_a"}
+    @verified_observation %{
+      state: :verified,
+      operation: :upsert,
+      index: "sdv_ops_post_a",
+      expected_ids: ["post-6001"],
+      checked_at: ~U[2026-01-02 03:04:05Z]
+    }
+
+    test "every status the page can hold maps into the closed set, with its own label and kind" do
+      expected = [
+        {nil, :not_checked, "Not checked", :neutral},
+        {:accepted, :accepted, "Retry queued", :warning},
+        {:running, :running, "Retry running", :warning},
+        {:queue_only_completed, :queue_only_completed,
+         "Queue job completed; backend evidence pending", :warning},
+        {:verified, :verified, "Recovery verified", :success},
+        {:failed, :failed, "Recovery failed", :error},
+        {:cancelled, :cancelled, "Recovery canceled", :error},
+        {:unknown, :unavailable, "Recovery outcome could not be checked", :neutral},
+        {:something_new, :unavailable, "Recovery outcome could not be checked", :neutral}
+      ]
+
+      for {observed, status, label, kind} <- expected do
+        evidence = if status in [:not_checked, :unavailable], do: nil, else: @full_evidence
+        observation = if status == :verified, do: @verified_observation
+
+        assert {:ok, view} = RecoveryView.build(recovery_input(observed, evidence, observation))
+        assert view.status == status
+        assert view.status in RecoveryView.statuses()
+        assert view.label == label
+        assert view.kind == kind
+      end
+
+      # Control: the loop above covered every status in the closed set.
+      assert Enum.sort(RecoveryView.statuses()) ==
+               Enum.sort(for {_, status, _, _} <- expected, uniq: true, do: status)
+    end
+
+    test "the unresolved-handle shape becomes the unavailable status with no evidence (defect D3)" do
+      unchecked = %{
+        state: :not_checked,
+        reason: :receipt_unavailable,
+        checked_at: nil,
+        operation: nil,
+        index: nil,
+        expected_ids: nil
+      }
+
+      # The shape the page used to crash on: an unknown outcome and the empty map the observer left.
+      assert {:ok, view} = RecoveryView.build(recovery_input(:unknown, %{}, unchecked))
+      assert view.status == :unavailable
+      assert view.evidence == nil
+      assert view.copy =~ "could not be checked"
+
+      # A partial map is no evidence either, whichever key is missing.
+      for key <- [:replacement_job, :attempt, :index] do
+        partial = Map.delete(@full_evidence, key)
+        assert {:ok, view} = RecoveryView.build(recovery_input(:unknown, partial, nil))
+        assert view.evidence == nil, "missing #{key}"
+      end
+
+      # Control: a complete map survives, and a missing task uid is a complete map (no task yet).
+      assert {:ok, %{evidence: @full_evidence}} =
+               RecoveryView.build(recovery_input(:accepted, @full_evidence, nil))
+
+      no_task = Map.delete(@full_evidence, :task_uid)
+
+      assert {:ok, %{evidence: %{task_uid: nil}}} =
+               RecoveryView.build(recovery_input(:accepted, no_task, nil))
+    end
+
+    test "a combination the observer cannot emit is refused, and the page shows it as unavailable" do
+      # :verified needs a document observation whose state is :verified.
+      for observation <- [nil, %{state: :running}, %{state: :not_checked, reason: :x}] do
+        input = recovery_input(:verified, @full_evidence, observation)
+
+        assert RecoveryView.build(input) == {:error, :verified_without_document_evidence}
+
+        page = RecoveryView.for_page(input)
+        assert page.status == :unavailable
+        assert page.evidence == nil
+        refute page.label =~ "verified"
+      end
+
+      # An observed queue status needs evidence.
+      for status <- [:accepted, :running, :queue_only_completed, :verified, :failed, :cancelled] do
+        observation = if status == :verified, do: @verified_observation
+
+        assert RecoveryView.build(recovery_input(status, nil, observation)) ==
+                 {:error, :observed_status_without_evidence}
+      end
+
+      # Evidence cannot exist while nothing was checked.
+      assert RecoveryView.build(recovery_input(nil, @full_evidence, nil)) ==
+               {:error, :evidence_without_status}
+
+      # Control: the same inputs with the missing piece supplied are accepted.
+      assert {:ok, %{status: :verified}} =
+               RecoveryView.build(
+                 recovery_input(:verified, @full_evidence, @verified_observation)
+               )
+    end
+
+    test "visibility follows a handle, an error or an observation, and needs a schema" do
+      visible? = fn input -> RecoveryView.for_page(input).visible? end
+      base = recovery_input(nil, nil, nil)
+
+      refute visible?.(base)
+      assert visible?.(%{base | handle: "h"})
+      assert visible?.(%{base | error: :receipt_unavailable})
+      assert visible?.(%{base | document_observation: @verified_observation})
+      refute visible?.(%{base | schema: nil, handle: "h"})
+    end
+
+    test "a thin document observation cannot crash a render by missing a key" do
+      assert {:ok, %{document: document}} =
+               RecoveryView.build(
+                 recovery_input(:unknown, nil, %{state: :unknown, reason: :observation_timeout})
+               )
+
+      assert document.title == "Could not check document freshness"
+      assert document.copy =~ ":observation_timeout"
+      assert {document.operation, document.index, document.expected_ids} == {nil, nil, nil}
+    end
+  end
+
+  defp recovery_input(status, evidence, document_observation) do
+    %{
+      schema: OpsPostA,
+      handle: nil,
+      status: status,
+      evidence: evidence,
+      document_observation: document_observation,
+      error: nil,
+      checked_at: nil,
+      loading?: false
+    }
+  end
+
+  # The story renders the same function components the page does. The recovery status area gets a
+  # seam test: the section the LiveView renders must canonicalize equal to the component's own output
+  # for a view the test builds itself from the same inputs, so a wiring fault in the LiveView (a
+  # wrong assign, a dropped flag) shows as a difference.
+  describe "seam: recovery_status (story output equals production output)" do
+    test "every status the page can show equals the component output", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      _ = render_async(lv)
+
+      mounted_assigns = :sys.get_state(lv.pid).socket.assigns
+      now = ScrypathOps.Clock.utc_now()
+      checked_at = DateTime.add(now, -180, :second)
+      evidence = %{replacement_job: 991, attempt: 1, task_uid: nil, index: "sdv_ops_post_a"}
+      task_evidence = %{evidence | task_uid: 44}
+
+      document = %{
+        state: :verified,
+        reason: nil,
+        operation: :upsert,
+        index: "sdv_ops_post_a",
+        expected_ids: ["post-6001"],
+        checked_at: checked_at
+      }
+
+      # Each case is the assigns the LiveView holds in that state.
+      cases = [
+        {"queued retry", %{recovery_status: :accepted, recovery_evidence: evidence}},
+        {"running and checking",
+         %{recovery_status: :running, recovery_evidence: task_evidence, recovery_loading: true}},
+        {"queue done, backend evidence pending",
+         %{recovery_status: :queue_only_completed, recovery_evidence: evidence}},
+        {"verified",
+         %{
+           recovery_status: :verified,
+           recovery_evidence: task_evidence,
+           recovery_document_observation: document
+         }},
+        {"failed", %{recovery_status: :failed, recovery_evidence: task_evidence}},
+        {"canceled", %{recovery_status: :cancelled, recovery_evidence: task_evidence}},
+        {"queued retry whose refresh could not be checked",
+         %{
+           recovery_status: :accepted,
+           recovery_evidence: evidence,
+           recovery_observation_error: :task_unavailable
+         }}
+      ]
+
+      for {name, overrides} <- cases do
+        assigns =
+          mounted_assigns
+          |> Map.merge(%{
+            recovery_handle: "opaque-receipt",
+            recovery_checked_at: checked_at,
+            recovery_loading: false
+          })
+          |> Map.merge(overrides)
+
+        mounted = assigns |> rendered_page() |> LazyHTML.query(@recovery_status_section)
+
+        # The view the test builds itself, spelling out every input.
+        {:ok, view} =
+          RecoveryView.build(%{
+            schema: OpsPostA,
+            handle: "opaque-receipt",
+            status: assigns.recovery_status,
+            evidence: assigns.recovery_evidence,
+            document_observation: assigns.recovery_document_observation,
+            error: assigns.recovery_observation_error,
+            checked_at: checked_at,
+            loading?: assigns.recovery_loading
+          })
+
+        component = recovery_status_html(view, now)
+
+        assert Enum.count(mounted) == 1, "#{name}: no recovery status section on the page"
+        assert Enum.count(component) == 1
+        assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component), "#{name}: page differs"
+
+        # The cause is real: the section names the status, or says the refresh could not be checked.
+        title = if view.error, do: "Recovery refresh could not be checked", else: view.label
+        assert HtmlCanon.canon(mounted) =~ title, "#{name}: the section does not say #{title}"
+      end
+
+      # Control: the comparison can fail. Another status changes the canonical tree.
+      {:ok, queued} =
+        RecoveryView.build(%{
+          schema: OpsPostA,
+          handle: "opaque-receipt",
+          status: :accepted,
+          evidence: evidence,
+          document_observation: nil,
+          error: nil,
+          checked_at: checked_at,
+          loading?: false
+        })
+
+      {:ok, failed} =
+        RecoveryView.build(%{recovery_input(:failed, task_evidence, nil) | handle: "h"})
+
+      refute HtmlCanon.canon(recovery_status_html(queued, now)) ==
+               HtmlCanon.canon(recovery_status_html(failed, now))
+    end
+
+    test "the real mounted unavailable section equals the component output", %{conn: conn} do
+      {:ok, lv, _html} =
+        live(
+          conn,
+          "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA&recovery=expired-or-other-node-handle&recovery_generation=0"
+        )
+
+      _ = render_async(lv)
+      assigns = :sys.get_state(lv.pid).socket.assigns
+
+      # The cause is real data: the LiveView holds the shape the page used to crash on.
+      assert assigns.recovery_status == :unknown
+      assert assigns.recovery_evidence == %{}
+
+      mounted =
+        lv |> render() |> LazyHTML.from_fragment() |> LazyHTML.query(@recovery_status_section)
+
+      {:ok, view} =
+        RecoveryView.build(%{
+          schema: assigns.selected_schema,
+          handle: assigns.recovery_handle,
+          status: assigns.recovery_status,
+          evidence: assigns.recovery_evidence,
+          document_observation: assigns.recovery_document_observation,
+          error: assigns.recovery_observation_error,
+          checked_at: assigns.recovery_checked_at,
+          loading?: assigns.recovery_loading
+        })
+
+      assert view.status == :unavailable
+      assert Enum.count(mounted) == 1
+
+      assert HtmlCanon.canon(mounted) ==
+               HtmlCanon.canon(recovery_status_html(view, ScrypathOps.Clock.utc_now()))
+
+      assert HtmlCanon.canon(mounted) =~ "Recovery refresh could not be checked"
+    end
+  end
+
+  describe "seam: document_freshness (story output equals production output)" do
+    test "every document observation the page can show equals the component output", %{
+      conn: conn
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      _ = render_async(lv)
+
+      mounted_assigns = :sys.get_state(lv.pid).socket.assigns
+      now = ScrypathOps.Clock.utc_now()
+      checked_at = DateTime.add(now, -180, :second)
+
+      observation = fn state, operation, extra ->
+        Map.merge(
+          %{
+            state: state,
+            reason: nil,
+            operation: operation,
+            index: "sdv_ops_post_a",
+            expected_ids: ["post-6001", "post-6002"],
+            checked_at: checked_at
+          },
+          extra
+        )
+      end
+
+      cases = [
+        {"verified upsert", observation.(:verified, :upsert, %{}), "Expected documents observed"},
+        {"verified delete", observation.(:verified, :delete, %{}), "Expected documents observed"},
+        {"running", observation.(:running, :upsert, %{}), "Document task is still running"},
+        {"failed", observation.(:failed, :upsert, %{}), "Document task failed"},
+        {"canceled", observation.(:cancelled, :upsert, %{expected_ids: nil}),
+         "Document task was canceled"},
+        {"could not be checked",
+         observation.(:unknown, nil, %{
+           reason: :observation_timeout,
+           index: nil,
+           expected_ids: nil,
+           checked_at: nil
+         }), "Could not check document freshness"},
+        {"unchecked after an unresolved handle",
+         observation.(:not_checked, nil, %{
+           reason: :receipt_unavailable,
+           index: nil,
+           expected_ids: nil,
+           checked_at: nil
+         }), "Not checked"},
+        {"no observation yet", nil, "Not checked"}
+      ]
+
+      for {name, document, title} <- cases do
+        assigns =
+          Map.merge(mounted_assigns, %{
+            recovery_handle: "opaque-receipt",
+            recovery_document_observation: document,
+            recovery_loading: name == "running"
+          })
+
+        mounted = assigns |> rendered_page() |> LazyHTML.query(@document_freshness_section)
+
+        # The view the test builds itself, spelling out every input.
+        {:ok, view} =
+          RecoveryView.build(%{
+            schema: OpsPostA,
+            handle: "opaque-receipt",
+            status: nil,
+            evidence: nil,
+            document_observation: document,
+            error: nil,
+            checked_at: nil,
+            loading?: name == "running"
+          })
+
+        component = document_freshness_html(view, now)
+
+        assert Enum.count(mounted) == 1, "#{name}: no document freshness section on the page"
+        assert Enum.count(component) == 1
+        assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component), "#{name}: page differs"
+
+        # The cause is real: the section says what this observation means.
+        assert HtmlCanon.canon(mounted) =~ title, "#{name}: the section does not say #{title}"
+      end
+
+      # Control: the comparison can fail. Another operation changes the canonical tree.
+      upsert = observation.(:verified, :upsert, %{})
+      delete = observation.(:verified, :delete, %{})
+      input = %{recovery_input(nil, nil, upsert) | handle: "h"}
+      {:ok, upsert_view} = RecoveryView.build(input)
+      {:ok, delete_view} = RecoveryView.build(%{input | document_observation: delete})
+
+      refute HtmlCanon.canon(document_freshness_html(upsert_view, now)) ==
+               HtmlCanon.canon(document_freshness_html(delete_view, now))
+    end
   end
 
   test "swap live rechecks current prerequisites and refuses a stale contract read" do
@@ -1627,6 +2095,38 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   defp blocked_count(text), do: length(String.split(text, "blocked")) - 1
+
+  # The Sync and index page rendered through the LiveView's own render/1 over the given assigns, as a
+  # parsed fragment (a route cannot reach every recovery state, so a mounted view's assigns are
+  # merged with the state, as `CopySurfaces` does).
+  defp rendered_page(assigns) do
+    assigns
+    |> SyncDriftLive.render()
+    |> Phoenix.HTML.Safe.to_iodata()
+    |> IO.iodata_to_binary()
+    |> LazyHTML.from_fragment()
+  end
+
+  # The Retry status section rendered by the shared component, as a parsed selection.
+  defp recovery_status_html(view, now) do
+    (&Recovery.recovery_status/1)
+    |> render_component(view: view, now: now, mount_path: "/ops")
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query(@recovery_status_section)
+  end
+
+  # The Document freshness section rendered by the shared component, as a parsed selection.
+  defp document_freshness_html(view, now) do
+    (&Recovery.document_freshness/1)
+    |> render_component(view: view, now: now)
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query(@document_freshness_section)
+  end
+
+  # The text of a parsed selection with whitespace runs collapsed to one space.
+  defp text_of(selection) do
+    selection |> LazyHTML.text() |> String.replace(~r/\s+/, " ") |> String.trim()
+  end
 
   defp flash_value(socket, key) do
     socket.assigns |> Map.get(:flash, %{}) |> Map.get(key)

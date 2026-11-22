@@ -65,44 +65,94 @@ defmodule ScrypathOps.Posture do
   @doc false
   @spec summary([module()], keyword(), DateTime.t(), t() | nil) :: t()
   def summary(allowlist, opts, %DateTime{} = snapshot_at, previous_summary) do
-    cond do
-      allowlist == [] ->
-        classify(%Posture{state: :unconfigured, refreshed_at: snapshot_at})
+    input =
+      cond do
+        allowlist == [] -> :unconfigured
+        not Keyword.has_key?(opts, :backend) -> :missing_backend
+        true -> scan(allowlist, opts)
+      end
 
-      not Keyword.has_key?(opts, :backend) ->
-        classify(%Posture{state: :missing_backend, refreshed_at: snapshot_at})
+    build(input, snapshot_at, previous_summary)
+  end
 
-      true ->
-        rows = scan(allowlist, opts)
+  @typedoc """
+  What `build/3` accepts: a setup problem (`:unconfigured` for an empty allowlist,
+  `:missing_backend` for no `:backend` option), or the rows `scan/2` returns.
+  """
+  @type scan_result :: :unconfigured | :missing_backend | [row()]
 
-        previous_refs =
-          if match?(%Posture{}, previous_summary),
-            do: previous_summary.last_success_refs,
-            else: %{}
+  @doc """
+  Scans the allowlist: one `Scrypath.sync_status/2` per schema, bounded and run under
+  `ScrypathOps.TaskSupervisor`. This is the only function in this module that does I/O, so it is
+  the one thing a story or a unit test cannot call without the application running.
 
-        err = Enum.count(rows, fn {_m, r} -> match?({:error, _}, r) end)
-        backend_failed = backend_failed_count(rows)
-        queue_failed = queue_failed_count(rows)
+  Rows with a fetch error sort first.
+  """
+  @spec scan([module()], keyword()) :: [row()]
+  def scan(allowlist, opts) do
+    outcomes =
+      Task.Supervisor.async_stream_nolink(
+        ScrypathOps.TaskSupervisor,
+        allowlist,
+        &Scrypath.sync_status(&1, opts),
+        max_concurrency: 3,
+        timeout: 15_000,
+        on_timeout: :kill_task
+      )
 
-        # Honest "can I trust search right now?" verdict: fetch errors degrade it, and
-        # so does sync work that already failed and won't self-heal (terminal backend
-        # rejections + discarded queue jobs) — that means the live index may be missing
-        # documents. Retrying/pending work is in-flight, so it stays neutral (no crying
-        # wolf over work that may yet succeed).
-        stuck_failed = backend_failed + queue_failed
+    allowlist
+    |> Enum.zip(outcomes)
+    |> Enum.map(fn
+      {mod, {:ok, result}} -> {mod, result}
+      {mod, {:exit, reason}} -> {mod, {:error, {:async_stream, reason}}}
+    end)
+    |> sort_rows()
+  end
 
-        classify(%Posture{
-          state: if(err > 0 or stuck_failed > 0, do: :degraded, else: :ok),
-          rows: rows,
-          error_count: err,
-          schema_count: length(rows),
-          backend_failed_count: backend_failed,
-          queue_failed_count: queue_failed,
-          queue_observed_count: queue_observed_count(rows),
-          last_success_refs: refresh_success_refs(rows, previous_refs, snapshot_at),
-          refreshed_at: snapshot_at
-        })
-    end
+  @doc """
+  Builds a posture summary from a `t:scan_result/0`. Pure: no process, no clock, no I/O.
+
+  `now` is the snapshot instant stamped on the summary, and `previous_summary` (or `nil`) lets a
+  refresh keep the source references a row last succeeded with when it could not be read this time.
+  A story builds its summary here from `Scrypath.sync_status/2` results, with no process running.
+  """
+  @spec build(scan_result(), DateTime.t(), t() | nil) :: t()
+  def build(:unconfigured, %DateTime{} = snapshot_at, _previous_summary) do
+    classify(%Posture{state: :unconfigured, refreshed_at: snapshot_at})
+  end
+
+  def build(:missing_backend, %DateTime{} = snapshot_at, _previous_summary) do
+    classify(%Posture{state: :missing_backend, refreshed_at: snapshot_at})
+  end
+
+  def build(rows, %DateTime{} = snapshot_at, previous_summary) when is_list(rows) do
+    previous_refs =
+      if match?(%Posture{}, previous_summary),
+        do: previous_summary.last_success_refs,
+        else: %{}
+
+    err = Enum.count(rows, fn {_m, r} -> match?({:error, _}, r) end)
+    backend_failed = backend_failed_count(rows)
+    queue_failed = queue_failed_count(rows)
+
+    # Honest "can I trust search right now?" verdict: fetch errors degrade it, and
+    # so does sync work that already failed and won't self-heal (terminal backend
+    # rejections + discarded queue jobs) — that means the live index may be missing
+    # documents. Retrying/pending work is in-flight, so it stays neutral (no crying
+    # wolf over work that may yet succeed).
+    stuck_failed = backend_failed + queue_failed
+
+    classify(%Posture{
+      state: if(err > 0 or stuck_failed > 0, do: :degraded, else: :ok),
+      rows: rows,
+      error_count: err,
+      schema_count: length(rows),
+      backend_failed_count: backend_failed,
+      queue_failed_count: queue_failed,
+      queue_observed_count: queue_observed_count(rows),
+      last_success_refs: refresh_success_refs(rows, previous_refs, snapshot_at),
+      refreshed_at: snapshot_at
+    })
   end
 
   @doc "Ordered operator next-checks for a summary, given the mount path. Caller decides how many to show."
@@ -275,26 +325,6 @@ defmodule ScrypathOps.Posture do
   defp row_class(status), do: status
 
   # ── internals ──────────────────────────────────────────────────────────────
-
-  defp scan(allowlist, opts) do
-    outcomes =
-      Task.Supervisor.async_stream_nolink(
-        ScrypathOps.TaskSupervisor,
-        allowlist,
-        &Scrypath.sync_status(&1, opts),
-        max_concurrency: 3,
-        timeout: 15_000,
-        on_timeout: :kill_task
-      )
-
-    allowlist
-    |> Enum.zip(outcomes)
-    |> Enum.map(fn
-      {mod, {:ok, result}} -> {mod, result}
-      {mod, {:exit, reason}} -> {mod, {:error, {:async_stream, reason}}}
-    end)
-    |> sort_rows()
-  end
 
   defp sort_rows(rows) do
     Enum.sort_by(rows, fn

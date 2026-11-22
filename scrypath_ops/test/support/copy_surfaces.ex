@@ -17,6 +17,7 @@ defmodule ScrypathOps.Test.CopySurfaces do
   alias ScrypathOps.Test.CopyStubs.FailedSync, as: FailedSyncStubs
   alias ScrypathOps.Test.CopyStubs.Posture, as: PostureStubs
   alias ScrypathOps.Test.CopyStubs.SyncDrift, as: SyncDriftStubs
+  alias ScrypathOps.Test.FixtureEnv
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOpsWeb.SyncDriftLive
 
@@ -29,8 +30,11 @@ defmodule ScrypathOps.Test.CopySurfaces do
     "control_room.refresh_retained" => "Search health refresh incomplete.",
     "control_room.refresh_retained_degraded" => "Search health refresh incomplete.",
     "failed_sync.after_retry" => "Oban job #991",
+    "failed_sync.delete_confirmation" => "Confirm delete sync work",
+    "failed_sync.scoped_load_error" => "Failed sync work could not load",
     "posture.default" => "Meilisearch document tasks",
     "posture.failed_row_retained" => "source-local evidence is retained from check",
+    "posture.shopadelic_degraded" => "Sync jobs and Meilisearch tasks failed",
     "sync_drift.caught_up" => "Caught up.",
     "sync_drift.default" => ~s(aria-label="Related search views"),
     "sync_drift.promotion_accepted" => ~s(id="promotion-status-result"),
@@ -38,6 +42,8 @@ defmodule ScrypathOps.Test.CopySurfaces do
     "sync_drift.queue_pending" => "Sync work is pending",
     "sync_drift.reconcile_error_retained" => ~s(id="sync-pipeline-error"),
     "sync_drift.recovery_queued" => "Refresh recovery status",
+    "sync_drift.recovery_unavailable" => "Recovery refresh could not be checked",
+    "sync_drift.recovery_verified" => "Recovery verified",
     "sync_drift.settings_missing_field" => ~s(data-missing="true")
   }
 
@@ -113,6 +119,36 @@ defmodule ScrypathOps.Test.CopySurfaces do
   # that report the retry are both on screen.
   def render("failed_sync.after_retry", %{conn: conn}),
     do: FailedSyncStubs.render_after_retry(conn)
+
+  # /ops/failed-sync for the Shopadelic failed journey after the operator pressed Retry on the failed
+  # delete (job 104): the confirmation dialog is open over the page.
+  def render("failed_sync.delete_confirmation", %{conn: conn}) do
+    with_scenario(:shopadelic_failed_journey, fn ->
+      {:ok, lv, _html} = live(conn, "/ops/failed-sync")
+      _ = render_async(lv)
+
+      lv
+      |> element("button[data-testid='failed-sync-retry'][phx-value-id='104']")
+      |> render_click()
+    end)
+  end
+
+  # /ops/failed-sync when the schema's task history is over its limit: the check could not finish, so
+  # the page says that instead of listing failed work.
+  def render("failed_sync.scoped_load_error", %{conn: conn}) do
+    with_scenario(:logistify_history_over_limit_f1, fn ->
+      {:ok, lv, _html} = live(conn, "/ops/failed-sync")
+      render_async(lv)
+    end)
+  end
+
+  # /ops/health for the Shopadelic failed journey: failed jobs and a failed Meilisearch task.
+  def render("posture.shopadelic_degraded", %{conn: conn}) do
+    with_scenario(:shopadelic_failed_journey, fn ->
+      {:ok, lv, _html} = live(conn, "/ops/health")
+      render_async(lv)
+    end)
+  end
 
   # /ops/health with one unreadable and one clear schema (the default Search health test).
   def render("posture.default", %{conn: conn}) do
@@ -221,6 +257,48 @@ defmodule ScrypathOps.Test.CopySurfaces do
     end)
   end
 
+  # The retry status block when the handle in the URL cannot be resolved (an expired receipt, another
+  # node or another organization): the page says the outcome could not be checked and shows no job.
+  def render("sync_drift.recovery_unavailable", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      {:ok, lv, _html} =
+        live(
+          conn,
+          "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA" <>
+            "&recovery=expired-or-other-node-handle&recovery_generation=0"
+        )
+
+      render_async(lv)
+    end)
+  end
+
+  # The retry status block once the retry's task and its expected documents were observed.
+  def render("sync_drift.recovery_verified", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      checked_at = ScrypathOps.Clock.utc_now()
+
+      render_with_assigns(conn, "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA", %{
+        recovery_handle: "opaque-receipt",
+        recovery_status: :verified,
+        recovery_evidence: %{
+          replacement_job: 991,
+          attempt: 1,
+          task_uid: 44,
+          index: "sdv_ops_post_a"
+        },
+        recovery_document_observation: %{
+          state: :verified,
+          reason: nil,
+          checked_at: checked_at,
+          operation: :upsert,
+          index: "sdv_ops_post_a",
+          expected_ids: ["post-6001"]
+        },
+        recovery_checked_at: checked_at
+      })
+    end)
+  end
+
   # The promotion result once Meilisearch has taken the index swap task.
   def render("sync_drift.promotion_accepted", %{conn: conn}) do
     SyncDriftStubs.with_stubs(fn ->
@@ -230,6 +308,19 @@ defmodule ScrypathOps.Test.CopySurfaces do
         promotion_loading: true
       })
     end)
+  end
+
+  # Runs `fun` with one fictional adopter scenario in the app env (the clock reads the scenario's
+  # instant) and restores the env after, whatever `fun` does.
+  defp with_scenario(id, fun) do
+    scenario = ScrypathFixtures.Scenarios.get!(id, ScrypathFixtures.preview_epoch())
+    restore = FixtureEnv.put(scenario)
+
+    try do
+      fun.()
+    after
+      restore.()
+    end
   end
 
   # A route cannot reach these states, so a mounted view's own assigns are merged with the

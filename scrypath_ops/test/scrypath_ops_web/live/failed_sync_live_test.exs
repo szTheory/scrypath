@@ -6,9 +6,14 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias Scrypath.Operator.FailedSyncWorkInspection
+  alias ScrypathOps.FailedSyncView
   alias ScrypathOps.Test.CopyStubs.FailedSync, as: FailedSyncStubs
+  alias ScrypathOps.Test.FixtureEnv
+  alias ScrypathOps.Test.HtmlCanon
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
+  alias ScrypathOpsWeb.Components.FailedSync
 
   defmodule FailingOban do
     # An enqueue that fails with the kind of term a real queue returns: a map holding atoms.
@@ -73,14 +78,16 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     }
   end
 
-  defp sudo!(view) do
+  # A confirmed operator by default (confirmed a minute ago, window 300 s); pass -600 for one whose
+  # confirmation is stale.
+  defp sudo!(view, sudo_at_offset \\ -60) do
     put_live_assigns(view,
       current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
       operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
         user_id: "user_123",
         active_org_id: "org_456",
         impersonator_user_id: nil,
-        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+        sudo_at: DateTime.add(DateTime.utc_now(), sudo_at_offset, :second)
       }
     )
   end
@@ -537,32 +544,79 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
   end
 
-  test "sigra retry redirects stale sudo and keeps the failed-sync row in place", %{} do
-    socket = %Phoenix.LiveView.Socket{
-      assigns: %{
-        __changed__: %{},
-        flash: %{},
-        operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
-          user_id: "user_123",
-          active_org_id: "org_456",
-          impersonator_user_id: nil,
-          sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
-        },
-        schema_allowlist: [OpsPostA, OpsPostB],
-        loads: nil,
-        recovery_receipts: %{},
-        mount_path: "/ops",
-        context_generation: 0
-      },
-      host_uri: URI.parse("https://scrypath.example/ops/failed-sync")
-    }
+  # Phase 197 PILOT-01: this test used to hand-build a socket with no loaded rows, so no row was
+  # ever found and the sudo gate was never reached for a real row. It now drives a mounted view and
+  # clicks the retry button the page renders.
+  test "stale sudo sends a click on a rendered retry button to the confirm page and keeps the row",
+       %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+    retry = "[data-testid='failed-sync-retry'][phx-value-id='501']"
+    assert has_element?(view, retry)
 
-    {:noreply, socket} =
-      ScrypathOpsWeb.FailedSyncLive.handle_event("retry", %{"id" => "501"}, socket)
+    sudo!(view, -600)
+    assert {:error, {:live_redirect, %{to: to}}} = view |> element(retry) |> render_click()
 
-    assert inspect(socket.redirected) =~ "/sudo/confirm"
-    assert inspect(socket.redirected) =~ "return_to=%2Fops%2Ffailed-sync"
+    assert String.starts_with?(to, "/sudo/confirm")
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
+
+    # The row is still retryable on a fresh mount.
+    {:ok, fresh, _html} = live(conn, ~p"/ops/failed-sync")
+    assert has_element?(fresh, retry)
+
+    # Positive control: the same click with a fresh confirmation is queued exactly once.
+    sudo!(fresh)
+    accepted = fresh |> element(retry) |> render_click()
+    assert accepted =~ "Retry queued"
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 1
+  end
+
+  # Phase 197 defect D1: LiveView prunes the path and query from `host_uri`, so a stale-sudo
+  # operator used to come back from the confirm page to "/" and lose the filters they had set.
+  test "stale sudo returns the operator to the filtered page they left", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(603, OpsPostA, error: "** (Req.TransportError) connection refused")
+    ])
+
+    left = "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA&cause=transport"
+    {:ok, view, _html} = live(conn, left)
+    retry = "[data-testid='failed-sync-retry'][phx-value-id='603']"
+    assert has_element?(view, retry)
+
+    sudo!(view, -600)
+    assert {:error, {:live_redirect, %{to: to}}} = view |> element(retry) |> render_click()
+
+    assert %URI{path: "/sudo/confirm", query: query} = URI.parse(to)
+    assert %{"return_to" => ^left} = URI.decode_query(query)
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 0
+  end
+
+  describe "OnMount.return_to_path/1" do
+    alias ScrypathOpsWeb.Live.OnMount
+
+    test "keeps the path and the query of a request URL and drops the host" do
+      assert OnMount.return_to_path("https://ops.example.com/ops/failed-sync?schema=A&cause=b") ==
+               "/ops/failed-sync?schema=A&cause=b"
+
+      assert OnMount.return_to_path("http://localhost:4002/ops/health") == "/ops/health"
+      assert OnMount.return_to_path("http://localhost:4002/ops/health?") == "/ops/health"
+    end
+
+    test "never returns a target that could leave the host" do
+      # A protocol-relative path would send the browser to another host after the confirmation.
+      assert OnMount.return_to_path("https://ops.example.com//evil.example/x") == nil
+      assert OnMount.return_to_path("//evil.example/x") == nil
+      assert OnMount.return_to_path("https://ops.example.com/\\evil.example") == nil
+      assert OnMount.return_to_path("https://ops.example.com/ops/\r\nSet-Cookie: a=b") == nil
+    end
+
+    test "returns nil when there is no usable absolute path" do
+      assert OnMount.return_to_path("https://ops.example.com") == nil
+      assert OnMount.return_to_path("ops/failed-sync") == nil
+      assert OnMount.return_to_path("") == nil
+      assert OnMount.return_to_path(nil) == nil
+    end
   end
 
   test "sigra retry refreshes in place and keeps receipts across filter changes", %{conn: conn} do
@@ -786,6 +840,468 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     end
   end
 
+  # ── The view-model (Phase 197): classification is decided here, never in the markup ──────────────
+
+  describe "FailedSyncView.build/4" do
+    test "the failed journey's rows carry a closed action: Retry for the Oban jobs, none for the task" do
+      view = journey_view()
+
+      assert view.state == :ready
+      assert view.summary_kind == :warning
+      assert view.headline == "4 failed, 1 retrying"
+
+      actions = Map.new(view.rows, &{&1.id, &1.action})
+
+      assert actions == %{
+               43 => :ineligible,
+               101 => :retry,
+               102 => :retry,
+               103 => :retry,
+               104 => :retry
+             }
+
+      # The facts the page shows today are on the row.
+      row_101 = Enum.find(view.rows, &(&1.id == 101))
+      assert row_101.schema == ScrypathFixtures.Shopadelic.Product
+      assert row_101.operation == :upsert
+      assert row_101.cause == :transport
+      assert row_101.sync_status == :failed
+      assert row_101.attempts == "8 of 8"
+      assert row_101.dom_id == "ScrypathFixtures-Shopadelic-Product-oban-101"
+      assert row_101.record_ids != nil and row_101.recoverable?
+      assert is_binary(row_101.reason)
+
+      row_102 = Enum.find(view.rows, &(&1.id == 102))
+      assert row_102.sync_status == :retrying
+      assert %DateTime{} = row_102.next_attempt_at
+
+      row_43 = Enum.find(view.rows, &(&1.id == 43))
+      assert row_43.source == :meilisearch
+      assert row_43.cause == :validation
+      refute row_43.recoverable?
+      assert row_43.record_ids == nil
+    end
+
+    test "a row with a receipt has the receipt action, and only that row" do
+      {loads, scope} = journey_loads()
+      entry = loads |> FailedSyncView.all_rows() |> Enum.find(&(&1.id == 101))
+
+      receipt = %{
+        replacement_job: 991,
+        handle: "h",
+        generation: 0,
+        operation: :upsert,
+        index: "i"
+      }
+
+      view =
+        FailedSyncView.build(
+          loads,
+          scope,
+          %{FailedSyncView.row_key(entry) => receipt},
+          ScrypathFixtures.preview_epoch()
+        )
+
+      actions = Map.new(view.rows, &{&1.id, &1.action})
+      assert actions[101] == :receipt
+      assert Enum.find(view.rows, &(&1.id == 101)).receipt == receipt
+
+      assert Map.delete(actions, 101) == %{
+               43 => :ineligible,
+               102 => :retry,
+               103 => :retry,
+               104 => :retry
+             }
+    end
+
+    test "every cause is in the closed set, and an unclassified row is unknown" do
+      view = journey_view()
+      assert Enum.all?(view.rows, &(&1.cause in FailedSyncView.causes()))
+
+      unclassified = %{journey_entry(101) | reason_class: nil}
+      assert FailedSyncView.cause(unclassified) == :unknown
+      assert FailedSyncView.cause(%{journey_entry(101) | reason_class: :surprise}) == :unknown
+    end
+
+    test "the page state is one of four, decided from the scope and the loads" do
+      now = ScrypathFixtures.preview_epoch()
+      {loads, scope} = journey_loads()
+
+      assert FailedSyncView.build(loads, scope, %{}, now).state == :ready
+      assert FailedSyncView.build(:missing_backend, scope, %{}, now).state == :missing_backend
+
+      assert FailedSyncView.build(nil, %{scope | error: :no_schemas}, %{}, now).state ==
+               :no_schemas
+
+      assert FailedSyncView.build(nil, %{scope | error: :unavailable}, %{}, now).state ==
+               :unavailable
+
+      # A nil load with no scope error is a state the LiveView never produces: it is refused, not
+      # rendered as a healthy page.
+      assert_raise FunctionClauseError, fn -> FailedSyncView.build(nil, scope, %{}, now) end
+    end
+
+    test "the summary kind follows the rows, the filters and the load errors" do
+      now = ScrypathFixtures.preview_epoch()
+      {loads, scope} = journey_loads()
+      [{mod, _}] = loads
+
+      assert FailedSyncView.build(loads, scope, %{}, now).summary_kind == :warning
+
+      # Filtered to a cause no row has: work exists but none matches.
+      neutral =
+        FailedSyncView.build(loads, %{scope | cause_filter: [:backend_rejected]}, %{}, now)
+
+      assert neutral.summary_kind == :neutral
+      assert neutral.headline == "No sync work matches these filters"
+      assert neutral.filtered_out?
+      assert neutral.hidden_count == 5
+
+      # Two schemas, one failed to load and the other has nothing: partial, not success.
+      other = ScrypathOps.Test.OpsPostA
+
+      partial =
+        FailedSyncView.build(
+          [{mod, {:error, :timeout}}, {other, {:ok, []}}],
+          %{scope | allowlist: [mod, other]},
+          %{},
+          now
+        )
+
+      assert partial.summary_kind == :partial
+      assert partial.headline == "No failed or retrying sync work in the schemas that loaded"
+      assert partial.errors == [{mod, :timeout}]
+      refute partial.all_failed?
+
+      success = FailedSyncView.build([{mod, {:ok, []}}], scope, %{}, now)
+      assert success.summary_kind == :success
+      assert success.headline == "No failed or retrying sync work"
+
+      # Every schema in scope failed to load: the verdict is withheld, the errors stay.
+      assert FailedSyncView.build([{mod, {:error, :timeout}}], scope, %{}, now).all_failed?
+    end
+
+    test "build/4 is pure: the same inputs give the same view, and now is only what it is given" do
+      {loads, scope} = journey_loads()
+      now = ScrypathFixtures.preview_epoch()
+
+      assert FailedSyncView.build(loads, scope, %{}, now) ==
+               FailedSyncView.build(loads, scope, %{}, now)
+
+      later = DateTime.add(now, 3600, :second)
+      assert FailedSyncView.build(loads, scope, %{}, later).now == later
+    end
+
+    test "an open delete retry is a row, and only a delete with a recovery action" do
+      now = ScrypathFixtures.preview_epoch()
+      {loads, scope} = journey_loads()
+      delete_entry = journey_entry(104)
+
+      view =
+        FailedSyncView.build(
+          loads,
+          %{scope | delete_confirmation: FailedSyncView.row_key(delete_entry)},
+          %{},
+          now
+        )
+
+      assert view.delete_row.id == 104
+      assert view.delete_row.operation == :delete
+
+      # An upsert job's key opens nothing.
+      upsert_key = FailedSyncView.row_key(journey_entry(101))
+
+      refute FailedSyncView.build(loads, %{scope | delete_confirmation: upsert_key}, %{}, now).delete_row
+    end
+  end
+
+  # The story renders the same function components the page does. Each area gets one seam test: the
+  # mounted page contains exactly the component's own output for the page's own view-model.
+  describe "seam: failed_row (story output equals production output)" do
+    setup do
+      scenario =
+        ScrypathFixtures.Scenarios.get!(
+          :shopadelic_failed_journey,
+          ScrypathFixtures.preview_epoch()
+        )
+
+      on_exit(FixtureEnv.put(scenario))
+      :ok
+    end
+
+    test "each mounted row for shopadelic_failed_journey equals the component output", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+      _ = render_async(view)
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      now = ScrypathOps.Clock.utc_now()
+      page_view = page_view(assigns, now)
+      mounted = view |> render() |> LazyHTML.from_fragment()
+
+      # The cause is real data: the five failed journey rows, including the one with a next try.
+      assert Enum.map(page_view.rows, & &1.id) |> Enum.sort() == [43, 101, 102, 103, 104]
+      assert Enum.any?(page_view.rows, &(&1.next_attempt_at != nil))
+
+      for row <- page_view.rows do
+        selector = "[id='failed-row-#{row.dom_id}']"
+        mounted_row = LazyHTML.query(mounted, selector)
+
+        component_row =
+          row |> component_html(now, assigns.mount_path) |> LazyHTML.query(selector)
+
+        assert Enum.count(mounted_row) == 1
+        assert Enum.count(component_row) == 1
+        assert HtmlCanon.canon(mounted_row) == HtmlCanon.canon(component_row)
+      end
+
+      # Control: the comparison can fail. A different row action changes the canonical tree.
+      row = Enum.find(page_view.rows, &(&1.id == 101))
+      selector = "[id='failed-row-#{row.dom_id}']"
+
+      changed =
+        %{row | action: :ineligible, recoverable?: false}
+        |> component_html(now, assigns.mount_path)
+        |> LazyHTML.query(selector)
+
+      refute HtmlCanon.canon(LazyHTML.query(mounted, selector)) == HtmlCanon.canon(changed)
+    end
+
+    test "a mounted row holding a receipt equals the component output for it", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+      entry = journey_entry(101)
+
+      # The shape `FailedSyncLive` stores after a retry is accepted (the journey drives the real
+      # retry; this test pins what the page shows for such a receipt).
+      receipt = %{
+        replacement_job: 991,
+        attempt: 1,
+        operation: :upsert,
+        index: "shopadelic_product",
+        generation: 0,
+        handle: "seam-handle",
+        state: :accepted
+      }
+
+      put_live_assigns(view, recovery_receipts: %{FailedSyncView.row_key(entry) => receipt})
+      # A patch to the same page makes the LiveView re-render with the injected receipt.
+      _ = render_patch(view, ~p"/ops/failed-sync")
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      now = ScrypathOps.Clock.utc_now()
+      row = assigns |> page_view(now) |> Map.fetch!(:rows) |> Enum.find(&(&1.id == 101))
+      assert row.action == :receipt
+
+      selector = "[id='failed-row-#{row.dom_id}']"
+      mounted_row = view |> render() |> LazyHTML.from_fragment() |> LazyHTML.query(selector)
+
+      component_row =
+        row |> component_html(now, assigns.mount_path) |> LazyHTML.query(selector)
+
+      assert Enum.count(mounted_row) == 1
+      assert HtmlCanon.canon(mounted_row) =~ "Retry queued"
+      assert HtmlCanon.canon(mounted_row) == HtmlCanon.canon(component_row)
+
+      refute has_element?(
+               view,
+               "[id='failed-row-#{row.dom_id}'] button[data-testid='failed-sync-retry']"
+             )
+    end
+  end
+
+  # Each case is mounted through the real router under FixtureEnv. When the page is ready, its
+  # summary and filters, and in every state the whole page, must canonicalize equal to the shared
+  # components' own output for the page's own view-model. The stories render the same functions, so
+  # this is what lets a story claim to show the page. The four page states are all reached: ready,
+  # no schemas, missing backend and an unavailable schema.
+  describe "seam: failed_summary, failed_filters and surface (story output equals production output)" do
+    for {scenario_id, query, state} <- [
+          {:shopadelic_failed_journey, "", :ready},
+          {:shopadelic_failed_journey, "?cause=transport", :ready},
+          {:shopadelic_failed_journey, "?cause=backend_rejected", :ready},
+          {:shopadelic_settings_aligned, "", :ready},
+          {:logistify_history_over_limit_f1, "", :ready},
+          {:wikily_first_delete_failed, "", :ready},
+          {:wikily_unconfigured, "", :no_schemas},
+          {:wikily_missing_backend, "", :missing_backend},
+          {:shopadelic_failed_journey, "?schema=No.Such.Schema", :unavailable}
+        ] do
+      test "#{scenario_id}#{query}: the #{state} page equals the component output", %{conn: conn} do
+        scenario_id = unquote(scenario_id)
+        scenario = ScrypathFixtures.Scenarios.get!(scenario_id, ScrypathFixtures.preview_epoch())
+        on_exit(FixtureEnv.put(scenario))
+
+        {:ok, view, _html} = live(conn, "/ops/failed-sync" <> unquote(query))
+        _ = render_async(view)
+
+        assigns = :sys.get_state(view.pid).socket.assigns
+        now = ScrypathOps.Clock.utc_now()
+        page_view = page_view(assigns, now)
+        mounted = view |> render() |> LazyHTML.from_fragment()
+
+        # The cause is real data: the page reached the state this case names.
+        assert page_view.state == unquote(state)
+
+        if page_view.state == :ready do
+          summary =
+            "[data-testid='failed-sync-load-error'], section[aria-labelledby='failed-sync-summary-heading']"
+
+          mounted_summary = LazyHTML.query(mounted, summary)
+
+          component_summary =
+            component_fragment(&FailedSync.failed_summary/1,
+              view: page_view,
+              mount_path: assigns.mount_path
+            )
+            |> LazyHTML.query(summary)
+
+          assert Enum.count(mounted_summary) > 0
+          assert HtmlCanon.canon(mounted_summary) == HtmlCanon.canon(component_summary)
+
+          if page_view.show_filters? do
+            filters = "#failed-sync-filters"
+            mounted_filters = LazyHTML.query(mounted, filters)
+
+            component_filters =
+              component_fragment(&FailedSync.failed_filters/1, view: page_view)
+              |> LazyHTML.query(filters)
+
+            assert Enum.count(mounted_filters) == 1
+            assert HtmlCanon.canon(mounted_filters) == HtmlCanon.canon(component_filters)
+          end
+        end
+
+        surface_assigns = [
+          view: page_view,
+          mount_path: assigns.mount_path,
+          flash: assigns.flash,
+          shell: assigns.shell,
+          page_title: assigns.page_title,
+          last_refresh_at: assigns.last_refresh_at
+        ]
+
+        page = LazyHTML.query(mounted, "[data-phx-main] > *")
+        component_page = component_fragment(&FailedSync.surface/1, surface_assigns)
+
+        assert Enum.count(page) > 0
+        assert HtmlCanon.canon(page) == HtmlCanon.canon(component_page)
+
+        # Control: the comparison can fail. A different mount path changes every shell link.
+        changed_page =
+          component_fragment(
+            &FailedSync.surface/1,
+            Keyword.put(surface_assigns, :mount_path, "/elsewhere")
+          )
+
+        refute HtmlCanon.canon(page) == HtmlCanon.canon(changed_page)
+      end
+    end
+
+    test "the delete confirmation the mounted page opens equals the component output", %{
+      conn: conn
+    } do
+      scenario =
+        ScrypathFixtures.Scenarios.get!(
+          :shopadelic_failed_journey,
+          ScrypathFixtures.preview_epoch()
+        )
+
+      on_exit(FixtureEnv.put(scenario))
+
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+      refute has_element?(view, "#retry-delete-modal")
+
+      # Job 104 is the failed delete: pressing its rendered Retry opens the confirmation.
+      view
+      |> element("button[data-testid='failed-sync-retry'][phx-value-id='104']")
+      |> render_click()
+
+      assert has_element?(view, "#retry-delete-modal")
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      page_view = page_view(assigns, ScrypathOps.Clock.utc_now())
+      assert page_view.delete_row.id == 104
+
+      mounted =
+        view |> render() |> LazyHTML.from_fragment() |> LazyHTML.query("#retry-delete-modal")
+
+      component =
+        component_fragment(&FailedSync.delete_confirmation/1, row: page_view.delete_row)
+        |> LazyHTML.query("#retry-delete-modal")
+
+      assert Enum.count(mounted) == 1
+      assert HtmlCanon.canon(mounted) =~ "Confirm delete sync work"
+      assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component)
+
+      # Control: a different document list changes the canonical tree.
+      recovery = page_view.delete_row.entry.recovery
+      reference = put_in(recovery.reference, [:payload, "document_ids"], ["OTHER-1"])
+      entry = %{page_view.delete_row.entry | recovery: %{recovery | reference: reference}}
+      changed_row = %{page_view.delete_row | entry: entry}
+
+      changed =
+        component_fragment(&FailedSync.delete_confirmation/1, row: changed_row)
+        |> LazyHTML.query("#retry-delete-modal")
+
+      refute HtmlCanon.canon(mounted) == HtmlCanon.canon(changed)
+    end
+
+    test "the retry receipt the mounted page shows equals the component output", %{conn: conn} do
+      scenario =
+        ScrypathFixtures.Scenarios.get!(
+          :shopadelic_failed_journey,
+          ScrypathFixtures.preview_epoch()
+        )
+
+      on_exit(FixtureEnv.put(scenario))
+
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+      receipt = %{
+        replacement_job: 991,
+        attempt: 1,
+        operation: :upsert,
+        index: "shopadelic_product",
+        generation: 0,
+        handle: "seam-handle",
+        state: :accepted
+      }
+
+      put_live_assigns(view,
+        recovery_receipts: %{FailedSyncView.row_key(journey_entry(101)) => receipt}
+      )
+
+      _ = render_patch(view, ~p"/ops/failed-sync")
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      page_view = page_view(assigns, ScrypathOps.Clock.utc_now())
+      row = Enum.find(page_view.rows, &(&1.id == 101))
+      assert row.action == :receipt
+
+      selector = "[data-testid='recovery-receipt']"
+      mounted = view |> render() |> LazyHTML.from_fragment() |> LazyHTML.query(selector)
+
+      component =
+        component_fragment(&FailedSync.retry_receipt/1, row: row, mount_path: assigns.mount_path)
+        |> LazyHTML.query(selector)
+
+      assert Enum.count(mounted) == 1
+      assert HtmlCanon.canon(mounted) =~ "Retry queued"
+      assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component)
+
+      # Control: a receipt without a handle has no status link, so it is a different tree.
+      no_handle =
+        component_fragment(&FailedSync.retry_receipt/1,
+          row: %{row | receipt: %{receipt | handle: nil}},
+          mount_path: assigns.mount_path
+        )
+        |> LazyHTML.query(selector)
+
+      refute HtmlCanon.canon(mounted) == HtmlCanon.canon(no_handle)
+    end
+  end
+
   defp put_delete_job!(document_ids) do
     Application.put_env(:scrypath_ops, :oban_jobs, [
       %{
@@ -816,5 +1332,72 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
       %{state | socket: socket}
     end)
+  end
+
+  # The Shopadelic failed journey's loads and scope, built the way the story builds them: straight
+  # from `Scrypath.failed_sync_work/2` over the scenario's own options, no process running.
+  defp journey_loads do
+    scenario =
+      ScrypathFixtures.Scenarios.get!(
+        :shopadelic_failed_journey,
+        ScrypathFixtures.preview_epoch()
+      )
+
+    opts = Keyword.put(scenario.scrypath_opts, :reason_class_counts, true)
+
+    loads =
+      for mod <- scenario.allowlist do
+        {:ok, %FailedSyncWorkInspection{entries: entries}} = Scrypath.failed_sync_work(mod, opts)
+        {mod, {:ok, entries}}
+      end
+
+    {loads, view_scope(scenario.allowlist)}
+  end
+
+  defp journey_view do
+    {loads, scope} = journey_loads()
+    FailedSyncView.build(loads, scope, %{}, ScrypathFixtures.preview_epoch())
+  end
+
+  defp journey_entry(id) do
+    {loads, _scope} = journey_loads()
+    loads |> FailedSyncView.all_rows() |> Enum.find(&(&1.id == id))
+  end
+
+  defp view_scope(allowlist) do
+    %{
+      error: nil,
+      allowlist: allowlist,
+      schema_filter: [],
+      cause_filter: [],
+      delete_confirmation: nil
+    }
+  end
+
+  # The view the mounted page rendered, rebuilt from its own state.
+  defp page_view(assigns, now) do
+    scope = %{
+      error: assigns.scope_error,
+      allowlist: assigns.schema_allowlist,
+      schema_filter: assigns.schema_filter,
+      cause_filter: assigns.cause_filter,
+      delete_confirmation: assigns.delete_confirmation
+    }
+
+    FailedSyncView.build(assigns.loads, scope, assigns.recovery_receipts, now)
+  end
+
+  # A Failed sync row rendered by the shared component, as a parsed fragment.
+  defp component_html(row, now, mount_path) do
+    assigns = [row: row, now: now, mount_path: mount_path]
+
+    (&FailedSync.failed_row/1)
+    |> render_component(assigns)
+    |> LazyHTML.from_fragment()
+  end
+
+  # A shared component rendered with the given assigns, as a parsed fragment.
+  defp component_fragment(component, assigns) do
+    component |> render_component(assigns) |> LazyHTML.from_fragment()
   end
 end

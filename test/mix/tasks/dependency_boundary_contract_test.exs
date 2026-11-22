@@ -753,6 +753,7 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
         {~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller"),
          ~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller phoenix_storybook mdex mdex_native")},
         {", PhoenixStorybook, MDEx]", ", PhoenixStorybook]"},
+        {", ScrypathOps.Catalog.Endpoint, ScrypathFixtures", ", ScrypathFixtures"},
         {~s("host|$base_url" "ops|$ops_base_url"), ~s("host|$base_url")}
       ]
 
@@ -774,6 +775,17 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
         assert storybook_script_violations(mutated) != [],
                "the script check accepted a planted edit: #{from} -> #{to}"
       end
+
+      # The endpoint mutant is reported by its own message and by no other check.
+      endpoint_mutant =
+        String.replace(
+          script,
+          ", ScrypathOps.Catalog.Endpoint, ScrypathFixtures",
+          ", ScrypathFixtures"
+        )
+
+      assert storybook_script_violations(endpoint_mutant) ==
+               ["the runtime probe must forbid ScrypathOps.Catalog.Endpoint"]
     end
 
     test "catalog flag is off whenever the test endpoint is not loopback" do
@@ -793,6 +805,29 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       assert catalog_bind_violation({{0, 0, 0, 0}, true}) =~ "loopback"
       assert catalog_bind_violation({nil, true}) =~ "loopback"
       assert catalog_bind_violation({{0, 0, 0, 0}, false}) == nil
+    end
+
+    test "the catalog server endpoint binds loopback in dev and is never started by the test config" do
+      dev = read_catalog_endpoint_bind!("scrypath_ops/config/dev.exs", :dev)
+      assert dev == {127, 0, 0, 1}
+      assert catalog_endpoint_bind_violation(dev) == nil
+      assert catalog_endpoint_bind_violation({0, 0, 0, 0, 0, 0, 0, 1}) == nil
+
+      # Planted: any other bind, and an unset one, is reported against the endpoint and says why.
+      for planted <- [{0, 0, 0, 0}, {10, 0, 0, 5}, {0, 0, 0, 0, 0, 0, 0, 0}, nil] do
+        message = catalog_endpoint_bind_violation(planted)
+
+        assert message =~ "ScrypathOps.Catalog.Endpoint",
+               "no endpoint named for #{inspect(planted)}"
+
+        assert message =~ "loopback", "no cause named for #{inspect(planted)}"
+      end
+
+      # The test environment never starts this server: no `server: true`, so no port is bound.
+      assert read_catalog_endpoint_config!("scrypath_ops/config/test.exs", :test, "[:server]") in [
+               nil,
+               false
+             ]
     end
   end
 
@@ -1143,6 +1178,10 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
          [_, names] -> not (names =~ "PhoenixStorybook" and names =~ "MDEx")
          nil -> true
        end, "the runtime probe must forbid the PhoenixStorybook and MDEx modules"},
+      {case Regex.run(modules, script) do
+         [_, names] -> not (names =~ "ScrypathOps.Catalog.Endpoint")
+         nil -> true
+       end, "the runtime probe must forbid ScrypathOps.Catalog.Endpoint"},
       {not (script =~ ~s(for catalog_target in "host|$base_url" "ops|$ops_base_url"; do)),
        "the /storybook 404 probe must cover both the host and standalone Ops"},
       {not (script =~ ~s([[ "$catalog_status" == "404" ]])),
@@ -1323,6 +1362,32 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     if flag == true and not loopback? do
       "the catalog flag is on while the endpoint binds #{inspect(ip)}; it must stay loopback-only"
     end
+  end
+
+  defp catalog_endpoint_bind_violation(ip) do
+    unless ip in [{127, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 0, 1}] do
+      "ScrypathOps.Catalog.Endpoint binds #{inspect(ip)}; the catalog server must stay loopback-only"
+    end
+  end
+
+  defp read_catalog_endpoint_bind!(config_file, env),
+    do: read_catalog_endpoint_config!(config_file, env, "[:http][:ip]")
+
+  # `access` is the Access path appended to the endpoint's config, for example "[:http][:ip]".
+  defp read_catalog_endpoint_config!(config_file, env, access) do
+    program =
+      ~s|c = Config.Reader.read!("#{config_file}", env: :#{env})[:scrypath_ops]; | <>
+        "IO.puts(inspect(c[ScrypathOps.Catalog.Endpoint]#{access}))"
+
+    {output, status} =
+      System.cmd(System.find_executable("elixir"), ["-e", program], stderr_to_stdout: true)
+
+    assert status == 0, "#{config_file}: config read failed: #{output}"
+
+    {value, _binding} =
+      output |> String.split("\n", trim: true) |> List.last() |> Code.eval_string()
+
+    value
   end
 
   # Reads a config file in a subprocess so PHX_SERVER can differ per call while this module stays async.

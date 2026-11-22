@@ -263,8 +263,9 @@ The brand and UI milestone (v1.46) may add at most 12 new required gates, and th
 | ScrypathOps re-skin component contract | `scrypath_ops/test/scrypath_ops_web/reskin_component_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops component catalog contract replaces it in v1.48 or scrypath_ops leaves this repository | One assertion edit when a status word, confirm label or row-action rule changes |
 | Website static contract | `test/mix/tasks/website_contract_test.exs` (runs `website/scripts/site-contract.test.mjs`) | `core` and `repository-contracts` | Delete if the website leaves this repository or stops building from the pinned brand | None unless a brand asset or token role changes; otherwise one role-map or allowed-character edit |
 | ScrypathOps copy rules table | `scrypath_ops/test/scrypath_ops_web/copy_rules_contract_test.exs` (rows in `scrypath_ops/test/support/copy_rules.json`) | `ops-ui (path-scoped)` | Delete when the v1.48 rendered-text copy lint ingests `copy_rules.json` and enforces the same rows, or when scrypath_ops leaves this repository | One row edit when a glossary status word changes; one surface edit when a covered LiveView state moves |
+| Component catalog contract (renders every story in light and dark, then checks route and component coverage, identical variations, DOM hygiene, copy rules and story provenance) | `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` | `ops-ui (path-scoped)` | Delete if the component catalog leaves `scrypath_ops` or moves to its own Mix project (the Storybook boundary row's trigger), or replace it when stories are generated from another source; drops to advisory if red twice in 30 days for non-defects (budget rule) | One `@no_story` entry added or removed per new or newly storied component or route, one description and provenance line per new variation; a new story needs no test edit (the checks read the story index); a changed `copy_rules.json` row re-runs over every story |
 
-Budget used: 10 of 12.
+Budget used: 11 of 12.
 
 ### Exact-source cache acceptance probes
 

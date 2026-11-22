@@ -109,6 +109,59 @@ export function previewSourceErrors(expected, mounted, mainIncluded, endpointMat
   return errors;
 }
 
+const catalogMarkerAttributes = { mainSha: "data-catalog-main-sha", headSha: "data-catalog-head-sha", dirty: "data-catalog-dirty", checkout: "data-catalog-checkout", epoch: "data-catalog-epoch" };
+
+// The five build markers the storybook's welcome page prints (scrypath_ops/storybook/welcome.story.exs).
+// A missing marker is null. Pure: the page is parsed as text, never evaluated.
+export function parseCatalogMarkers(html) {
+  const unescape = (value) => value.replace(/&(quot|amp|lt|gt|#39|#x27);/g, (_, entity) => ({ quot: '"', amp: "&", lt: "<", gt: ">", "#39": "'", "#x27": "'" })[entity]);
+  const markers = {};
+  for (const [key, attribute] of Object.entries(catalogMarkerAttributes)) {
+    const match = new RegExp(`<[a-zA-Z][^>]*?\\s${attribute}="([^"]*)"`).exec(String(html || ""));
+    markers[key] = match ? unescape(match[1]) : null;
+  }
+  return markers;
+}
+
+// What is wrong with the storybook as a review surface, one message per cause; [] when it is current.
+// `printedMain` and `printedHead` are what its welcome page prints; `localMain` and `localHead` are this
+// checkout's origin/main and HEAD (12 characters); `remoteMain` is the remote main (any length, compared on 12).
+export function storybookErrors({ expectedCheckout, printedCheckout, printedMain, printedHead, localMain, localHead, remoteMain, mainIncluded = true, markersFound, reachable }) {
+  if (!reachable) return ["Storybook is not reachable at the URL recorded in .planning/UI-PREVIEW.json. Start it with the block's start command."];
+  if (!markersFound) return ["Storybook landing page does not carry the catalog markers (data-catalog-*); the recorded address may belong to another program."];
+  const errors = [];
+  if (printedCheckout !== expectedCheckout) errors.push(`Storybook checkout mismatch: it serves ${printedCheckout}; expected ${expectedCheckout}.`);
+  if (printedMain !== localMain) errors.push(`Storybook main@${printedMain} differs from this checkout's origin/main ${localMain}. Restart the storybook after refreshing.`);
+  if (printedHead !== undefined && localHead !== undefined && printedHead !== localHead) errors.push(`Storybook was started at HEAD ${printedHead}; this checkout is at ${localHead}. Restart the storybook.`);
+  if (localMain !== String(remoteMain || "").slice(0, 12)) errors.push(`Local origin/main ${localMain} is stale against the remote main ${String(remoteMain || "").slice(0, 12)}. Refresh and reconcile main before treating the storybook as latest.`);
+  if (!mainIncluded) errors.push("Checkout does not include origin/main. Reconcile newer merged work before reviewing the current storybook.");
+  return errors;
+}
+
+const loopbackHosts = new Set(["127.0.0.1", "localhost", "[::1]"]);
+
+// The storybook check of ui:preflight, independent of the 4002 preview: reads the `storybook` block
+// from UI-PREVIEW.json, fetches its landing page (loopback only, 5 s) and compares what it prints.
+export async function checkStorybook({ block, expectedCheckout, localMain, localHead, remoteMain, mainIncluded, timeoutMs = 5000 }) {
+  if (!block || typeof block !== "object") return { ok: false, errors: ["No storybook block in .planning/UI-PREVIEW.json."] };
+  let landing;
+  try {
+    const base = new URL(block.url);
+    landing = new URL(block.landing || "/storybook/welcome", base);
+    if (!loopbackHosts.has(base.hostname) || landing.origin !== base.origin) return { ok: false, url: String(block.url), errors: ["The storybook URL must be a loopback address; the check fetches nothing else."] };
+    if (base.port !== String(block.port)) return { ok: false, url: String(block.url), errors: [`The storybook block disagrees with itself: url ${block.url} and port ${block.port}.`] };
+  } catch { return { ok: false, url: String(block.url), errors: ["The storybook block has an unusable url or landing path."] }; }
+  let html = null;
+  try {
+    const response = await fetch(landing, { redirect: "manual", signal: AbortSignal.timeout(timeoutMs) });
+    if (response.status === 200) html = await response.text();
+  } catch { html = null; }
+  const markers = html === null ? null : parseCatalogMarkers(html);
+  const markersFound = markers !== null && Object.values(markers).every((value) => value !== null);
+  const errors = storybookErrors({ expectedCheckout, printedCheckout: markers?.checkout, printedMain: markers?.mainSha, printedHead: markers?.headSha, localMain, localHead, remoteMain, mainIncluded, markersFound, reachable: html !== null });
+  return { ok: errors.length === 0, url: String(landing), markers: markersFound ? markers : null, local_main: localMain, remote_main: String(remoteMain || "").slice(0, 12), errors };
+}
+
 export function entryFixtureErrors(deployment, surface, text) {
   const requirements = {
     "host:control-room": ["3 sync jobs failed"],
@@ -787,14 +840,41 @@ async function captureAll() {
 }
 
 async function preflight() {
-  const runtime = await verifyPreviewSource();
-  const remoteMain = runGit(["ls-remote", "--exit-code", "origin", "refs/heads/main"], { timeout: 15_000, maxBuffer: 1024 * 1024 }).trim().split(/\s+/)[0];
-  const errors = previewSourceErrors(await realpath(repoRoot), runtime.mount, runtime.main_included, true, remoteMain === runtime.main_ref);
-  if (errors.length) throw new Error(errors.join("\n"));
-  const source = await sourceIdentity();
-  const branch = runGit(["branch", "--show-current"]).trim();
-  const pending = runGit(["status", "--porcelain", "--untracked-files=all"]).split("\n").filter(Boolean);
-  console.log(JSON.stringify({ checkout: repoRoot, command_cwd: process.cwd(), branch, source, runtime: { ...runtime, remote_main_current: true }, pending_work: pending }, null, 2));
+  const attempt = (action) => { try { return { value: action() }; } catch (error) { return { error: error.message }; } };
+  const remote = attempt(() => runGit(["ls-remote", "--exit-code", "origin", "refs/heads/main"], { timeout: 15_000, maxBuffer: 1024 * 1024 }).trim().split(/\s+/)[0]);
+  // The two checks are independent: a missing container must not hide the storybook result, and the reverse.
+  let runtime = null;
+  let preview;
+  try {
+    runtime = await verifyPreviewSource();
+    const errors = previewSourceErrors(await realpath(repoRoot), runtime.mount, runtime.main_included, true, remote.value === runtime.main_ref);
+    if (errors.length) throw new Error(errors.join("\n"));
+    preview = { ok: true };
+  } catch (error) { runtime = null; preview = { ok: false, errors: error.message.split("\n") }; }
+  let storybook;
+  try {
+    const local = {
+      main: runGit(["rev-parse", "--short=12", "refs/remotes/origin/main"]).trim(),
+      head: runGit(["rev-parse", "--short=12", "HEAD"]).trim(),
+      included: runGit(["merge-base", "refs/remotes/origin/main", "HEAD"]).trim() === runGit(["rev-parse", "refs/remotes/origin/main"]).trim()
+    };
+    const block = JSON.parse(await readFile(path.join(repoRoot, ".planning", "UI-PREVIEW.json"), "utf8")).storybook;
+    storybook = await checkStorybook({ block, expectedCheckout: await realpath(repoRoot), localMain: local.main, localHead: local.head, remoteMain: remote.value, mainIncluded: local.included });
+  } catch (error) { storybook = { ok: false, errors: [`Storybook check could not run: ${error.message}`] }; }
+  if (remote.error) {
+    // AGENTS.md: when the remote cannot be verified, neither surface is claimed to be latest.
+    const unverified = `Remote main could not be read, so this cannot be called latest: ${remote.error}`;
+    preview = { ok: false, errors: [...(preview.errors || []).filter((message) => !message.includes("stale against the remote")), unverified] };
+    storybook = { ...storybook, ok: false, errors: [...(storybook.errors || []).filter((message) => !message.includes("stale against the remote")), unverified] };
+  }
+  const source = attempt(() => sourceIdentity());
+  const identity = source.error ? { error: source.error } : await source.value.catch((error) => ({ error: error.message }));
+  const branch = attempt(() => runGit(["branch", "--show-current"]).trim());
+  const pending = attempt(() => runGit(["status", "--porcelain", "--untracked-files=all"]).split("\n").filter(Boolean));
+  const ok = preview.ok && storybook.ok && !identity.error;
+  console.log(JSON.stringify({ ok, checkout: repoRoot, command_cwd: process.cwd(), branch: branch.value ?? null, source: identity, runtime, preview, storybook, pending_work: pending.value ?? [] }, null, 2));
+  for (const error of [...(preview.errors || []).map((message) => `Preview (4002): ${message}`), ...(storybook.errors || []).map((message) => `Storybook: ${message}`), ...(identity.error ? [`Source identity: ${identity.error}`] : [])]) console.error(error);
+  if (!ok) process.exitCode = 1;
 }
 
 async function checkReview(directory) {

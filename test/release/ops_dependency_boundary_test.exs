@@ -8,10 +8,15 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
   @asset_apps [:esbuild, :tailwind]
   # The component catalog is a dev and test dependency of Ops: no consumer graph and no production build may carry it.
   @storybook_apps [:phoenix_storybook, :mdex, :mdex_native]
+  # Every module under scrypath_ops/catalog/lib belongs in this list (the direct probe: available exactly in dev
+  # and test) and in @absent_modules (the mounted probe); catalog_module_gaps/3 fails naming one that is missing.
   @storybook_modules [
     Module.concat(["PhoenixStorybook"]),
     Module.concat(["MDEx"]),
-    Module.concat(["ScrypathOps", "Catalog", "Storybook"])
+    Module.concat(["ScrypathOps", "Catalog", "Storybook"]),
+    Module.concat(["ScrypathOps", "Catalog", "Endpoint"]),
+    Module.concat(["ScrypathOps", "Catalog", "Router"]),
+    Module.concat(["Mix", "Tasks", "ScrypathOps", "Catalog", "Serve"])
   ]
   # The fixtures project (ADR 0002) is a dev and test path dependency of Ops. Nothing that mounts Ops, and
   # no production build, may carry it. It is a path dependency, so the lock cannot prove its absence.
@@ -28,6 +33,9 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     Module.concat(["PhoenixStorybook"]),
     Module.concat(["MDEx"]),
     Module.concat(["ScrypathOps", "Catalog", "Storybook"]),
+    Module.concat(["ScrypathOps", "Catalog", "Endpoint"]),
+    Module.concat(["ScrypathOps", "Catalog", "Router"]),
+    Module.concat(["Mix", "Tasks", "ScrypathOps", "Catalog", "Serve"]),
     Module.concat(["ScrypathFixtures"])
   ]
 
@@ -44,6 +52,40 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     {source_sha, 0} = System.cmd("git", ["rev-parse", "HEAD"], cd: repo)
 
     %{repo: repo, scratch: scratch, source_sha: String.trim(source_sha), run_id: run_id}
+  end
+
+  # Cheap consistency check (no build): every module defined under scrypath_ops/catalog/lib is proven absent
+  # outside dev and test by BOTH probes, so a new catalog module cannot ship unproven.
+  test "every catalog/lib module is in the direct probe list and the mounted probe list", ctx do
+    defined = catalog_defined_modules(ctx.repo)
+
+    assert ScrypathOps.Catalog.Endpoint in defined
+    assert Mix.Tasks.ScrypathOps.Catalog.Serve in defined
+    assert catalog_module_gaps(defined, @storybook_modules, @absent_modules) == []
+
+    # Planted: the endpoint missing from one list is reported against that list, and only it.
+    assert catalog_module_gaps(
+             defined,
+             @storybook_modules -- [ScrypathOps.Catalog.Endpoint],
+             @absent_modules
+           ) == [{:missing_direct, ScrypathOps.Catalog.Endpoint}]
+
+    assert catalog_module_gaps(
+             defined,
+             @storybook_modules,
+             @absent_modules -- [ScrypathOps.Catalog.Endpoint]
+           ) == [{:missing_mounted, ScrypathOps.Catalog.Endpoint}]
+
+    # A module the lists have never heard of is reported against both.
+    assert catalog_module_gaps(
+             [ScrypathOps.Catalog.Planted | defined],
+             @storybook_modules,
+             @absent_modules
+           ) ==
+             [
+               {:missing_direct, ScrypathOps.Catalog.Planted},
+               {:missing_mounted, ScrypathOps.Catalog.Planted}
+             ]
   end
 
   test "mounted test and production consumers compile and start without optional Ops dependencies",
@@ -554,6 +596,25 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     |> String.replace("__FIXTURES_APPS__", inspect(@fixtures_apps))
     |> String.replace("__ABSENT_MODULES__", inspect(@absent_modules -- present_modules))
     |> String.replace("__PRESENT_MODULES__", inspect(present_modules))
+  end
+
+  # Every `defmodule` name under scrypath_ops/catalog/lib, read from source (no compile).
+  defp catalog_defined_modules(repo) do
+    repo
+    |> Path.join("scrypath_ops/catalog/lib/**/*.ex")
+    |> Path.wildcard()
+    |> Enum.flat_map(fn file ->
+      ~r/^\s*defmodule\s+([A-Za-z0-9_.]+)\s+do/m
+      |> Regex.scan(File.read!(file), capture: :all_but_first)
+      |> List.flatten()
+    end)
+    |> Enum.map(&Module.concat([&1]))
+    |> Enum.sort()
+  end
+
+  defp catalog_module_gaps(defined, direct, mounted) do
+    for(module <- defined, module not in direct, do: {:missing_direct, module}) ++
+      for(module <- defined, module not in mounted, do: {:missing_mounted, module})
   end
 
   defp direct_probe do

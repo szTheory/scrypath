@@ -7,7 +7,11 @@ defmodule ScrypathOps.Catalog.RenderAll do
   @css_import ~r|@import "/assets/css/app\.css\?hash=[0-9a-f]{32}" layer\(app\)|
   @js_hash ~r|\?hash=[0-9a-f]{32}\z|
 
-  @doc "Every `{path, variation_id}` the iframe route can render for a backend; `:page` is unsupported."
+  @doc """
+  Every `{path, variation_id}` the catalog can render for a backend. A component story gives one
+  target per variation, an example gives `{path, nil}`, a page story gives `{path, :page}` (rendered
+  through the storybook shell, not an iframe) and any other kind is `{path, {:unsupported, kind}}`.
+  """
   def targets(backend) do
     for entry <- backend.leaves(),
         {:ok, story} = backend.load_story(String.trim_leading(entry.path, "/")),
@@ -19,6 +23,7 @@ defmodule ScrypathOps.Catalog.RenderAll do
     case story.storybook_type() do
       :component -> for variation <- story.variations(), do: {path, to_string(variation.id)}
       :example -> [{path, nil}]
+      :page -> [{path, :page}]
       other -> [{path, {:unsupported, other}}]
     end
   end
@@ -58,6 +63,36 @@ defmodule ScrypathOps.Catalog.RenderAll do
       [src | _] -> Regex.match?(@js_hash, src)
       [] -> false
     end
+  end
+
+  @doc "The shell route of a page story, for example `/storybook/welcome`."
+  def page_url(mount, path), do: "#{mount}#{path}"
+
+  @doc """
+  The story's own markup in a rendered storybook page. A `:page` story renders inside the storybook
+  shell, in the sandbox div, so this leaves out the sidebar and toolbar (which are upstream's).
+  """
+  def page_markup(html) do
+    html
+    |> LazyHTML.from_document()
+    |> LazyHTML.query("[data-phx-main] .psb-sandbox")
+    |> LazyHTML.to_html()
+  end
+
+  @doc "Labels of every failing check for one rendered page story; an empty list means it passed."
+  def page_problems(html) do
+    doc = LazyHTML.from_document(html)
+    content = LazyHTML.query(doc, "[data-phx-main] .psb-sandbox")
+
+    [
+      {Enum.empty?(LazyHTML.query(doc, "[data-phx-main]")), "no LiveView container"},
+      {Enum.empty?(content), "no page content"},
+      {not Enum.empty?(content) and content |> LazyHTML.text() |> String.trim() == "",
+       "empty page content"},
+      {not Enum.empty?(LazyHTML.query(doc, "[data-phx-error]")), "data-phx-error present"}
+    ]
+    |> Enum.filter(&elem(&1, 0))
+    |> Enum.map(&elem(&1, 1))
   end
 
   @doc "A problem label when the body does not carry the requested theme, else nil."

@@ -165,7 +165,12 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert rule(".ops-notice-surface") =~ "border-inline-start-width: 2px"
     refute css() =~ ".ops-notice-surface__cue"
 
-    posture_live = File.read!(Path.join(@web_root, "live/posture_live.ex"))
+    # Search health markup lives in the shared components the page and the catalog both render, so
+    # the spacing tokens are read across the LiveView and its component module together.
+    posture_live =
+      File.read!(Path.join(@web_root, "live/posture_live.ex")) <>
+        File.read!(Path.join(@web_root, "components/search_health.ex"))
+
     assert posture_live =~ "space-y-ops-4"
     assert posture_live =~ "gap-ops-4"
     refute posture_live =~ "space-y-4"

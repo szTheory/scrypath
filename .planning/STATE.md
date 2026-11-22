@@ -4,18 +4,18 @@ milestone: v1.49
 milestone_name: Catalog foundation
 current_phase: 197
 current_phase_name: Pilot JOB-03, unhealthy verdict to verified retry
-status: planning
-stopped_at: Phase 196 complete, ready to plan Phase 197
-last_updated: "2026-11-22T06:34:58.540Z"
+status: executing
+stopped_at: Completed 197-04-PLAN.md
+last_updated: "2026-11-22T15:21:18.737Z"
 last_activity: 2026-11-22
-last_activity_desc: Phase 196 complete, transitioned to Phase 197
-state_head: 053b718c8cba93c6afdf35b79053de2aa7b21573
+last_activity_desc: Completed 197-04 (RecoveryView and recovery components with the D3 fix, the JOB-03 Job story, cumulative parity, coverage, provenance and copy checks, ledger row 11 of 12)
+state_head: 07ad2dfb7c22dccfbdbc4e319bc8f20d6d61b5bd
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 8
-  percent: 47
+  completed_plans: 12
+  percent: 71
 ---
 
 # Project State
@@ -25,14 +25,14 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 196 — Fixtures and three adopters
+**Current focus:** Phase 197 — Pilot JOB-03, unhealthy verdict to verified retry
 
 ## Current Position
 
-Phase: 197 — Pilot JOB-03, unhealthy verdict to verified retry
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-22 — Phase 196 complete, transitioned to Phase 197
+Phase: 197 (Pilot JOB-03, unhealthy verdict to verified retry) — EXECUTING
+Plan: 5 of 5
+Status: Executing Phase 197 (Plans 01 to 04 complete)
+Last activity: 2026-11-22 — Completed 197-04 (RecoveryView and recovery components with the D3 fix, the JOB-03 Job story, cumulative parity, coverage, provenance and copy checks, ledger row 11 of 12)
 
 
 ## Performance Metrics
@@ -52,6 +52,10 @@ Last activity: 2026-11-22 — Phase 196 complete, transitioned to Phase 197
 | Phase 196 P03 | 24 min | 3 tasks | 41 files |
 | Phase 196 P04 | 24 min | 3 tasks | 15 files |
 | Phase 196 P05 | 130 min | 3 tasks | 16 files |
+| Phase 197 P01 | 31 min | 3 tasks | 14 files |
+| Phase 197 P02 | 15 min | 2 tasks | 14 files |
+| Phase 197 P03 | 21m | 3 tasks | 16 files |
+| Phase 197 P04 | 24m | 3 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -82,6 +86,17 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 196]: 196-04: Scrypath.sync_status/2 raises ArgumentError without :backend (no error tag); wikily_missing_backend states only a posture expectation and Phase 197 screens must not call Scrypath directly in that state
 - [Phase 196]: 196-05: Hostile text sits only where Meilisearch and Scrypath can carry it (invalid ids only inside their invalid_document_id echoes, markup and non-Latin text only inside one echoed document, the 511-byte id and 200-character token only as valid job document_ids) and lives in one named stress variation, Shopadelic hostile_ids — A stress string placed where the real system cannot produce it would show a state that cannot happen; the render test proves it shows as text with no script element
 - [Phase 196]: 196-05: The fixtures' hosted ops-ui cost is warm 433 s against a same-hour control of 436 s (about 0 s), cold 482 s on the PR and 469 s on the first main run; the advisory 60 s fold threshold was not reached — A cold number is dominated by the BEAM cache miss (finding 26), so cost is read from warm against a same-day control; recorded as CI-EFFICIENCY finding 29
+- [Phase 197]: Journey seams (Queue, JobRepo, Client) live in the journey file, not copy_stubs; Recovery verified kept (under the cut threshold)
+- [Phase 197]: D1 fixed by one return_to assign in OnMount; return_to_path/1 also refuses backslash and control-character paths
+- [Phase 197]: Catalog served by a dedicated endpoint and mix scrypath_ops.catalog.serve (no Repo, loopback, CATALOG_PORT, holder check); storybook font fixed in storybook.js
+- [Phase 197]: health_verdict/1 renders the setup empty states too, so every story variation renders and the render-all empty-output check stays meaningful
+- [Phase 197]: Search health components take the LiveView's ranked rows and never sort; every ops_time in a component falls back to the posture snapshot, never the clock
+- [Phase 197]: Parity capture pins the test clock for copy surfaces and normalizes the random recovery handle; base and head are compared as canonical trees, never raw text
+- [Phase 197]: The Failed sync row action is a closed retry, receipt or ineligible set that records eligibility only; the LiveView's gate still decides who may act
+- [Phase 197]: failed_summary calls failed_filters so the filter form stays inside the summary section and the DOM is unchanged
+- [Phase 197]: A seam test can only catch wiring faults in the LiveView, so its plants edit what the LiveView passes; the copy-rules scan reads tracked files, so stage new files before the full suite
+- [Phase 197]: An unresolved recovery handle renders a closed unavailable state; RecoveryView refuses combinations the observer cannot emit and shows them as unavailable, so the page never claims an outcome its evidence does not back (D3 fixed)
+- [Phase 197]: Copy lint over stories applies the copy_rules.json rows that scan all copy; surface-only rows describe one state and are not applied to unrelated stories. Jobs-tier stories count main landmarks like surface stories
 
 ### Pending Todos
 - Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
@@ -115,9 +130,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-22T04:47:09.455Z
-Stopped at: Phase 196 complete, ready to plan Phase 197
-Acting next: verify Phase 196 (all five plans are done and merged), then plan Phase 197, which starts with the fixtures fold evaluation. A Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-22T15:21:18.624Z
+Stopped at: Completed 197-04-PLAN.md
+Acting next: execute 197-05 (landing page with main@sha, the bundle-font and marker checks, the storybook block and preflight, the docs, the local mirror, the phase PR and the Pause 1 note) from the journey baseline d913b8b6; Plan 04 ended at 07ad2dfb. The run stops at Pause 1 after Plan 05. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps

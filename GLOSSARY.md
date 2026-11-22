@@ -22,7 +22,7 @@ The levels of the story tree, from smallest to largest:
 - **Pattern:** a small group of components that work together.
 - **Area:** one region of a surface.
 - **Surface:** a whole screen.
-- **Job:** a whole page in one persona's `JOB-*` situation.
+- **Job:** one surface state in one persona's `JOB-*` situation.
 
 _Avoid_: section (for surface), page (for job)
 

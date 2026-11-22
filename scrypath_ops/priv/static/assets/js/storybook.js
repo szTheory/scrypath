@@ -911,6 +911,13 @@
     const theme = new URLSearchParams(window.location.search).get("theme");
     if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
   })();
+  (function() {
+    const useProductFont = () => {
+      document.body.style.fontFamily = "var(--font-sans)";
+    };
+    if (document.body) useProductFont();
+    else document.addEventListener("DOMContentLoaded", useProductFont, { once: true });
+  })();
   window.storybook = {
     Hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation }
   };

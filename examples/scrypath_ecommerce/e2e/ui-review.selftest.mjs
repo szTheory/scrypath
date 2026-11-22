@@ -4,8 +4,9 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createServer } from "node:http";
 import { test } from "node:test";
-import { captureDisposableMatrix, captureSurface, configureDisposableFontProfile, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, prepareCaptureStateInPage, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, captureSurface, checkStorybook, configureDisposableFontProfile, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, parseCatalogMarkers, prepareCaptureStateInPage, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, storybookErrors, surfaces, themes, viewports } from "./ui-review.mjs";
 
 const require = createRequire(import.meta.url);
 const { domStateErrors } = require("../../../scripts/ci/ui_preservation.cjs");
@@ -425,6 +426,76 @@ test("a different preview worktree or omitted main commits cannot masquerade as 
   const { source, manifest, review } = fixture();
   manifest.runtime.source_match = false;
   assert.ok(reviewErrors(review, manifest, "capture-digest", source).some((error) => error.includes("provenance")));
+});
+
+const storybookCurrent = { expectedCheckout: "/work/preview", printedCheckout: "/work/preview", printedMain: "0123456789ab", printedHead: "fedcba987654", localMain: "0123456789ab", localHead: "fedcba987654", remoteMain: "0123456789abcdef0123456789abcdef01234567", mainIncluded: true, markersFound: true, reachable: true };
+
+test("storybookErrors passes a current storybook and names each cause separately", () => {
+  assert.deepEqual(storybookErrors(storybookCurrent), []);
+  const only = (change, fragment) => {
+    const errors = storybookErrors({ ...storybookCurrent, ...change });
+    assert.equal(errors.length, 1, JSON.stringify(errors));
+    assert.ok(errors[0].includes(fragment), errors[0]);
+  };
+  only({ printedCheckout: "/work/other" }, "checkout mismatch");
+  only({ printedMain: "aaaaaaaaaaaa" }, "differs from this checkout's origin/main");
+  only({ printedHead: "bbbbbbbbbbbb" }, "was started at HEAD");
+  only({ localMain: "aaaaaaaaaaaa", printedMain: "aaaaaaaaaaaa" }, "stale against the remote main");
+  only({ mainIncluded: false }, "does not include origin/main");
+  // A missing page and a page without markers say different things and stop at that: nothing else is known.
+  assert.deepEqual(storybookErrors({ ...storybookCurrent, reachable: false }).length, 1);
+  assert.ok(storybookErrors({ ...storybookCurrent, reachable: false })[0].includes("not reachable"));
+  assert.equal(storybookErrors({ ...storybookCurrent, markersFound: false }).length, 1);
+  assert.ok(storybookErrors({ ...storybookCurrent, markersFound: false })[0].includes("another program"));
+  // Several independent causes are all reported.
+  assert.equal(storybookErrors({ ...storybookCurrent, printedCheckout: "/work/other", printedMain: "aaaaaaaaaaaa" }).length, 2);
+  // An unreadable remote can never read as current.
+  assert.ok(storybookErrors({ ...storybookCurrent, remoteMain: undefined }).some((error) => error.includes("stale against the remote")));
+});
+
+test("parseCatalogMarkers reads the five attributes in any order and ignores a page without them", () => {
+  const html = '<html><body><dl><dd class="x" data-catalog-epoch="2026-11-20T14:00:00Z" id="e">t</dd><dd data-catalog-checkout="/work/a &amp; b">c</dd><dd id="h" data-catalog-head-sha="fedcba987654">h</dd><dd data-catalog-dirty="false">d</dd><dd data-catalog-main-sha="0123456789ab" title="main">m</dd></dl></body></html>';
+  assert.deepEqual(parseCatalogMarkers(html), { mainSha: "0123456789ab", headSha: "fedcba987654", dirty: "false", checkout: "/work/a & b", epoch: "2026-11-20T14:00:00Z" });
+  assert.deepEqual(parseCatalogMarkers("<html><body><p>Another app</p></body></html>"), { mainSha: null, headSha: null, dirty: null, checkout: null, epoch: null });
+  // Text that merely mentions an attribute is not a marker, and a longer attribute name is not the marker.
+  assert.equal(parseCatalogMarkers('<p>data-catalog-main-sha="0123456789ab"</p><i data-catalog-main-sha-x="0123456789ab">').mainSha, null);
+  assert.equal(parseCatalogMarkers(undefined).mainSha, null);
+});
+
+test("checkStorybook reads a real loopback page, and refuses a stale, foreign, absent or non-loopback one", async () => {
+  const page = (main) => `<html><body><dl><dd data-catalog-main-sha="${main}">m</dd><dd data-catalog-head-sha="fedcba987654">h</dd><dd data-catalog-dirty="false">d</dd><dd data-catalog-checkout="/work/preview">c</dd><dd data-catalog-epoch="2026-11-20T14:00:00Z">e</dd></dl></body></html>`;
+  let body = page("0123456789ab");
+  let status = 200;
+  const server = createServer((request, response) => { assert.equal(request.url, "/storybook/welcome"); response.writeHead(status, { "content-type": "text/html" }); response.end(body); });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const port = server.address().port;
+  const block = { url: `http://127.0.0.1:${port}`, port, landing: "/storybook/welcome" };
+  const args = { block, expectedCheckout: "/work/preview", localMain: "0123456789ab", localHead: "fedcba987654", remoteMain: "0123456789abcdef0123456789abcdef01234567", mainIncluded: true };
+  try {
+    const current = await checkStorybook(args);
+    assert.deepEqual(current.errors, []);
+    assert.equal(current.ok, true);
+    assert.equal(current.markers.mainSha, "0123456789ab");
+    // A storybook started before main moved on: its page prints the old sha.
+    body = page("aaaaaaaaaaaa");
+    const stale = await checkStorybook(args);
+    assert.equal(stale.ok, false);
+    assert.ok(stale.errors.some((error) => error.includes("differs from this checkout's origin/main")));
+    // Another program on the port: a page without the markers.
+    body = "<html><body>Another app</body></html>";
+    assert.ok((await checkStorybook(args)).errors[0].includes("another program"));
+    // A non-200 answer is not a storybook.
+    status = 503;
+    assert.ok((await checkStorybook(args)).errors[0].includes("not reachable"));
+  } finally { await new Promise((resolve) => server.close(resolve)); }
+  // Nothing listens any more.
+  assert.ok((await checkStorybook(args)).errors[0].includes("not reachable"));
+  // The check fetches loopback only, and a block must agree with itself.
+  assert.ok((await checkStorybook({ ...args, block: { ...block, url: `http://example.com:${port}` } })).errors[0].includes("loopback"));
+  assert.ok((await checkStorybook({ ...args, block: { ...block, landing: "http://example.com/storybook/welcome" } })).errors[0].includes("loopback"));
+  assert.ok((await checkStorybook({ ...args, block: { ...block, port: port + 1 } })).errors[0].includes("disagrees with itself"));
+  assert.ok((await checkStorybook({ ...args, block: undefined })).errors[0].includes("No storybook block"));
+  assert.ok((await checkStorybook({ ...args, block: { url: "not a url", port: 1 } })).errors[0].includes("unusable"));
 });
 
 test("disposable captures cannot target retained loopback or arbitrary network hosts", async () => {
