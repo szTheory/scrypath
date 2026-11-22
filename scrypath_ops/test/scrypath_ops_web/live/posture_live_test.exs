@@ -966,6 +966,95 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     end
   end
 
+  # Each scenario below is mounted through the real router under FixtureEnv. Every Search health row
+  # on the page, and the whole page, must canonicalize equal to the shared components' own output for
+  # the page's own view-model (summary, ranked rows, snapshot instant). The stories render the same
+  # functions, so this is what lets a story claim to show the page.
+  describe "seam: health_schema_row and surface (story output equals production output)" do
+    for scenario_id <- [
+          :shopadelic_failed_journey,
+          :shopadelic_settings_aligned,
+          :wikily_first_delete_failed,
+          :logistify_history_over_limit_f1,
+          :wikily_unconfigured
+        ] do
+      test "#{scenario_id}: each mounted row and the whole page equal the component output", %{
+        conn: conn
+      } do
+        scenario_id = unquote(scenario_id)
+        scenario = ScrypathFixtures.Scenarios.get!(scenario_id, ScrypathFixtures.preview_epoch())
+        on_exit(FixtureEnv.put(scenario))
+
+        {:ok, view, _html} = live(conn, ~p"/ops/health")
+        _ = render_async(view)
+
+        assigns = :sys.get_state(view.pid).socket.assigns
+        summary = assigns.posture_summary
+        now = assigns.last_refresh_at
+        sync_mode = Keyword.get(assigns.scrypath_opts, :sync_mode, :inline)
+
+        ranked =
+          case assigns.posture_rows do
+            {:ok, rows} -> rows
+            _setup_state -> []
+          end
+
+        mounted = view |> render() |> LazyHTML.from_fragment()
+
+        # The cause is real data: a setup scenario has no rows, every other one has exactly one.
+        assert length(ranked) ==
+                 if(summary.state in [:unconfigured, :missing_backend], do: 0, else: 1)
+
+        for {mod, _result} = row <- ranked do
+          selector = "[id='posture-#{inspect(mod)}']"
+          mounted_row = LazyHTML.query(mounted, selector)
+
+          component_row =
+            row_component(&SearchHealth.health_schema_row/1,
+              row: row,
+              summary: summary,
+              mount_path: assigns.mount_path,
+              now: now
+            )
+            |> LazyHTML.query(selector)
+
+          assert Enum.count(mounted_row) == 1
+          assert Enum.count(component_row) == 1
+          assert HtmlCanon.canon(mounted_row) == HtmlCanon.canon(component_row)
+        end
+
+        surface_assigns = [
+          mount_path: assigns.mount_path,
+          flash: assigns.flash,
+          shell: assigns.shell,
+          page_title: assigns.page_title,
+          summary: summary,
+          rows: ranked,
+          sync_mode: sync_mode,
+          now: now,
+          auto_refresh: assigns.auto_refresh
+        ]
+
+        page = LazyHTML.query(mounted, "[data-phx-main] > *")
+        component_page = surface_component(surface_assigns)
+
+        assert Enum.count(page) > 0
+        assert HtmlCanon.canon(page) == HtmlCanon.canon(component_page)
+
+        # Control: the comparison can fail. A different mount path changes every shell link.
+        changed_page = surface_component(Keyword.put(surface_assigns, :mount_path, "/elsewhere"))
+        refute HtmlCanon.canon(page) == HtmlCanon.canon(changed_page)
+      end
+    end
+  end
+
+  defp surface_component(assigns), do: row_component(&SearchHealth.surface/1, assigns)
+
+  # Renders a function component to a parsed fragment.
+  defp row_component(component, assigns) do
+    component |> render_component(assigns) |> LazyHTML.from_fragment()
+  end
+
   defp verdict_component_root(summary, sync_mode, selector) do
     html =
       render_component(&SearchHealth.health_verdict/1, summary: summary, sync_mode: sync_mode)

@@ -6,16 +6,18 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
   # Paths from this file: test/scrypath_ops_web → app root.
   @operator_ia Path.join([__DIR__, "..", "..", "docs", "operator-ia.md"]) |> File.read!()
   @router Path.join([__DIR__, "..", "..", "lib", "scrypath_ops_web", "router.ex"]) |> File.read!()
-  @posture_live Path.join([
-                  __DIR__,
-                  "..",
-                  "..",
-                  "lib",
-                  "scrypath_ops_web",
-                  "live",
-                  "posture_live.ex"
-                ])
-                |> File.read!()
+  # The Search health markup, including its failed-sync handoff link, lives in the shared
+  # components the page and the catalog both render (Phase 197).
+  @search_health Path.join([
+                   __DIR__,
+                   "..",
+                   "..",
+                   "lib",
+                   "scrypath_ops_web",
+                   "components",
+                   "search_health.ex"
+                 ])
+                 |> File.read!()
   @failed_sync_live Path.join([
                       __DIR__,
                       "..",
@@ -133,7 +135,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
   end
 
   test "incident handoffs use exact allowlisted schema identity and expose triage first" do
-    assert @posture_live =~ "OperatorSelection.path(@mount_path, \"failed-sync\", mod)"
+    assert @search_health =~ "OperatorSelection.path(@mount_path, \"failed-sync\", @mod)"
     assert @failed_sync_live =~ "def handle_params(params, uri, socket)"
 
     assert @failed_sync_live =~
