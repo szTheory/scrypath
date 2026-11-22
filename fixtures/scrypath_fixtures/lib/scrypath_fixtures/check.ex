@@ -32,10 +32,11 @@ defmodule ScrypathFixtures.Check do
 
   Three more kinds of check read the project's own text and its bulk data:
 
-    * source lints over every file of the project: no raw bidirectional control, zero-width
-      character or byte-order mark (hostile text is written as escapes, never typed), and no
-      wall-clock, random, operating-system or repository call in `lib/` (every time is `now` minus an
-      offset);
+    * source lints over every file of the project: no raw bidirectional control, zero-width or
+      other invisible formatting character or byte-order mark (hostile text is written as escapes,
+      never typed; `format_codepoints/0` is the list), and none of the calls in `impure_tokens/0`
+      in `lib/` (wall clock, random source, unique ids, operating system, file system, repository;
+      every time is `now` minus an offset);
     * labels and data: no compliance-claim word and no sibling-brand canon id in a scenario label,
       any string inside a scenario, the README or `lib/` source, and a provenance line (fictional,
       Scrypath-owned, no records copied) in every adopter module and schema;
@@ -185,12 +186,37 @@ defmodule ScrypathFixtures.Check do
   # source checkout, never from a release.
   @fixtures_root Path.expand("../..", __DIR__)
 
-  # The characters Trojan Source hides behind: zero-width and direction marks (U+200B to U+200F),
-  # bidirectional embeddings and overrides (U+202A to U+202E), isolates (U+2066 to U+2069) and the
-  # byte-order mark (U+FEFF). Written as code points, so this file holds none of them itself.
-  @format_codepoints Enum.to_list(0x200B..0x200F) ++
+  # The characters Trojan Source and its relatives hide behind: every character that changes how
+  # text is ordered or shown without showing itself. Written as code points, so this file holds
+  # none of them itself. The list is explicit on purpose, and every entry has a planted file in
+  # `fixtures_provenance_test.exs`.
+  #
+  #   U+00AD           soft hyphen
+  #   U+061C           Arabic letter mark (a bidirectional control, UAX 9)
+  #   U+180E           Mongolian vowel separator
+  #   U+200B-U+200F    zero-width space, the two joiners, and the left and right direction marks
+  #   U+202A-U+202E    bidirectional embeddings and overrides
+  #   U+2060-U+2064    word joiner and the invisible operators (function application, times,
+  #                    separator, plus)
+  #   U+2066-U+2069    bidirectional isolates
+  #   U+FE00-U+FE0F    variation selectors
+  #   U+FEFF           byte-order mark (zero-width no-break space)
+  #   U+E0000-U+E007F  tag characters (invisible text that smuggles ASCII)
+  @format_codepoints [0x00AD, 0x061C, 0x180E] ++
+                       Enum.to_list(0x200B..0x200F) ++
                        Enum.to_list(0x202A..0x202E) ++
-                       Enum.to_list(0x2066..0x2069) ++ [0xFEFF]
+                       Enum.to_list(0x2060..0x2064) ++
+                       Enum.to_list(0x2066..0x2069) ++
+                       Enum.to_list(0xFE00..0xFE0F) ++
+                       [0xFEFF] ++
+                       Enum.to_list(0xE0000..0xE007F)
+
+  @doc """
+  The code points `:raw_format_char` forbids in any file of the project (bidirectional controls,
+  zero-width and other invisible formatting characters, the byte-order mark).
+  """
+  @spec format_codepoints() :: [non_neg_integer()]
+  def format_codepoints, do: @format_codepoints
 
   defp default_source_files do
     @fixtures_root
@@ -237,39 +263,97 @@ defmodule ScrypathFixtures.Check do
         do: {:source, {:raw_format_char, relative(path), codepoint}}
   end
 
-  # The calls a pure builder must not make. Each is written in two pieces so this file does not
-  # contain the text it searches for: this file stays under its own lint instead of being exempt.
-  defp impure_tokens do
-    [
-      "DateTime" <> ".utc_now",
-      "NaiveDateTime" <> ".utc_now",
-      "Date" <> ".utc_today",
-      ":rand" <> ".",
-      "System" <> ".",
-      ":os" <> ".",
-      "Repo" <> ".",
-      "~U" <> "["
-    ]
-  end
+  # The calls a pure builder must not make: the whole list, one family per group. A `lib/` file that
+  # holds one of these (see `impure_problems/3` for how it is matched) is an `:impure_source`
+  # problem that names the token. Each is written in two pieces so this file does not contain the
+  # text it searches for: this file stays under its own lint instead of being exempt.
+  #
+  # The README lists the same tokens. A new one needs a planted file in
+  # `fixtures_provenance_test.exs`, and that test fails for a token without one.
+  @impure_tokens [
+    # the wall clock, in every spelling Elixir and Erlang have for it
+    "DateTime" <> ".utc_now",
+    "DateTime" <> ".now",
+    "NaiveDateTime" <> ".utc_now",
+    "NaiveDateTime" <> ".local_now",
+    "Date" <> ".utc_today",
+    "Time" <> ".utc_now",
+    ":erlang" <> ".system_time",
+    ":erlang" <> ".monotonic_time",
+    ":erlang" <> ".timestamp",
+    ":erlang" <> ".localtime",
+    ":erlang" <> ".universaltime",
+    ":calendar" <> ".local_time",
+    ":calendar" <> ".universal_time",
+    # waiting on real time
+    "Process" <> ".sleep",
+    ":timer" <> ".",
+    # a datetime literal pins a calendar date (bracket delimiter, the one this project writes)
+    "~U" <> "[",
+    "~N" <> "[",
+    "~D" <> "[",
+    "~T" <> "[",
+    # a random source, or a value that differs on every call
+    ":rand" <> ".",
+    "Enum" <> ".random",
+    "Enum" <> ".shuffle",
+    "Enum" <> ".take_random",
+    ":crypto" <> ".strong_rand_bytes",
+    ":erlang" <> ".unique_integer",
+    "UUID" <> ".generate",
+    "UUID" <> ".bingenerate",
+    "UUID" <> ".uuid1",
+    "UUID" <> ".uuid4",
+    # the operating system and the file system
+    "System" <> ".",
+    ":os" <> ".",
+    "File" <> ".",
+    # a repository
+    "Repo" <> "."
+  ]
 
-  # A token counts only where a word starts, so a call on `NaiveDateTime` is one problem and not
-  # also one for the `DateTime` token it contains.
+  # Where a token is allowed, by path suffix, and nowhere else in `lib/`. The one datetime literal
+  # in the project is the preview epoch. The file system is read by the two modules whose job is to
+  # read this project's own files: the loader of the recordings (at compile time) and this check.
+  @exempt_paths %{
+    ("~U" <> "[") => ["/lib/scrypath_fixtures.ex"],
+    ("File" <> ".") => ["/lib/scrypath_fixtures/recordings.ex", "/lib/scrypath_fixtures/check.ex"]
+  }
+
+  @doc """
+  The calls `:impure_source` forbids in `lib/` source, as the text the check searches for.
+
+  A token matches where a word starts (so `NaiveDateTime` is one problem and not also one for the
+  `DateTime` token it contains) and on a line of code: a whole-line comment is not code, so a
+  comment may name a call. A comment after code on the same line is scanned, and so is a string.
+  Recordings, the README and any file outside `lib/` are never scanned for these.
+  """
+  @spec impure_tokens() :: [String.t()]
+  def impure_tokens, do: @impure_tokens
+
   defp impure_patterns do
-    for token <- impure_tokens() do
+    for token <- @impure_tokens do
       {token, Regex.compile!("(?<![A-Za-z0-9_])" <> Regex.escape(token))}
     end
   end
 
-  # The one datetime literal in the project lives in `lib/scrypath_fixtures.ex` (the preview epoch).
   defp impure_problems(path, content, patterns) do
     if lib_source?(path) do
+      code = without_comment_lines(content)
+
       for {token, pattern} <- patterns,
-          Regex.match?(pattern, content),
-          not (token == "~U" <> "[" and String.ends_with?(path, "/lib/scrypath_fixtures.ex")),
+          Regex.match?(pattern, code),
+          not exempt?(token, path),
           do: {:source, {:impure_source, relative(path), token}}
     else
       []
     end
+  end
+
+  defp without_comment_lines(content), do: Regex.replace(~r/^[ \t]*#.*$/m, content, "")
+
+  defp exempt?(token, path) do
+    @exempt_paths |> Map.get(token, []) |> Enum.any?(&String.ends_with?(path, &1))
   end
 
   # An adopter file is a module or schema under `lib/scrypath_fixtures/<adopter>.ex` or

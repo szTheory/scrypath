@@ -5,9 +5,11 @@ defmodule ScrypathOps.FixturesProvenanceTest do
   # asserts exactly its own problem, beside a positive control that the same shape is clean.
   #
   #   * labels: every registered scenario says "(fictional)";
-  #   * `:raw_format_char`: a bidirectional control, zero-width character or byte-order mark anywhere
-  #     in the project (Trojan Source); the character is built from its bytes, never typed here;
-  #   * `:impure_source`: a wall-clock, random, operating-system or repository call in `lib/`;
+  #   * `:raw_format_char`: a bidirectional control, zero-width or other invisible formatting
+  #     character or byte-order mark anywhere in the project (Trojan Source); the character is built
+  #     from its code point, never typed here;
+  #   * `:impure_source`: a wall-clock, random, unique-id, operating-system, file-system or repository
+  #     call in `lib/` (`Check.impure_tokens/0`; a token without a plant here fails the coverage test);
   #   * `:denylisted_word`: a compliance claim or the sibling canon id in a label, scenario data, the
   #     README or `lib/` source. The words appear in this file only because it is a test; the
   #     fixtures project itself never lists them outside the check;
@@ -59,24 +61,67 @@ defmodule ScrypathOps.FixturesProvenanceTest do
   end
 
   describe "raw_format_char" do
-    test "a control character in a project file is reported with its code point", %{
-      dir: dir,
-      deep: deep
-    } do
-      # right-to-left override, zero-width space, left-to-right isolate, closing isolate, BOM
-      for codepoint <- [0x202E, 0x200B, 0x2066, 0x2069, 0xFEFF] do
+    # One code point of each class, written as a number: this file holds none of them itself.
+    # Where a class is a range, its first and last member and a notable one are named.
+    @planted_codepoints [
+      {0x00AD, "soft hyphen"},
+      {0x061C, "Arabic letter mark"},
+      {0x180E, "Mongolian vowel separator"},
+      {0x200B, "zero-width space"},
+      {0x200D, "zero-width joiner"},
+      {0x200F, "right-to-left mark"},
+      {0x202A, "left-to-right embedding"},
+      {0x202E, "right-to-left override"},
+      {0x2060, "word joiner"},
+      {0x2061, "function application"},
+      {0x2064, "invisible plus"},
+      {0x2066, "left-to-right isolate"},
+      {0x2069, "pop directional isolate"},
+      {0xFE00, "variation selector 1"},
+      {0xFE0F, "variation selector 16"},
+      {0xFEFF, "byte-order mark"},
+      {0xE0000, "first tag character"},
+      {0xE0001, "language tag"},
+      {0xE007F, "cancel tag"}
+    ]
+
+    test "a control character in a project file is reported with its code point", %{dir: dir} do
+      for {codepoint, name} <- @planted_codepoints do
         path = write!(dir, "raw-#{codepoint}.txt", "a" <> <<codepoint::utf8>> <> "b")
 
         assert {:error, [{:source, {:raw_format_char, ^path, ^codepoint}}]} =
-                 Check.run(scenarios: [deep], source_files: [path]),
-               "U+#{Integer.to_string(codepoint, 16)} was not reported"
+                 run_source([path]),
+               "U+#{Integer.to_string(codepoint, 16)} (#{name}) was not reported"
       end
     end
 
-    test "two different characters in one file are two problems", %{dir: dir, deep: deep} do
+    test "the list names every planted class, and no listed code point is a printable one" do
+      listed = MapSet.new(Check.format_codepoints())
+
+      for {codepoint, name} <- @planted_codepoints do
+        assert codepoint in listed, "#{name} is not in Check.format_codepoints/0"
+      end
+
+      # every listed code point is a valid scalar, and none is a letter, a digit or a symbol
+      for codepoint <- listed do
+        printable = <<codepoint::utf8>> =~ ~r/[\p{L}\p{N}\p{P}\p{S}]/u
+        refute printable, "U+#{Integer.to_string(codepoint, 16)} looks printable"
+      end
+    end
+
+    test "every listed code point in one file is one problem each", %{dir: dir} do
+      listed = Check.format_codepoints()
+      content = for codepoint <- listed, into: "", do: <<codepoint::utf8>>
+      path = write!(dir, "all.txt", content)
+
+      assert {:error, problems} = run_source([path])
+      assert Enum.sort(problems) == Enum.sort(for(cp <- listed, do: raw(path, cp)))
+    end
+
+    test "two different characters in one file are two problems", %{dir: dir} do
       path = write!(dir, "two.txt", <<0xE2, 0x80, 0xAE, ?x, 0xE2, 0x80, 0x8B>>)
 
-      assert {:error, problems} = Check.run(scenarios: [deep], source_files: [path])
+      assert {:error, problems} = run_source([path])
 
       assert Enum.sort(problems) ==
                Enum.sort([
@@ -85,35 +130,121 @@ defmodule ScrypathOps.FixturesProvenanceTest do
                ])
     end
 
-    test "positive control: plain text and an escape written as text are clean", %{
-      dir: dir,
-      deep: deep
-    } do
+    test "positive control: plain text, an escape written as text and the neighbours of each range are clean",
+         %{dir: dir} do
       plain = write!(dir, "plain.txt", "item 2041, caf\u00E9, and a backslash escape \\u{202E}\n")
-      assert {:ok, _summary} = Check.run(scenarios: [deep], source_files: [plain])
+      assert {:ok, _summary} = run_source([plain])
+
+      # visible or ordinary neighbours of every listed range: the Arabic semicolon and letter, the
+      # hair space, the hyphen, the narrow no-break space, a superscript zero, the not sign and the
+      # registered sign, the first code point after the variation selectors and after the tags
+      neighbours = [
+        0x061B,
+        0x0627,
+        0x200A,
+        0x2010,
+        0x202F,
+        0x2070,
+        0x00AC,
+        0x00AE,
+        0xFE10,
+        0xE0080
+      ]
+
+      text = for codepoint <- neighbours, into: "", do: <<codepoint::utf8>>
+      assert {:ok, _summary} = run_source([write!(dir, "neighbours.txt", text)])
     end
   end
 
   describe "impure_source" do
-    test "each impure call in lib source is reported with its own token", %{dir: dir, deep: deep} do
-      calls = [
-        {"DateTime.utc_now", "DateTime.utc_now()"},
-        {"NaiveDateTime.utc_now", "NaiveDateTime.utc_now()"},
-        {"Date.utc_today", "Date.utc_today()"},
-        {":rand.", ":rand.uniform(3)"},
-        {"System.", "System.os_time()"},
-        {":os.", ":os.timestamp()"},
-        {"Repo.", "MyApp.Repo.all(Thing)"},
-        {"~U[", "~U[2026-01-01 00:00:00Z]"}
-      ]
+    # One call for every token `Check.impure_tokens/0` lists, each matching its own token and no
+    # other. The coverage test below fails for a token with no entry, so the list cannot grow
+    # without a plant.
+    @impure_calls [
+      {"DateTime.utc_now", "DateTime.utc_now()"},
+      {"DateTime.now", ~S|DateTime.now!("Etc/UTC")|},
+      {"NaiveDateTime.utc_now", "NaiveDateTime.utc_now()"},
+      {"NaiveDateTime.local_now", "NaiveDateTime.local_now()"},
+      {"Date.utc_today", "Date.utc_today()"},
+      {"Time.utc_now", "Time.utc_now()"},
+      {":erlang.system_time", ":erlang.system_time(:second)"},
+      {":erlang.monotonic_time", ":erlang.monotonic_time()"},
+      {":erlang.timestamp", ":erlang.timestamp()"},
+      {":erlang.localtime", ":erlang.localtime()"},
+      {":erlang.universaltime", ":erlang.universaltime()"},
+      {":calendar.local_time", ":calendar.local_time()"},
+      {":calendar.universal_time", ":calendar.universal_time()"},
+      {"Process.sleep", "Process.sleep(10)"},
+      {":timer.", ":timer.tc(fn -> :ok end)"},
+      {"~U[", "~U[2026-01-01 00:00:00Z]"},
+      {"~N[", "~N[2026-01-01 00:00:00]"},
+      {"~D[", "~D[2026-01-01]"},
+      {"~T[", "~T[00:00:00]"},
+      {":rand.", ":rand.uniform(3)"},
+      {"Enum.random", "Enum.random([1, 2])"},
+      {"Enum.shuffle", "Enum.shuffle([1, 2])"},
+      {"Enum.take_random", "Enum.take_random([1, 2], 1)"},
+      {":crypto.strong_rand_bytes", ":crypto.strong_rand_bytes(4)"},
+      {":erlang.unique_integer", ":erlang.unique_integer([:positive])"},
+      {"UUID.generate", "Ecto.UUID.generate()"},
+      {"UUID.bingenerate", "Ecto.UUID.bingenerate()"},
+      {"UUID.uuid1", "UUID.uuid1()"},
+      {"UUID.uuid4", "UUID.uuid4()"},
+      {"System.", "System.os_time()"},
+      {":os.", ":os.timestamp()"},
+      {"File.", ~S|File.read!("x")|},
+      {"Repo.", "MyApp.Repo.all(Thing)"}
+    ]
 
-      for {token, call} <- calls do
+    test "every token the check forbids has a planted call here, and no call names another token" do
+      assert Enum.sort(Enum.map(@impure_calls, &elem(&1, 0))) == Enum.sort(Check.impure_tokens())
+    end
+
+    test "each impure call in lib source is reported with its own token", %{dir: dir} do
+      for {token, call} <- @impure_calls do
         path = write!(dir, "lib/scrypath_fixtures/planted.ex", "def at, do: #{call}\n")
 
-        assert {:error, [{:source, {:impure_source, ^path, ^token}}]} =
-                 Check.run(scenarios: [deep], source_files: [path]),
+        assert {:error, [{:source, {:impure_source, ^path, ^token}}]} = run_source([path]),
                "#{token} was not reported on its own"
       end
+    end
+
+    test "positive controls: pure calls, and a word that only contains a token, are clean", %{
+      dir: dir
+    } do
+      pure = [
+        ~S|:crypto.hash(:sha256, "x")|,
+        "DateTime.add(now, 5, :second)",
+        "DateTime.diff(a, b)",
+        "DateTime.to_iso8601(now)",
+        "Calendar.strftime(now, \"%Y\")",
+        "Enum.at([1, 2], 0)",
+        "Enum.sort([2, 1])",
+        ":erlang.phash2({1, 2}, 10)",
+        # the token must start a word: these end in the same letters
+        "Profile.read(x)",
+        "Subsystem.call()",
+        "MyTime.utc_now_fixed()",
+        "MyProcess.sleep(1)"
+      ]
+
+      for call <- pure do
+        path = write!(dir, "lib/scrypath_fixtures/planted.ex", "def at, do: #{call}\n")
+        assert {:ok, _summary} = run_source([path]), "#{call} should be clean"
+      end
+    end
+
+    test "positive controls: a whole-line comment may name a call, a comment after code is scanned",
+         %{dir: dir} do
+      comment = write!(dir, "lib/scrypath_fixtures/commented.ex", "# never DateTime.utc_now()\n")
+      indented = write!(dir, "lib/scrypath_fixtures/indented.ex", "  \t# Enum.random([1])\n")
+      assert {:ok, _summary} = run_source([comment, indented])
+
+      # the documented limit: only whole-line comments are skipped
+      trailing = write!(dir, "lib/scrypath_fixtures/trailing.ex", "x = 1 # Enum.random([1])\n")
+
+      assert {:error, [{:source, {:impure_source, ^trailing, "Enum.random"}}]} =
+               run_source([trailing])
     end
 
     test "positive controls: the epoch literal is allowed in its one file, nothing is allowed elsewhere in lib",
@@ -130,6 +261,38 @@ defmodule ScrypathOps.FixturesProvenanceTest do
       # only lib source is held to purity: notes outside lib may mention a call
       notes = write!(dir, "notes.txt", "never call DateTime.utc_now here\n")
       assert {:ok, _summary} = Check.run(scenarios: [deep], source_files: [notes])
+    end
+
+    test "positive controls: the file system is read in the two modules built to read it, nowhere else",
+         %{dir: dir} do
+      read = ~S|def body, do: File.read!("x")| <> "\n"
+
+      for module <- ["recordings", "check"] do
+        path = write!(dir, "lib/scrypath_fixtures/#{module}.ex", read)
+        assert {:ok, _summary} = run_source([path]), "#{module}.ex may read files"
+      end
+
+      for module <- ["scrypath_fixtures", "scrypath_fixtures/meili", "scrypath_fixtures/bulk"] do
+        path = write!(dir, "lib/#{module}.ex", read)
+
+        assert {:error, [{:source, {:impure_source, ^path, "File."}}]} = run_source([path]),
+               "#{module}.ex may not read files"
+      end
+    end
+
+    test "positive controls: recordings, the README and a script may name any call", %{dir: dir} do
+      text = Enum.map_join(@impure_calls, "\n", &elem(&1, 1)) <> "\n"
+
+      for relative <- [
+            "recordings/meilisearch-v1.15/body.json",
+            "recordings/record.sh",
+            "README.md",
+            "mix.exs",
+            "test/some_test.exs"
+          ] do
+        path = write!(dir, relative, text)
+        assert {:ok, _summary} = run_source([path]), "#{relative} is not lib source"
+      end
     end
   end
 
@@ -302,6 +465,11 @@ defmodule ScrypathOps.FixturesProvenanceTest do
   # -- helpers -------------------------------------------------------------------------------
 
   defp run_labels(scenario, labels), do: Check.run(scenarios: [scenario], labels: labels)
+
+  # The source lints need no scenario: with none, the run is only the files.
+  defp run_source(files), do: Check.run(scenarios: [], source_files: files)
+
+  defp raw(path, codepoint), do: {:source, {:raw_format_char, path, codepoint}}
 
   # Writes `content` under `dir` and returns the path.
   defp write!(dir, relative, content) do
