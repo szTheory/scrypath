@@ -13,8 +13,13 @@ defmodule ScrypathFixtures.Check do
 
   The check never reads the operator UI and never touches a database. It does these kinds of work:
 
-    * invariants on the raw data (key sets, index names, time order, Oban attempt rules), taken from
-      Meilisearch's documented behaviour and Oban's executor;
+    * invariants on the raw data, taken from Meilisearch's documented behaviour and Oban's executor.
+      A task has its key set, index name, time order and a uid that is unique and never enqueued
+      before a lower one (Meilisearch hands uids out in enqueue order). A job has its shape (the 11
+      keys and their types, a known state and worker), the attempt, error and completion rules of
+      its state, the order of its own stamps and Oban's retry and discard attempt rules. A job
+      whose shape is wrong is reported for its shape alone, because every other job rule reads the
+      fields the shape promises;
     * invariants on the registry and its labels: unique ids, every label says "(fictional)", every
       stress scenario says "stress", every Oban job names an allowlisted schema;
     * relative time: a scenario built three days later must differ by exactly three days in every
@@ -52,6 +57,7 @@ defmodule ScrypathFixtures.Check do
   alias ScrypathFixtures.Bulk
   alias ScrypathFixtures.Failures
   alias ScrypathFixtures.Meili
+  alias ScrypathFixtures.ObanJob
   alias ScrypathFixtures.Recordings
   alias ScrypathFixtures.Scenario
   alias ScrypathFixtures.Scenarios
@@ -75,6 +81,9 @@ defmodule ScrypathFixtures.Check do
     :retryable_attempts,
     :discarded_attempts,
     :job_in_future,
+    :job_shape,
+    :job_state_coherence,
+    :job_time_order,
     :duplicate_id,
     :job_schema,
     :time_not_relative,
@@ -605,7 +614,16 @@ defmodule ScrypathFixtures.Check do
     uid_problems = tasks |> task_uid_problems() |> tag(scenario)
     job_problems = Enum.flat_map(jobs, &job_problems(scenario, &1, indexes))
 
-    task_problems ++ uid_problems ++ job_problems ++ round_trip_problems(scenario)
+    task_problems ++ uid_problems ++ job_problems ++ round_trip(scenario, job_problems)
+  end
+
+  # A scenario holding a malformed job is not run through the real code: its answer to an
+  # impossible job says nothing about the scenario, and the fake inspector may raise on it. The
+  # shape problem is already reported.
+  defp round_trip(scenario, job_problems) do
+    if Enum.any?(job_problems, &match?({_id, {:job_shape, _job, _field}}, &1)),
+      do: [],
+      else: round_trip_problems(scenario)
   end
 
   defp list_opt(%Scenario{scrypath_opts: opts}, key) do
@@ -780,16 +798,95 @@ defmodule ScrypathFixtures.Check do
 
   # -- jobs ----------------------------------------------------------------------------------
 
+  # A job with the wrong shape is reported for its shape alone: every other rule reads the fields
+  # the shape promises, and the real code's answer to an impossible job says nothing about it.
   defp job_problems(scenario, job, indexes) do
-    List.flatten([
-      job_index(job, indexes),
-      job_schema(job, scenario),
-      job_failures(job),
-      job_attempts(scenario, job),
-      job_times(scenario, job)
-    ])
-    |> tag(scenario)
+    case job_shape(job) do
+      [] ->
+        List.flatten([
+          job_index(job, indexes),
+          job_schema(job, scenario),
+          job_failures(job),
+          job_attempts(scenario, job),
+          job_times(scenario, job),
+          job_coherence(job),
+          job_time_order(job)
+        ])
+        |> tag(scenario)
+
+      shape_problems ->
+        tag(shape_problems, scenario)
+    end
   end
+
+  # The 11 atom keys `ScrypathFixtures.ObanJob.job/1` builds, with the types Oban's job row has.
+  @job_keys ~w(id state worker queue args errors attempt max_attempts attempted_at scheduled_at completed_at)a
+
+  defp job_shape(job) when is_map(job) do
+    if Enum.sort(Map.keys(job)) == Enum.sort(@job_keys) do
+      for {field, valid?} <- job_field_checks(job), not valid?, do: {:job_shape, job.id, field}
+    else
+      [{:job_shape, Map.get(job, :id), :keys}]
+    end
+  end
+
+  defp job_shape(_job), do: [{:job_shape, nil, :keys}]
+
+  # `scheduled_at` is never null in Oban (it defaults to the insert time); the other two stamps are
+  # null until the job is attempted or completed.
+  defp job_field_checks(job) do
+    [
+      state: job.state in ObanJob.states(),
+      worker: job.worker in Map.values(ObanJob.workers()),
+      queue: is_binary(job.queue),
+      args: is_map(job.args),
+      errors: is_list(job.errors),
+      attempt: is_integer(job.attempt) and job.attempt >= 0,
+      max_attempts: is_integer(job.max_attempts) and job.max_attempts >= 1,
+      attempted_at: match?(%DateTime{}, job.attempted_at) or is_nil(job.attempted_at),
+      scheduled_at: match?(%DateTime{}, job.scheduled_at),
+      completed_at: match?(%DateTime{}, job.completed_at) or is_nil(job.completed_at)
+    ]
+  end
+
+  # What Oban's executor does to a row, state by state: it counts an attempt and stamps
+  # `attempted_at` together when it takes the job, records an error for every failed attempt (so a
+  # retryable or discarded job has one), and stamps `completed_at` only on completion. Each rule is
+  # reported with its own name.
+  @attempted_states ~w(executing completed retryable discarded)
+
+  defp job_coherence(job) do
+    attempted? = job.attempt >= 1
+    stamped? = not is_nil(job.attempted_at)
+
+    rules = [
+      attempt_over_max: job.attempt > job.max_attempts,
+      attempt_required: job.state in @attempted_states and not attempted?,
+      attempted_at_mismatch: attempted? != stamped?,
+      errors_required: job.state in ["retryable", "discarded"] and job.errors == [],
+      completed_at_required: job.state == "completed" and is_nil(job.completed_at),
+      completed_at_unexpected: job.state != "completed" and not is_nil(job.completed_at)
+    ]
+
+    for {rule, true} <- rules, do: {:job_state_coherence, job.id, rule}
+  end
+
+  # A job is scheduled, then attempted, then completed. The scheduled time comes before the attempt
+  # only for a job that is running or has run: a retryable job's `scheduled_at` is its next try, and
+  # a cancelled one may never have run.
+  defp job_time_order(job) do
+    ran? = job.state in ["executing", "completed", "discarded"]
+
+    if after?(job.attempted_at, job.completed_at) or
+         (ran? and after?(job.scheduled_at, job.attempted_at)),
+       do: [{:job_time_order, job.id}],
+       else: []
+  end
+
+  defp after?(%DateTime{} = first, %DateTime{} = second),
+    do: DateTime.compare(first, second) == :gt
+
+  defp after?(_first, _second), do: false
 
   defp job_failures(%{id: id, errors: errors}) when is_list(errors) do
     if Enum.all?(errors, &Failures.oban_error?/1), do: [], else: [{:unknown_failure, id}]

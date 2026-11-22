@@ -11,6 +11,10 @@ defmodule ScrypathOps.FixturesCheckTest do
   # here. It is self-contained on purpose: ExUnit loads only the test files it is given, so a
   # coverage test that called another test module could not run when this file runs alone.
   #
+  # A job plant is built the way the real builder builds a job (`built/3`), so it is impossible in
+  # exactly one way; a malformed job is reported for its shape alone, so a shape plant names no
+  # other tag.
+  #
   # Pure: no app env and no database, so it runs async.
   use ExUnit.Case, async: true
 
@@ -19,6 +23,7 @@ defmodule ScrypathOps.FixturesCheckTest do
   alias ScrypathFixtures.Failures
   alias ScrypathFixtures.Logistify
   alias ScrypathFixtures.Meili
+  alias ScrypathFixtures.ObanJob
   alias ScrypathFixtures.Scenarios
 
   @now ScrypathFixtures.preview_epoch()
@@ -291,7 +296,12 @@ defmodule ScrypathOps.FixturesCheckTest do
       plant(:retryable_attempts, "a retryable job scheduled in the past", id,
         scenarios: [
           change_jobs(deep, fn [j | rest] ->
-            [%{j | state: "retryable", attempt: 1, scheduled_at: DateTime.add(now, -10)} | rest]
+            retry = [{:oban_transport, 1, []}]
+
+            [
+              built(j, now, %{state: "retryable", attempt: 1, scheduled_in: -10, errors: retry})
+              | rest
+            ]
           end)
         ],
         problem: {:retryable_attempts, job_id}
@@ -299,13 +309,15 @@ defmodule ScrypathOps.FixturesCheckTest do
       plant(:retryable_attempts, "a retryable job at its last attempt", id,
         scenarios: [
           change_jobs(deep, fn [j | rest] ->
+            last = j.max_attempts
+
             [
-              %{
-                j
-                | state: "retryable",
-                  attempt: j.max_attempts,
-                  scheduled_at: DateTime.add(now, 600)
-              }
+              built(j, now, %{
+                state: "retryable",
+                attempt: last,
+                scheduled_in: 600,
+                errors: [{:oban_transport, last, []}]
+              })
               | rest
             ]
           end)
@@ -314,7 +326,16 @@ defmodule ScrypathOps.FixturesCheckTest do
       ),
       plant(:discarded_attempts, "a discarded job below its last attempt", id,
         scenarios: [
-          change_jobs(deep, fn [j | rest] -> [%{j | state: "discarded", attempt: 3} | rest] end)
+          change_jobs(deep, fn [j | rest] ->
+            [
+              built(j, now, %{
+                state: "discarded",
+                attempt: 3,
+                errors: [{:oban_transport, 3, []}]
+              })
+              | rest
+            ]
+          end)
         ],
         problem: {:discarded_attempts, job_id}
       ),
@@ -325,6 +346,150 @@ defmodule ScrypathOps.FixturesCheckTest do
           end)
         ],
         problem: {:job_in_future, job_id}
+      ),
+      # -- the shape of a job: reported for the shape alone, one cause per plant --------------
+      plant(:job_shape, "a job that lost a key", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [Map.delete(j, :attempt) | rest] end)],
+        problem: {:job_shape, job_id, :keys}
+      ),
+      plant(:job_shape, "a job that gained a key", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] -> [Map.put(j, :inserted_at, now) | rest] end)
+        ],
+        problem: {:job_shape, job_id, :keys}
+      ),
+      plant(:job_shape, "a state Oban does not have", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | state: "exhausted"} | rest] end)],
+        problem: {:job_shape, job_id, :state}
+      ),
+      plant(:job_shape, "a worker Scrypath does not have", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | worker: "Some.Other"} | rest] end)],
+        problem: {:job_shape, job_id, :worker}
+      ),
+      plant(:job_shape, "a queue that is not a name", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | queue: :sync} | rest] end)],
+        problem: {:job_shape, job_id, :queue}
+      ),
+      plant(:job_shape, "args that are not a map", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | args: []} | rest] end)],
+        problem: {:job_shape, job_id, :args}
+      ),
+      plant(:job_shape, "errors that are not a list", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | errors: nil} | rest] end)],
+        problem: {:job_shape, job_id, :errors}
+      ),
+      plant(:job_shape, "an attempt that is not a count", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | attempt: "1"} | rest] end)],
+        problem: {:job_shape, job_id, :attempt}
+      ),
+      plant(:job_shape, "a negative attempt", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | attempt: -1} | rest] end)],
+        problem: {:job_shape, job_id, :attempt}
+      ),
+      plant(:job_shape, "a job that may never be attempted", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | max_attempts: 0} | rest] end)],
+        problem: {:job_shape, job_id, :max_attempts}
+      ),
+      plant(:job_shape, "an attempted_at that is not a time", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] -> [%{j | attempted_at: "yesterday"} | rest] end)
+        ],
+        problem: {:job_shape, job_id, :attempted_at}
+      ),
+      plant(:job_shape, "a job with no scheduled_at", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | scheduled_at: nil} | rest] end)],
+        problem: {:job_shape, job_id, :scheduled_at}
+      ),
+      plant(:job_shape, "a completed_at that is not a time", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | completed_at: 0} | rest] end)],
+        problem: {:job_shape, job_id, :completed_at}
+      ),
+      # -- what a state implies: one plant per rule --------------------------------------------
+      plant(:job_state_coherence, "an executing job that was never attempted", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [built(j, now, %{state: "executing", attempt: 0}) | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :attempt_required}
+      ),
+      plant(:job_state_coherence, "a completed job at attempt zero", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [built(j, now, %{state: "completed", attempt: 0}) | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :attempt_required}
+      ),
+      plant(:job_state_coherence, "a job past its last attempt", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [built(j, now, %{state: "executing", attempt: j.max_attempts + 1}) | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :attempt_over_max}
+      ),
+      plant(:job_state_coherence, "an attempt with no attempted_at", id,
+        scenarios: [change_jobs(deep, fn [j | rest] -> [%{j | attempt: 1} | rest] end)],
+        problem: {:job_state_coherence, job_id, :attempted_at_mismatch}
+      ),
+      plant(:job_state_coherence, "an attempted_at on a job never attempted", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [%{j | attempted_at: DateTime.add(now, -10)} | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :attempted_at_mismatch}
+      ),
+      plant(:job_state_coherence, "a retryable job with no error", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [built(j, now, %{state: "retryable", attempt: 1, scheduled_in: 480}) | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :errors_required}
+      ),
+      plant(:job_state_coherence, "a discarded job with no error", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [built(j, now, %{state: "discarded", attempt: j.max_attempts}) | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :errors_required}
+      ),
+      plant(:job_state_coherence, "a completed job with no completed_at", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [%{built(j, now, %{state: "completed", attempt: 1}) | completed_at: nil} | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :completed_at_required}
+      ),
+      plant(:job_state_coherence, "a completed_at on a job that did not complete", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [%{j | completed_at: DateTime.add(now, -5)} | rest]
+          end)
+        ],
+        problem: {:job_state_coherence, job_id, :completed_at_unexpected}
+      ),
+      # -- the order of a job's own stamps ------------------------------------------------------
+      plant(:job_time_order, "a job completed before it was attempted", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            done = built(j, now, %{state: "completed", attempt: 1})
+            [%{done | completed_at: DateTime.add(now, -5_000)} | rest]
+          end)
+        ],
+        problem: {:job_time_order, job_id}
+      ),
+      plant(:job_time_order, "an executing job attempted before its scheduled time", id,
+        scenarios: [
+          change_jobs(deep, fn [j | rest] ->
+            [built(j, now, %{state: "executing", attempt: 1, scheduled_in: 60}) | rest]
+          end)
+        ],
+        problem: {:job_time_order, job_id}
       ),
       plant(:duplicate_id, "the same scenario registered twice", id,
         scenarios: [deep, deep],
@@ -457,6 +622,25 @@ defmodule ScrypathOps.FixturesCheckTest do
   # -- helpers -------------------------------------------------------------------------------
 
   defp problem_tags(problems), do: for({_id, tuple} <- problems, uniq: true, do: elem(tuple, 0))
+
+  # A job built the way the real builder builds one, from the deep queue's first job: an available
+  # upsert with that job's id, queue, args and `max_attempts`, unless `attrs` say otherwise. The
+  # builder stamps what the state implies (an attempt stamps `attempted_at`, a completed job
+  # `completed_at`), so a plant changes the one field it names and nothing else.
+  defp built(job, now, attrs) do
+    base = %{
+      id: job.id,
+      state: "available",
+      worker: :upsert,
+      queue: job.queue,
+      args: job.args,
+      now: now,
+      ago: 120,
+      max_attempts: job.max_attempts
+    }
+
+    ObanJob.job(Map.merge(base, attrs))
+  end
 
   # A succeeded task on the scenario's index with the given uid, enqueued `ago` seconds before now.
   defp task_enqueued(scenario, uid, ago) do
