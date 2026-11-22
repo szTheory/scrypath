@@ -462,17 +462,23 @@ end
 | A5 | Hosted `ops-ui` increase from this phase stays inside the noise band | Pattern 8 | Low; re-measure per CI-EFFICIENCY finding 29's revisit trigger |
 | A6 | One mounted assertion set can stand in for the `Layouts.app` shell in surface stories without the sidebar's per-page nav state | Pattern 6 | Medium; surface stories need `Layouts.app` with `mount_path`, `flash: %{}`, `shell: :ops`, check at plan time |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Fix D3 in this phase? (needs the maintainer, ask-first: a second defect fix beyond D1)**
    - What we know: reproducible crash, `scrypath_ops` only, the recovery view-model removes it by construction.
    - What's unclear: whether the maintainer wants it fixed now or recorded.
    - Recommendation: fix in Plan 4 with its own test and a `test(ops-ui):` title that says it fixes a defect; fallback is to leave the evidence line unextracted and record D3. Needed before Plan 4 is written.
+   - **RESOLVED:** the maintainer chose to fix it in this phase (interactive dialog 2026-11-22, orchestrator ruling 1, CONTEXT D3 decision). Implemented in 197-04 Task 1: `RecoveryView` yields a closed `:unavailable` state, a mounted test is red on the old code and green after; the phase PR body names it (197-05 Task 2).
 2. **Is "Recovery verified" in the journey required or stretch?** PILOT-01's text ends at the return link, so queued satisfies it. Recommendation: required = queued; verified = a second test in the same file with a stated cut rule and one fixtures edit (`Product.search_records/2`). Planner decides.
+   - **RESOLVED:** queued is required (197-01 Task 1); verified is a separate cut-able test with the CONTEXT cut rule (197-01 Task 2 step 5: stop after about a quarter of the plan or two failed attempts, and record it as `operator.spec.ts`'s job). Orchestrator ruling 2.
 3. **Hosting story in 197?** Required only by the sentence "adopter theming appears in one Hosting story only". Recommendation: defer (no deliverable needs it) and record in the Pause 1 note, or include a 4-variation story and the allowlisted-variables check if there is room. Planner decides.
+   - **RESOLVED:** no Hosting story in this phase (orchestrator ruling 3, CONTEXT decided autonomously); 197-04 Task 2 and 197-05 Task 1 add no adopter theming.
 4. **Persona name.** The glossary defines an operator persona as "a named, fictional person" with trigger, skill, device and habits. Recommendation: one paragraph on the landing page for "the paged on-call engineer (ROLE-OPS, JOB-03)", no invented first name unless the maintainer wants one.
+   - **RESOLVED:** one paragraph, no invented name (orchestrator ruling 3): the landing page (197-05 Task 1) and the Job story caption (197-04 Task 2).
 5. **Font fix location** (RESOLVED as a defect, open as a choice): fix before Pause 1, inside Plan 2 or 5; `storybook.js` or `app.css`.
+   - **RESOLVED:** first plan, `storybook.js` body style, product stylesheet untouched (orchestrator ruling 4, CONTEXT). 197-01 Task 3: bundle check with a cause-pinned plant, and the fidelity probe's font mode run with and without the fix.
 6. **Hosted measurement of the 197 cost.** Plan 5 should record warm minus same-day control for `ops-ui` after merge (finding 29's revisit trigger).
+   - **RESOLVED:** 197-05 Task 2 takes the PR cold, warm and same-day control samples and the main cold sample; 197-05 Task 3 records them as the next CI-EFFICIENCY finding.
 7. (RESOLVED) Can the journey reach "verified"? Yes, with the seams in Pattern 1.
 8. (RESOLVED) D1 location and cause, D2 confirmation. D2: after "Recovery verified" and the return link, a fresh mount of Failed sync lists job 101 with Retry again and no receipt `[VERIFIED: scratch run]`; record it, do not encode it.
 9. (RESOLVED) Is the dev server a stable 4003 mechanism? No; the dedicated endpoint is (Pattern 9).
