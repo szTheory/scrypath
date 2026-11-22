@@ -34,6 +34,7 @@ defmodule ScrypathFixtures.Check do
   alias ScrypathFixtures.Meili
   alias ScrypathFixtures.Recordings
   alias ScrypathFixtures.Scenario
+  alias ScrypathFixtures.Scenarios
 
   @invariants [
     :wire_guard,
@@ -65,11 +66,9 @@ defmodule ScrypathFixtures.Check do
   @spec invariants() :: [atom()]
   def invariants, do: @invariants
 
-  @doc "The scenarios `run/1` checks by default."
+  @doc "The scenarios `run/1` checks by default: every registered scenario, built at `now`."
   @spec scenarios(DateTime.t()) :: [Scenario.t()]
-  def scenarios(%DateTime{} = now) do
-    [ScrypathFixtures.Logistify.scenario(:deep_queue, now: now)]
-  end
+  def scenarios(%DateTime{} = now), do: Scenarios.all(now)
 
   @doc """
   Checks scenarios and returns `{:ok, %{scenarios: n}}` or `{:error, [problem]}`.
@@ -321,15 +320,22 @@ defmodule ScrypathFixtures.Check do
 
   # -- round trip through the real Scrypath code -----------------------------------------------
 
+  # A call with no expectation is not made, and an empty allowlist makes no per-schema call at all.
+  # `sync_status/2` and `failed_sync_work/2` split the operator-only keys off themselves, so they
+  # take the full options; `index_contract_drift/2` does not, so it takes the runtime half.
   defp round_trip_problems(%Scenario{allowlist: allowlist, expect: expect} = scenario) do
+    full_opts = scenario.scrypath_opts
+    runtime_opts = Scenario.runtime_opts(full_opts)
+
     for schema <- allowlist,
         {call, fun} <- [
-          sync_status: &Scrypath.sync_status/2,
-          failed_sync_work: &Scrypath.failed_sync_work/2
+          sync_status: fn -> Scrypath.sync_status(schema, full_opts) end,
+          failed_sync_work: fn -> Scrypath.failed_sync_work(schema, full_opts) end,
+          index_contract_drift: fn -> Scrypath.index_contract_drift(schema, runtime_opts) end
         ],
         expected = Map.get(expect, call),
         expected != nil,
-        got = outcome(fun.(schema, scenario.scrypath_opts)),
+        got = outcome(fun.()),
         not matches?(expected, got) do
       {scenario.id, {:unexpected_outcome, call, got}}
     end

@@ -12,8 +12,12 @@ defmodule ScrypathFixtures.Scenario do
     * `:now` is the instant every stamp is measured from.
     * `:allowlist` is the list of schema modules the operator UI would show.
     * `:scrypath_opts` uses only the keys `ScrypathOps.Schemas` forwards to Scrypath.
-    * `:expect` maps a call name (`:sync_status`, `:failed_sync_work`, `:index_contract_drift`,
-      `:posture`) to `:ok` or `{:error, tag}`.
+    * `:expect` maps a call name (`:sync_status`, `:failed_sync_work`, `:index_contract_drift`)
+      to `:ok` or `{:error, tag}`; a call with no entry is not made (without a `:backend`,
+      `Scrypath.sync_status/2` raises `ArgumentError` rather than returning a tag, and the posture
+      never calls it). `:posture` maps to `%{state: state, headline: headline}`: the state and
+      headline `ScrypathOps.Posture.summary/4` reports for the scenario, checked by the
+      `scrypath_ops` round-trip test (this project cannot call the operator UI).
 
   This module also owns the one list of operator-only option keys. `Scrypath.Operator` splits those
   keys off in `sync_status/2` and `failed_sync_work/2`, but `index_contract_drift/2` passes its
@@ -26,6 +30,7 @@ defmodule ScrypathFixtures.Scenario do
 
   @type kind :: :ordinary | :stress
   @type expectation :: :ok | {:error, term()}
+  @type posture_expectation :: %{state: atom(), headline: String.t()}
 
   @type t :: %__MODULE__{
           id: atom(),
@@ -35,7 +40,7 @@ defmodule ScrypathFixtures.Scenario do
           now: DateTime.t(),
           allowlist: [module()],
           scrypath_opts: keyword(),
-          expect: %{optional(atom()) => expectation()}
+          expect: %{optional(atom()) => expectation() | posture_expectation()}
         }
 
   # Copied from `@operator_only_opts` in lib/scrypath/operator.ex. A test pins the two lists

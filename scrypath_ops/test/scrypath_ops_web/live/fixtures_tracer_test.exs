@@ -104,7 +104,9 @@ defmodule ScrypathOpsWeb.FixturesTracerTest do
 
     test "the real deep queue is clean (positive control)", %{scenario: scenario} do
       assert {:ok, %{scenarios: 1}} = Check.run(scenarios: [scenario])
-      assert {:ok, %{scenarios: 1}} = Check.run()
+      # the default is the whole registry, not only the tracer
+      registered = length(ScrypathFixtures.Scenarios.ids())
+      assert {:ok, %{scenarios: ^registered}} = Check.run()
     end
 
     test "a job that names a foreign index is a job_index problem", %{scenario: scenario} do

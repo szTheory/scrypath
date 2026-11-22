@@ -8,6 +8,7 @@ defmodule ScrypathFixtures.Logistify do
   real `Scrypath.sync_status/2` reads it as pending work and `failed_sync_work/2` finds no rows.
   """
 
+  alias ScrypathFixtures.AppliedSettings
   alias ScrypathFixtures.FakeMeilisearchClient
   alias ScrypathFixtures.FakeObanInspector
   alias ScrypathFixtures.Logistify.Shipment
@@ -30,7 +31,7 @@ defmodule ScrypathFixtures.Logistify do
       oban_queue: @queue,
       index_prefix: @index_prefix,
       # RFC 2606: the .invalid top-level domain never resolves.
-      meilisearch_url: "https://logistify.fixtures.invalid",
+      meilisearch_url: AppliedSettings.url(:logistify),
       meilisearch_client: FakeMeilisearchClient,
       oban_inspector: FakeObanInspector
     ]
@@ -52,7 +53,12 @@ defmodule ScrypathFixtures.Logistify do
             meilisearch_tasks: deep_queue_tasks(now, index),
             oban_jobs: deep_queue_jobs(now, index, max_attempts)
           ],
-      expect: %{sync_status: :ok, failed_sync_work: :ok, posture: :ok}
+      expect: %{
+        sync_status: :ok,
+        failed_sync_work: :ok,
+        index_contract_drift: :ok,
+        posture: %{state: :ok, headline: "No sync failures found"}
+      }
     }
   end
 

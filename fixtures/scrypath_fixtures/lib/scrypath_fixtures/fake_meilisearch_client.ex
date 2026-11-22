@@ -46,6 +46,18 @@ defmodule ScrypathFixtures.FakeMeilisearchClient do
     end
   end
 
+  @doc """
+  Returns the applied index settings for the scenario's `:meilisearch_url`, as the real client's
+  `get_settings/2` does: `{:ok, settings}`, or `{:error, {:http_error, 404, body}}` for an index
+  that was never created. The answer comes from `ScrypathFixtures.AppliedSettings`, so it is data,
+  not state.
+  """
+  @spec get_settings(String.t(), keyword()) ::
+          {:ok, map()} | {:error, {:http_error, 404, map()}}
+  def get_settings(index, config) when is_binary(index) and is_list(config) do
+    ScrypathFixtures.AppliedSettings.fetch(Keyword.get(config, :meilisearch_url), index)
+  end
+
   defp uid_of(nil), do: nil
   defp uid_of(task), do: task["uid"]
 end
