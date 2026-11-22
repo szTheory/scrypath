@@ -15,6 +15,7 @@ ENV MIX_ENV=dev
 
 COPY mix.exs mix.lock ./
 COPY scrypath_ops/mix.exs scrypath_ops/mix.lock ./scrypath_ops/
+COPY fixtures/scrypath_fixtures/mix.exs ./fixtures/scrypath_fixtures/
 COPY examples/scrypath_ecommerce/mix.exs examples/scrypath_ecommerce/mix.lock ./examples/scrypath_ecommerce/
 
 # Each project resolves its own lock and compile graph into its project-local
@@ -57,6 +58,7 @@ ENV MIX_ENV=prod \
 
 COPY mix.exs mix.lock ./
 COPY scrypath_ops/mix.exs scrypath_ops/mix.lock ./scrypath_ops/
+COPY fixtures/scrypath_fixtures/mix.exs ./fixtures/scrypath_fixtures/
 COPY examples/scrypath_ecommerce/mix.exs examples/scrypath_ecommerce/mix.lock ./examples/scrypath_ecommerce/
 
 RUN --mount=type=cache,target=/root/.hex,sharing=locked \
@@ -95,6 +97,7 @@ ENV MIX_ENV=test \
 
 COPY mix.exs mix.lock ./
 COPY scrypath_ops/mix.exs scrypath_ops/mix.lock ./scrypath_ops/
+COPY fixtures/scrypath_fixtures/mix.exs ./fixtures/scrypath_fixtures/
 COPY examples/scrypath_ecommerce/mix.exs examples/scrypath_ecommerce/mix.lock ./examples/scrypath_ecommerce/
 
 RUN --mount=type=cache,target=/root/.hex,sharing=locked \

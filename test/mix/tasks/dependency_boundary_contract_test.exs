@@ -38,6 +38,8 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @dev_router "scrypath_ops/lib/scrypath_ops_web/dev_router.ex"
   @catalog_routes_source "scrypath_ops/lib/scrypath_ops_web/optional_catalog_routes.ex"
   @boundary_script "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh"
+  @boundary_dockerfile "examples/scrypath_ecommerce/Dockerfile"
+  @fixtures_copy "COPY fixtures/scrypath_fixtures/mix.exs ./fixtures/scrypath_fixtures/"
   @telemetry_source "scrypath_ops/lib/scrypath_ops_web/telemetry.ex"
   @application_source "scrypath_ops/lib/scrypath_ops/application.ex"
   @endpoint_source "scrypath_ops/lib/scrypath_ops_web/endpoint.ex"
@@ -794,6 +796,225 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     end
   end
 
+  # Static boundary checks for the fixtures project (ADR 0002, v1.49 Phase 196). It is a dev and test path
+  # dependency of Ops: it must stay out of the Hex package (package_metadata_test), every mounted consumer,
+  # production graph and the prod image. A path dependency is in no lock, so these rows read the manifest
+  # options and the scripts directly, and the integration probes (ops_dependency_boundary_test) check the
+  # built graphs. Each check has a planted failing case that asserts its own cause, not only "a violation".
+  describe "fixtures boundary (ADR 0002, v1.49 Phase 196)" do
+    test "the Ops manifest declares the fixtures path dependency for dev and test only" do
+      assert path_dependency_options!(@ops_manifest, :scrypath_fixtures) ==
+               [path: "../fixtures/scrypath_fixtures", only: [:dev, :test]]
+
+      assert fixtures_dependency_violation(@ops_manifest) == nil
+    end
+
+    test "neither the root manifest nor the host depends on the fixtures project" do
+      for manifest <- [@root_manifest, @host_manifest] do
+        refute :scrypath_fixtures in direct_dependency_names!(manifest),
+               "#{manifest}: the fixtures project belongs to scrypath_ops only"
+      end
+    end
+
+    test "planted manifests are each rejected for their own cause" do
+      tmp =
+        Path.join(System.tmp_dir!(), "fixtures-boundary-#{System.unique_integer([:positive])}")
+
+      File.mkdir_p!(tmp)
+      on_exit(fn -> File.rm_rf(tmp) end)
+
+      path = ~s(path: "../fixtures/scrypath_fixtures")
+      manifest = fn name, line -> write_planted_manifest!(tmp, name, line) end
+
+      compliant = manifest.("compliant.exs", "{:scrypath_fixtures, #{path}, only: [:test, :dev]}")
+      absent = manifest.("absent.exs", ~s({:jason, "~> 1.4"}))
+      unrestricted = manifest.("unrestricted.exs", "{:scrypath_fixtures, #{path}}")
+      dev_only = manifest.("dev_only.exs", "{:scrypath_fixtures, #{path}, only: :dev}")
+
+      all_envs =
+        manifest.("all_envs.exs", "{:scrypath_fixtures, #{path}, only: [:dev, :test, :prod]}")
+
+      wrong_path =
+        manifest.(
+          "wrong_path.exs",
+          ~s({:scrypath_fixtures, path: "../fixtures/other", only: [:dev, :test]})
+        )
+
+      hex_two = manifest.("hex_two.exs", ~s({:scrypath_fixtures, "~> 0.1"}))
+
+      hex_three =
+        manifest.("hex_three.exs", ~s({:scrypath_fixtures, "~> 0.1", only: [:dev, :test]}))
+
+      assert fixtures_dependency_violation(compliant) == nil
+
+      assert fixtures_dependency_violation(absent) ==
+               "#{absent}: the manifest must declare the fixtures dependency, but :scrypath_fixtures is absent"
+
+      only_message = fn file, got ->
+        "#{file}: the fixtures dependency must declare only: [:dev, :test], got #{got}"
+      end
+
+      assert fixtures_dependency_violation(unrestricted) == only_message.(unrestricted, "nil")
+      assert fixtures_dependency_violation(dev_only) == only_message.(dev_only, ":dev")
+
+      assert fixtures_dependency_violation(all_envs) ==
+               only_message.(all_envs, "[:dev, :test, :prod]")
+
+      path_message = fn file, got ->
+        "#{file}: the fixtures dependency must use path: \"../fixtures/scrypath_fixtures\", got #{got}"
+      end
+
+      assert fixtures_dependency_violation(wrong_path) ==
+               path_message.(wrong_path, ~s("../fixtures/other"))
+
+      assert fixtures_dependency_violation(hex_two) == path_message.(hex_two, "nil")
+      assert fixtures_dependency_violation(hex_three) == path_message.(hex_three, "nil")
+    end
+
+    test "root lib and scrypath_ops lib never mention the fixtures project" do
+      root = Path.wildcard("lib/**/*.{ex,exs}")
+      ops = Path.wildcard("scrypath_ops/lib/**/*.{ex,exs}")
+      assert root != [] and ops != [], "expected sources under lib/ and scrypath_ops/lib/"
+
+      mentions = (root ++ ops) |> Enum.map(&{&1, File.read!(&1)}) |> fixtures_mentions()
+
+      assert mentions == [],
+             "a fixtures name in a production source breaks the prod compile and the Hex package: #{inspect(mentions)}"
+    end
+
+    test "planted mentions are reported by exact path" do
+      sources = [
+        {"lib/planted_module.ex", "alias ScrypathFixtures.Logistify"},
+        {"scrypath_ops/lib/planted_task.ex",
+         ~s[Mix.Task.run("scrypath_fixtures.check_fixtures")]},
+        {"lib/clean.ex", "defmodule Clean do\nend\n"}
+      ]
+
+      assert fixtures_mentions(sources) == [
+               "lib/planted_module.ex",
+               "scrypath_ops/lib/planted_task.ex"
+             ]
+    end
+
+    test "the Docker boundary script forbids the fixtures project in prod and host graphs" do
+      script = File.read!(@boundary_script)
+
+      assert fixtures_script_violations(script) == []
+
+      # Planted: each edit removes one thing the script must prove. It must stay well-formed shell and leave the
+      # catalog checks untouched, so that exactly the one fixtures message names what was removed.
+      mutants = [
+        {"the fixtures if-block", ~s(forbidden_deps="$forbidden_deps scrypath_fixtures"), ":",
+         "its own if block"},
+        {"the shared list",
+         ~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller"),
+         ~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller scrypath_fixtures"),
+         "shared forbidden list must not contain scrypath_fixtures"},
+        {"ScrypathFixtures in forbidden_modules", ", ScrypathFixtures, PhoenixStorybook, MDEx]",
+         ", PhoenixStorybook, MDEx]", "must forbid the ScrypathFixtures module"},
+        {"the prod _build check", ~s(if [ "$MIX_ENV" = "prod" ]; then),
+         ~s(if [ "$MIX_ENV" = "test" ]; then), "_build/prod/lib/scrypath_fixtures"},
+        {"the prod _build path", "/app/scrypath_ops/_build/prod/lib/scrypath_fixtures",
+         "/app/scrypath_ops/_build/test/lib/scrypath_fixtures",
+         "_build/prod/lib/scrypath_fixtures"}
+      ]
+
+      tmp = Path.join(System.tmp_dir!(), "fixtures-script-#{System.unique_integer([:positive])}")
+      File.mkdir_p!(tmp)
+      on_exit(fn -> File.rm_rf(tmp) end)
+
+      for {removed, from, to, fragment} <- mutants do
+        mutated = String.replace(script, from, to)
+        assert mutated != script, "planted edit (#{removed}) found nothing to change: #{from}"
+
+        mutant_path = Path.join(tmp, "mutant.sh")
+        File.write!(mutant_path, mutated)
+        {output, status} = System.cmd("bash", ["-n", mutant_path], stderr_to_stdout: true)
+        assert status == 0, "planted edit (#{removed}) is malformed shell: #{output}"
+
+        assert [message] = fixtures_script_violations(mutated),
+               "removing #{removed} must be reported by exactly one fixtures message"
+
+        assert message =~ fragment, "removing #{removed} was reported as: #{message}"
+
+        assert storybook_script_violations(mutated) == [],
+               "removing #{removed} must not disturb the catalog checks"
+      end
+    end
+
+    test "the Dockerfile copies the fixtures manifest in each stage that resolves Ops" do
+      dockerfile = File.read!(@boundary_dockerfile)
+
+      assert Enum.map(dockerfile_stages(dockerfile), &elem(&1, 0)) ==
+               ["beam_base", "asset_builder", "runtime_prod", "runtime_test"]
+
+      assert fixtures_dockerfile_violations(dockerfile) == []
+
+      # Planted: each edit removes or misplaces the line in exactly one stage.
+      for stage <- ["asset_builder", "runtime_prod", "runtime_test"] do
+        removed =
+          edit_dockerfile_stage(
+            dockerfile,
+            stage,
+            &String.replace(&1, @fixtures_copy <> "\n", "")
+          )
+
+        refute removed == dockerfile, "removing the fixtures COPY from #{stage} changed nothing"
+
+        assert fixtures_dockerfile_violations(removed) ==
+                 [
+                   "stage #{stage} copies scrypath_ops/mix.exs but has no `#{@fixtures_copy}` line"
+                 ]
+
+        late =
+          edit_dockerfile_stage(dockerfile, stage, fn text ->
+            text
+            |> String.replace(@fixtures_copy <> "\n", "")
+            |> then(
+              &Regex.replace(~r/\nCOPY (--exclude=\S+ )?\. \.\n/, &1, "\n#{@fixtures_copy}\n\\0")
+            )
+          end)
+
+        refute late == dockerfile, "moving the fixtures COPY in #{stage} changed nothing"
+
+        assert fixtures_dockerfile_violations(late) ==
+                 ["stage #{stage} must copy the fixtures manifest before its first mix deps.get"]
+
+        doubled =
+          edit_dockerfile_stage(
+            dockerfile,
+            stage,
+            &String.replace(
+              &1,
+              @fixtures_copy <> "\n",
+              @fixtures_copy <> "\n" <> @fixtures_copy <> "\n"
+            )
+          )
+
+        assert fixtures_dockerfile_violations(doubled) ==
+                 ["stage #{stage} copies the fixtures manifest more than once"]
+      end
+    end
+
+    test ".dockerignore keeps the fixtures sources and ignores their build output" do
+      text = File.read!(".dockerignore")
+
+      assert fixtures_dockerignore_violations(text) == []
+
+      assert fixtures_dockerignore_violations(text <> "fixtures/\n") ==
+               ["excludes the fixtures sources: fixtures/"]
+
+      assert fixtures_dockerignore_violations(text <> "fixtures/*\n") ==
+               ["excludes the fixtures sources: fixtures/*"]
+
+      assert fixtures_dockerignore_violations(String.replace(text, "fixtures/*/_build\n", "")) ==
+               ["must ignore fixtures/*/_build"]
+
+      assert fixtures_dockerignore_violations(String.replace(text, "fixtures/*/deps\n", "")) ==
+               ["must ignore fixtures/*/deps"]
+    end
+  end
+
   defp storybook_mentions(sources) do
     for {path, text} <- sources, text =~ ~r/PhoenixStorybook|phoenix_storybook/, do: path
   end
@@ -929,6 +1150,171 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     ]
     |> Enum.filter(&elem(&1, 0))
     |> Enum.map(&elem(&1, 1))
+  end
+
+  defp write_planted_manifest!(tmp, name, dependency_line) do
+    path = Path.join(tmp, name)
+
+    File.write!(path, """
+    defmodule Planted.MixProject do
+      defp deps do
+        [
+          {:phoenix, "~> 1.7"},
+          #{dependency_line}
+        ]
+      end
+    end
+    """)
+
+    path
+  end
+
+  # Reads the options of a dependency written as `{:name, path: ..., only: ...}` (a two-tuple whose second
+  # element is a keyword list) or `{:name, "~> 1.0", only: ...}`. dependency_options!/2 above cannot: its
+  # first clause matches the two-tuple and returns [] for a path dependency, which would make every
+  # assertion on `only:` read nil (research N4, Pitfall 2). A requirement with no options reads as [].
+  defp path_dependency_options!(path, dependency) do
+    deps_body = path |> read_ast!() |> find_deps_body!()
+
+    Enum.find_value(deps_body, fn
+      {^dependency, options} when is_list(options) -> options
+      {^dependency, requirement} when is_binary(requirement) -> []
+      {:{}, _, [^dependency, _requirement, options]} when is_list(options) -> options
+      _ -> nil
+    end) || flunk("#{path}: expected direct dependency #{dependency}")
+  end
+
+  defp fixtures_dependency_violation(manifest_path) do
+    if :scrypath_fixtures in direct_dependency_names!(manifest_path) do
+      options = path_dependency_options!(manifest_path, :scrypath_fixtures)
+      path = Keyword.get(options, :path)
+      only = Keyword.get(options, :only)
+
+      cond do
+        path != "../fixtures/scrypath_fixtures" ->
+          "#{manifest_path}: the fixtures dependency must use path: \"../fixtures/scrypath_fixtures\", got #{inspect(path)}"
+
+        Enum.sort(List.wrap(only)) != [:dev, :test] ->
+          "#{manifest_path}: the fixtures dependency must declare only: [:dev, :test], got #{inspect(only)}"
+
+        true ->
+          nil
+      end
+    else
+      "#{manifest_path}: the manifest must declare the fixtures dependency, but :scrypath_fixtures is absent"
+    end
+  end
+
+  defp fixtures_mentions(sources) do
+    for {path, text} <- sources, text =~ ~r/ScrypathFixtures|scrypath_fixtures/, do: path
+  end
+
+  # Text-level check of the Docker verify script. The fixtures project is a dev and test dependency of Ops,
+  # like the catalog, so the prod image and the host project (in both images) must not list it while the test
+  # image's /app/scrypath_ops legitimately does. It has its own `if` block, separate from the catalog block, so
+  # storybook_script_violations/1 above keeps reading a single statement.
+  defp fixtures_script_violations(script) do
+    shared = ~r/^\s*forbidden_deps="([^"$]*)"$/m
+
+    conditional =
+      ~r/if \[\[ "\$environment" == "prod" \|\| "\$project_dir" == "\/app\/examples\/scrypath_ecommerce" \]\]; then\n\s*forbidden_deps="\$forbidden_deps scrypath_fixtures"\n\s*fi/
+
+    modules = ~r/^\s*forbidden_modules = \[([^\]]*)\]$/m
+
+    prod_build =
+      ~r/if \[ "\$MIX_ENV" = "prod" \]; then\n\s*test ! -e "\/app\/scrypath_ops\/_build\/prod\/lib\/scrypath_fixtures" \|\|/
+
+    [
+      {not Regex.match?(conditional, script),
+       "the prod-or-host condition must add scrypath_fixtures to the forbidden dependencies in its own if block"},
+      {case Regex.run(shared, script) do
+         [_, names] -> names =~ "scrypath_fixtures"
+         nil -> true
+       end,
+       "the shared forbidden list must exist and the shared forbidden list must not contain scrypath_fixtures"},
+      {case Regex.run(modules, script) do
+         [_, names] -> not (names =~ "ScrypathFixtures")
+         nil -> true
+       end, "the runtime probe must forbid the ScrypathFixtures module"},
+      {not Regex.match?(prod_build, script),
+       "the prod image check must fail when _build/prod/lib/scrypath_fixtures exists"}
+    ]
+    |> Enum.filter(&elem(&1, 0))
+    |> Enum.map(&elem(&1, 1))
+  end
+
+  # `{stage_name, text}` for each FROM block, in file order.
+  defp dockerfile_stages(dockerfile) do
+    ~r/(?=^FROM )/m
+    |> Regex.split(dockerfile, trim: true)
+    |> Enum.filter(&String.starts_with?(&1, "FROM "))
+    |> Enum.map(fn text ->
+      [_, name] = Regex.run(~r/^FROM \S+ AS (\S+)/m, text)
+      {name, text}
+    end)
+  end
+
+  defp edit_dockerfile_stage(dockerfile, stage, edit) do
+    ~r/(?=^FROM )/m
+    |> Regex.split(dockerfile, trim: true)
+    |> Enum.map_join(fn text ->
+      if text =~ ~r/^FROM \S+ AS #{stage}$/m, do: edit.(text), else: text
+    end)
+  end
+
+  # Each stage that copies the Ops manifest for its early `mix deps.get` must copy the fixtures manifest too,
+  # once, before that `deps.get`: Mix reads a path dependency's manifest there, and a missing one only fails
+  # later at compile ("the dependency is not available").
+  defp fixtures_dockerfile_violations(dockerfile) do
+    ops_copy = "COPY scrypath_ops/mix.exs scrypath_ops/mix.lock ./scrypath_ops/"
+
+    for {name, text} <- dockerfile_stages(dockerfile),
+        text =~ ops_copy,
+        message = fixtures_copy_problem(name, text),
+        do: message
+  end
+
+  defp fixtures_copy_problem(name, text) do
+    copies = length(String.split(text, @fixtures_copy)) - 1
+    copy_at = offset(text, @fixtures_copy)
+    deps_get_at = offset(text, "mix deps.get")
+
+    cond do
+      copies == 0 ->
+        "stage #{name} copies scrypath_ops/mix.exs but has no `#{@fixtures_copy}` line"
+
+      copies > 1 ->
+        "stage #{name} copies the fixtures manifest more than once"
+
+      copy_at > deps_get_at ->
+        "stage #{name} must copy the fixtures manifest before its first mix deps.get"
+
+      true ->
+        nil
+    end
+  end
+
+  defp offset(text, needle) do
+    case :binary.match(text, needle) do
+      {at, _length} -> at
+      :nomatch -> -1
+    end
+  end
+
+  # The builder and runtime_test stages compile the fixtures sources, so .dockerignore must not exclude them;
+  # their _build and deps directories are ignored like the other nested projects'.
+  defp fixtures_dockerignore_violations(text) do
+    lines = text |> String.split("\n") |> Enum.map(&String.trim/1)
+    excluding = ~r{^/?(\*\*/)?fixtures(/(\*\*?|scrypath_fixtures(/(\*\*?|lib|mix\.exs)?)?))?/?$}
+
+    for(
+      line <- lines,
+      Regex.match?(excluding, line),
+      do: "excludes the fixtures sources: #{line}"
+    ) ++
+      for required <- ["fixtures/*/_build", "fixtures/*/deps"],
+          required not in lines,
+          do: "must ignore #{required}"
   end
 
   defp catalog_bind_violation({ip, flag}) do

@@ -651,6 +651,9 @@ COMPOSE
         "/app/examples/scrypath_ecommerce/_build/$MIX_ENV/lib/tailwind"; do
         test ! -e "$dependency" || { echo "asset wrapper was compiled into the runtime graph: $dependency" >&2; exit 1; }
       done
+      if [ "$MIX_ENV" = "prod" ]; then
+        test ! -e "/app/scrypath_ops/_build/prod/lib/scrypath_fixtures" || { echo "fixtures project was compiled into the prod runtime graph" >&2; exit 1; }
+      fi
     ' || fail "$environment target contains a builder dependency, dev build, or dev config"
 
     for project_dir in /app/scrypath_ops /app/examples/scrypath_ecommerce; do
@@ -660,6 +663,11 @@ COMPOSE
       # legitimately lists them. The prod image and the host project, in both images, must never include them.
       if [[ "$environment" == "prod" || "$project_dir" == "/app/examples/scrypath_ecommerce" ]]; then
         forbidden_deps="$forbidden_deps phoenix_storybook mdex mdex_native"
+      fi
+      # The fixtures project is a dev and test dependency of Ops, like the catalog: only the test image's
+      # /app/scrypath_ops lists it. A separate block keeps the catalog block above a single statement.
+      if [[ "$environment" == "prod" || "$project_dir" == "/app/examples/scrypath_ecommerce" ]]; then
+        forbidden_deps="$forbidden_deps scrypath_fixtures"
       fi
       for forbidden_dep in $forbidden_deps; do
         if printf '%s\n' "$deps_output" | grep -Eq "^[*] $forbidden_dep[[:space:]]"; then
@@ -694,7 +702,7 @@ for {app, label} <- [{:scrypath_ops, "ops"}, {:scrypath_ecommerce, "host"}] do
   IO.puts("DEPENDENCY_BOUNDARY_APP label=#{label} env=#{environment} required=#{inspect(applications)} optional=#{inspect(optional)} code=#{code_path}")
 end
 
-forbidden_modules = [Esbuild, Tailwind, Phoenix.LiveDashboard, Phoenix.LiveDashboard.RequestLogger, Telemetry.Metrics, :telemetry_poller, PhoenixStorybook, MDEx]
+forbidden_modules = [Esbuild, Tailwind, Phoenix.LiveDashboard, Phoenix.LiveDashboard.RequestLogger, Telemetry.Metrics, :telemetry_poller, ScrypathFixtures, PhoenixStorybook, MDEx]
 loaded = Enum.filter(forbidden_modules, &Code.ensure_loaded?/1)
 loaded == [] || raise "runtime loaded builder/diagnostic modules: #{inspect(loaded)}"
 
