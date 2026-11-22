@@ -5,9 +5,21 @@
 #
 # It starts one task-scoped container on a random loopback port with tmpfs data and no master key
 # (so no secret can appear in a body), sends the requests below, writes each response body to
-# <NN>-<what>.json (or <NN>-<what>-<status>.json for a non-2xx body), prints a markdown table of
-# the files for PROVENANCE.md, and stops the container on any exit. The JSON files are written by
-# this script and never edited by hand.
+# <NN>-<what>.json (or <NN>-<what>-<status>.json for a non-2xx body) in a staging directory, prints
+# a markdown table of the files for PROVENANCE.md, and stops the container on any exit. The JSON
+# files are written by this script and never edited by hand.
+#
+# Nothing in the output directory is touched until every request has succeeded. Only then are the
+# recorded files copied into it and the *.json files it holds that this run did not record removed
+# (so a re-record leaves no stale file), and the directory is never empty in between. A failed run
+# (Docker down, a pull that fails, any request that errors) leaves the committed recordings as they
+# were. The output directory must be one of:
+#
+#   * a meilisearch-v* directory beside this script (the committed recordings), or
+#   * a new or empty directory under the system temporary directory.
+#
+# Any other directory is refused before Docker starts and nothing is deleted, so a mistyped
+# argument cannot remove the *.json files of the directory you are standing in.
 #
 # Every value is Scrypath-owned and fictional: indexes logistify_shipment, shopadelic_product and
 # wikily_page (never created) plus the logistify_shipment__reindex partner, ids shaped LSH-1001.
@@ -21,18 +33,58 @@
 
 set -euo pipefail
 
-out_dir="${1:?usage: record.sh <output-dir>}"
-mkdir -p "$out_dir"
-out_dir=$(cd "$out_dir" && pwd)
-rm -f "$out_dir"/*.json
+out_arg="${1:?usage: record.sh <output-dir>}"
+
+# Resolve the output directory without creating it (its parent must exist), then decide whether it
+# is one this script may replace files in. `pwd -P` resolves symlinks on both sides of every
+# comparison, so /tmp and /private/tmp (macOS) compare equal.
+case "$out_arg" in
+  /*) out_abs="$out_arg" ;;
+  *) out_abs="$PWD/$out_arg" ;;
+esac
+out_name=$(basename "$out_abs")
+out_parent=$(cd "$(dirname "$out_abs")" 2>/dev/null && pwd -P) || {
+  echo "refusing: the parent directory of $out_arg does not exist" >&2
+  exit 2
+}
+case "$out_name" in
+  '' | . | ..)
+    echo "refusing: $out_arg does not name a directory to record into" >&2
+    exit 2
+    ;;
+esac
+out_dir="$out_parent/$out_name"
+
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+tmp_root=$(cd "${TMPDIR:-/tmp}" && pwd -P)
+
+allowed=no
+if [ "$out_parent" = "$script_dir" ]; then
+  case "$out_name" in meilisearch-v*) allowed=yes ;; esac
+fi
+case "$out_dir" in
+  "$tmp_root"/*)
+    # new, or an empty directory (mktemp -d makes one): nothing in it to lose
+    if [ ! -e "$out_dir" ] || { [ -d "$out_dir" ] && [ -z "$(ls -A "$out_dir")" ]; }; then
+      allowed=yes
+    fi
+    ;;
+esac
+if [ "$allowed" != yes ]; then
+  echo "refusing to record into $out_dir" >&2
+  echo "use a meilisearch-v* directory beside this script, or a new or empty directory under $tmp_root" >&2
+  exit 2
+fi
 
 # One backslash, so hostile text below can be written as ${bs}uXXXX without a raw character.
 bs=$'\134'
 name=scrypath-p196-recording
 image=getmeili/meilisearch:v1.15
 work=$(mktemp -d)
+stage="$work/out"
 manifest="$work/manifest.md"
 raw="$work/last.raw"
+mkdir -p "$stage"
 : >"$manifest"
 
 cleanup() {
@@ -98,8 +150,8 @@ save() {
     2??) file="$stem.json" ;;
     *) file="$stem-$LAST_STATUS.json" ;;
   esac
-  escape <"$raw" >"$out_dir/$file"
-  printf '\n' >>"$out_dir/$file"
+  escape <"$raw" >"$stage/$file"
+  printf '\n' >>"$stage/$file"
   printf '| `%s` | `%s`%s | %s |\n' "$file" "$LAST_REQUEST" "$note" "$LAST_STATUS" >>"$manifest"
 }
 
@@ -290,7 +342,16 @@ save 30-list-after-swap-live-documents " (document tasks under the live index af
 request GET "/tasks?indexUids=logistify_shipment__reindex&types=$types&limit=1000"
 save 31-list-after-swap-partner-documents " (document tasks under the partner index after the swap)"
 
-echo "Recorded $(ls "$out_dir"/*.json | wc -l | tr -d ' ') files from $image into $out_dir" >&2
+# Every request succeeded: only now touch the output directory. Copy the new files in first, then
+# remove the *.json files this run did not record (a status that changed renames a file), so the
+# directory is never left without recordings.
+mkdir -p "$out_dir"
+cp "$stage"/*.json "$out_dir"/
+for old in "$out_dir"/*.json; do
+  [ -e "$stage/$(basename "$old")" ] || rm -f "$old"
+done
+
+echo "Recorded $(ls "$stage"/*.json | wc -l | tr -d ' ') files from $image into $out_dir" >&2
 echo "Image: $(docker image inspect "$image" --format '{{.Id}}')" >&2
 echo >&2
 cat "$manifest"

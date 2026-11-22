@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 milestone: v1.49
 milestone_name: Catalog foundation
-current_phase: 196
-current_phase_name: Fixtures and three adopters
-status: verifying
-stopped_at: Completed 196-05-PLAN.md
-last_updated: "2026-11-22T04:47:09.515Z"
+current_phase: 197
+current_phase_name: Pilot JOB-03, unhealthy verdict to verified retry
+status: planning
+stopped_at: Phase 196 complete, ready to plan Phase 197
+last_updated: "2026-11-22T06:34:58.540Z"
 last_activity: 2026-11-22
-last_activity_desc: Plan 196-05 complete (hostile text, bulk digest and source lints; phase PR #174 squash-merged on green required checks; hosted cost measured, CI-EFFICIENCY finding 29)
-state_head: 7a18da1213a72e165c00ca8c70570ae8e776039f
+last_activity_desc: Phase 196 complete, transitioned to Phase 197
+state_head: 053b718c8cba93c6afdf35b79053de2aa7b21573
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 17
   completed_plans: 8
   percent: 47
@@ -29,10 +29,10 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 ## Current Position
 
-Phase: 196 (Fixtures and three adopters) — all five plans done and merged
-Plan: 5 of 5
-Status: Phase complete — ready for verification
-Last activity: 2026-11-22 — Plan 196-05 complete (hostile text, bulk digest and source lints; phase PR #174 squash-merged as 7a18da12; hosted cost measured, CI-EFFICIENCY finding 29)
+Phase: 197 — Pilot JOB-03, unhealthy verdict to verified retry
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-22 — Phase 196 complete, transitioned to Phase 197
 
 
 ## Performance Metrics
@@ -61,6 +61,7 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 
 - v1.48 Discovery and onboarding (opened 2026-11-21 as recommended; [v1.48 prep notes](research/v1.48-prep/), D is the tie-breaker): 192 docs truth and README, 193 HexDocs regroup plus guards, an entry-point checkpoint (record GitHub traffic referrers and hex.pm downloads; decides 194), optional 194 website content. Cut line after 193. The catalog is v1.49 (renumbered at its opening); the earlier "catalog is v1.48, Phases 192-196" wording in v1.47 notes is superseded. Hex 0.3.20 after Phase 192 needs the maintainer's explicit yes.
 - v1.49 Phase 195 (2026-11-21): storybook mounted dev/test-only and merged (PRs #171, #172). The cold `ops-ui` trigger tripped (620 s on the first main run against the 548 s line) and the maintainer chose to continue; see [GO-NO-GO.md](phases/195-mount-and-prove/GO-NO-GO.md). The plan's measure-then-merge order could not see the main-run cold number, so future gates should measure on the main-run cold sample after merge.
+- v1.49 Phase 196 (2026-11-22): `fixtures/scrypath_fixtures` merged (PRs #174, #175, plus review fixes): three adopters, 11 scenarios, 31 recorded Meilisearch v1.15.2 payloads, a DB-free check task with 31 invariants. Hosted cost was in the noise (warm minus control -3 s; first cold main run 469 s). Findings F3 and F4 are with the maintainer ([196-FINDINGS.md](phases/196-fixtures-and-three-adopters/196-FINDINGS.md)). Phase 197 planning starts with the fixtures fold evaluation (still no second consumer; the measured cost does not argue for folding).
 - v1.47 was the small "Brand completion" milestone: 189 website, 190 wording, 191 cleanup (done).
 - GATE-02 is mapped to Phase 189 and stays a standing rule for every phase. Gate budget: 8 of 12 used at the start of v1.47; Phase 189's static contract takes row 9. `build-and-check` stays non-required (decided in the gap pass; re-open trigger in SITE-05).
 - Phase 189 merges only after `build-and-check` is green on the exact PR head (checked with `gh api`), because merging deploys the site and that job is not a required check.
@@ -115,7 +116,7 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 ## Session Continuity
 
 Last session: 2026-11-22T04:47:09.455Z
-Stopped at: Completed 196-05-PLAN.md
+Stopped at: Phase 196 complete, ready to plan Phase 197
 Acting next: verify Phase 196 (all five plans are done and merged), then plan Phase 197, which starts with the fixtures fold evaluation. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 

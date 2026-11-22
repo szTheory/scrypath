@@ -32,7 +32,7 @@ v1.48 Discovery and onboarding is archived ([audit](milestones/v1.48-MILESTONE-A
 **Phase numbering continues from v1.48 (the first v1.49 phase is 195).** Plan cap is 5 per phase; the milestone stops and re-asks at 20 plans.
 
 - [x] **Phase 195: Mount and prove** - phoenix_storybook mounted dev/test-only with real styling, boundary tests made non-vacuous, and a measured go/no-go recorded (3 plans) (completed 2026-11-21)
-- [ ] **Phase 196: Fixtures and three adopters** - a `fixtures/scrypath_fixtures` project of pure builders and three Scrypath-owned fictional adopters with named states (5 plans)
+- [x] **Phase 196: Fixtures and three adopters** - a `fixtures/scrypath_fixtures` project of pure builders and three Scrypath-owned fictional adopters with named states (5 plans) (completed 2026-11-22)
 - [ ] **Phase 197: Pilot JOB-03, unhealthy verdict to verified retry** - mounted journey first, safe extraction into shared components, catalog contract test, stable storybook on 4003; ends with Pause 1 (5 plans)
 - [ ] **Phase 198: Scale** - remaining small screens, Clinicly and Chatly sets, a local browser check; cut by default and sized after Pause 1; ends with Pause 2 (at most 4 plans)
 
@@ -77,7 +77,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
   2. Real Meilisearch task payload shapes were recorded once from a task-scoped Docker run (container removed afterward), every fixture failure string comes from a closed table whose entries carry a `source:` pointing at a real Meilisearch error code or Scrypath path, hostile text is stored as escapes, and no failure the library cannot produce is present.
   3. Shopadelic (journey and settings drift), Logistify (deep queue, nothing failed) and Wikily (empty install) each have named states, ordinary data separate from stress variations, and nothing copied from the six sibling brand repos.
   4. The DB-free `check_fixtures` task runs first in its consumers' `test` alias and a planted failing case fails it; two renders with different `now` differ only in time-derived text; `package_metadata_test` asserts `fixtures/` never ships in the Hex tarball; the CI path classifier and `package_contents_test` decisions are recorded; the host's `phase173` fixtures and `?scenario=` branches remain with a recorded deletion trigger.
-**Plans**: 5/5 plans executed (cap 5; re-cut from the 4 estimated so each plan stays under 15 files and about 80k tokens; the one `scrypath_ops/mix.exs` edit is in 196-01):
+**Plans**: 5/5 plans complete (cap 5; re-cut from the 4 estimated so each plan stays under 15 files and about 80k tokens; the one `scrypath_ops/mix.exs` edit is in 196-01):
 **Wave 1**
 - [x] 196-01-PLAN.md — `fixtures/scrypath_fixtures` project and the Logistify tracer through the fake client to a rendered `/ops/health`; the single `scrypath_ops/mix.exs` edit (path dependency, `scrypath_fixtures.check_fixtures` first in the `test` alias, `preferred_envs`); DB-free check skeleton with cause-pinned plants; FixtureEnv
 
@@ -125,7 +125,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 195. Mount and prove | 3/3 | Complete    | 2026-11-21 |
-| 196. Fixtures and three adopters | 5/5 | In Progress | - |
+| 196. Fixtures and three adopters | 5/5 | Complete    | 2026-11-22 |
 | 197. Pilot JOB-03 | 0/5 | Not started | - |
 | 198. Scale | 0/4 | Not started (cut by default) | - |
 

@@ -13,8 +13,13 @@ defmodule ScrypathFixtures.Check do
 
   The check never reads the operator UI and never touches a database. It does these kinds of work:
 
-    * invariants on the raw data (key sets, index names, time order, Oban attempt rules), taken from
-      Meilisearch's documented behaviour and Oban's executor;
+    * invariants on the raw data, taken from Meilisearch's documented behaviour and Oban's executor.
+      A task has its key set, index name, time order and a uid that is unique and never enqueued
+      before a lower one (Meilisearch hands uids out in enqueue order). A job has its shape (the 11
+      keys and their types, a known state and worker), the attempt, error and completion rules of
+      its state, the order of its own stamps and Oban's retry and discard attempt rules. A job
+      whose shape is wrong is reported for its shape alone, because every other job rule reads the
+      fields the shape promises;
     * invariants on the registry and its labels: unique ids, every label says "(fictional)", every
       stress scenario says "stress", every Oban job names an allowlisted schema;
     * relative time: a scenario built three days later must differ by exactly three days in every
@@ -32,10 +37,11 @@ defmodule ScrypathFixtures.Check do
 
   Three more kinds of check read the project's own text and its bulk data:
 
-    * source lints over every file of the project: no raw bidirectional control, zero-width
-      character or byte-order mark (hostile text is written as escapes, never typed), and no
-      wall-clock, random, operating-system or repository call in `lib/` (every time is `now` minus an
-      offset);
+    * source lints over every file of the project: no raw bidirectional control, zero-width or
+      other invisible formatting character or byte-order mark (hostile text is written as escapes,
+      never typed; `format_codepoints/0` is the list), and none of the calls in `impure_tokens/0`
+      in `lib/` (wall clock, random source, unique ids, operating system, file system, repository;
+      every time is `now` minus an offset);
     * labels and data: no compliance-claim word and no sibling-brand canon id in a scenario label,
       any string inside a scenario, the README or `lib/` source, and a provenance line (fictional,
       Scrypath-owned, no records copied) in every adopter module and schema;
@@ -51,6 +57,7 @@ defmodule ScrypathFixtures.Check do
   alias ScrypathFixtures.Bulk
   alias ScrypathFixtures.Failures
   alias ScrypathFixtures.Meili
+  alias ScrypathFixtures.ObanJob
   alias ScrypathFixtures.Recordings
   alias ScrypathFixtures.Scenario
   alias ScrypathFixtures.Scenarios
@@ -60,6 +67,8 @@ defmodule ScrypathFixtures.Check do
     :unexpected_outcome,
     :task_keys,
     :index_uid,
+    :task_uid_unique,
+    :task_uid_order,
     :time_order,
     :unparsable_time,
     :meili_cancelled_spelling,
@@ -72,6 +81,9 @@ defmodule ScrypathFixtures.Check do
     :retryable_attempts,
     :discarded_attempts,
     :job_in_future,
+    :job_shape,
+    :job_state_coherence,
+    :job_time_order,
     :duplicate_id,
     :job_schema,
     :time_not_relative,
@@ -185,12 +197,37 @@ defmodule ScrypathFixtures.Check do
   # source checkout, never from a release.
   @fixtures_root Path.expand("../..", __DIR__)
 
-  # The characters Trojan Source hides behind: zero-width and direction marks (U+200B to U+200F),
-  # bidirectional embeddings and overrides (U+202A to U+202E), isolates (U+2066 to U+2069) and the
-  # byte-order mark (U+FEFF). Written as code points, so this file holds none of them itself.
-  @format_codepoints Enum.to_list(0x200B..0x200F) ++
+  # The characters Trojan Source and its relatives hide behind: every character that changes how
+  # text is ordered or shown without showing itself. Written as code points, so this file holds
+  # none of them itself. The list is explicit on purpose, and every entry has a planted file in
+  # `fixtures_provenance_test.exs`.
+  #
+  #   U+00AD           soft hyphen
+  #   U+061C           Arabic letter mark (a bidirectional control, UAX 9)
+  #   U+180E           Mongolian vowel separator
+  #   U+200B-U+200F    zero-width space, the two joiners, and the left and right direction marks
+  #   U+202A-U+202E    bidirectional embeddings and overrides
+  #   U+2060-U+2064    word joiner and the invisible operators (function application, times,
+  #                    separator, plus)
+  #   U+2066-U+2069    bidirectional isolates
+  #   U+FE00-U+FE0F    variation selectors
+  #   U+FEFF           byte-order mark (zero-width no-break space)
+  #   U+E0000-U+E007F  tag characters (invisible text that smuggles ASCII)
+  @format_codepoints [0x00AD, 0x061C, 0x180E] ++
+                       Enum.to_list(0x200B..0x200F) ++
                        Enum.to_list(0x202A..0x202E) ++
-                       Enum.to_list(0x2066..0x2069) ++ [0xFEFF]
+                       Enum.to_list(0x2060..0x2064) ++
+                       Enum.to_list(0x2066..0x2069) ++
+                       Enum.to_list(0xFE00..0xFE0F) ++
+                       [0xFEFF] ++
+                       Enum.to_list(0xE0000..0xE007F)
+
+  @doc """
+  The code points `:raw_format_char` forbids in any file of the project (bidirectional controls,
+  zero-width and other invisible formatting characters, the byte-order mark).
+  """
+  @spec format_codepoints() :: [non_neg_integer()]
+  def format_codepoints, do: @format_codepoints
 
   defp default_source_files do
     @fixtures_root
@@ -237,39 +274,97 @@ defmodule ScrypathFixtures.Check do
         do: {:source, {:raw_format_char, relative(path), codepoint}}
   end
 
-  # The calls a pure builder must not make. Each is written in two pieces so this file does not
-  # contain the text it searches for: this file stays under its own lint instead of being exempt.
-  defp impure_tokens do
-    [
-      "DateTime" <> ".utc_now",
-      "NaiveDateTime" <> ".utc_now",
-      "Date" <> ".utc_today",
-      ":rand" <> ".",
-      "System" <> ".",
-      ":os" <> ".",
-      "Repo" <> ".",
-      "~U" <> "["
-    ]
-  end
+  # The calls a pure builder must not make: the whole list, one family per group. A `lib/` file that
+  # holds one of these (see `impure_problems/3` for how it is matched) is an `:impure_source`
+  # problem that names the token. Each is written in two pieces so this file does not contain the
+  # text it searches for: this file stays under its own lint instead of being exempt.
+  #
+  # The README lists the same tokens. A new one needs a planted file in
+  # `fixtures_provenance_test.exs`, and that test fails for a token without one.
+  @impure_tokens [
+    # the wall clock, in every spelling Elixir and Erlang have for it
+    "DateTime" <> ".utc_now",
+    "DateTime" <> ".now",
+    "NaiveDateTime" <> ".utc_now",
+    "NaiveDateTime" <> ".local_now",
+    "Date" <> ".utc_today",
+    "Time" <> ".utc_now",
+    ":erlang" <> ".system_time",
+    ":erlang" <> ".monotonic_time",
+    ":erlang" <> ".timestamp",
+    ":erlang" <> ".localtime",
+    ":erlang" <> ".universaltime",
+    ":calendar" <> ".local_time",
+    ":calendar" <> ".universal_time",
+    # waiting on real time
+    "Process" <> ".sleep",
+    ":timer" <> ".",
+    # a datetime literal pins a calendar date (bracket delimiter, the one this project writes)
+    "~U" <> "[",
+    "~N" <> "[",
+    "~D" <> "[",
+    "~T" <> "[",
+    # a random source, or a value that differs on every call
+    ":rand" <> ".",
+    "Enum" <> ".random",
+    "Enum" <> ".shuffle",
+    "Enum" <> ".take_random",
+    ":crypto" <> ".strong_rand_bytes",
+    ":erlang" <> ".unique_integer",
+    "UUID" <> ".generate",
+    "UUID" <> ".bingenerate",
+    "UUID" <> ".uuid1",
+    "UUID" <> ".uuid4",
+    # the operating system and the file system
+    "System" <> ".",
+    ":os" <> ".",
+    "File" <> ".",
+    # a repository
+    "Repo" <> "."
+  ]
 
-  # A token counts only where a word starts, so a call on `NaiveDateTime` is one problem and not
-  # also one for the `DateTime` token it contains.
+  # Where a token is allowed, by path suffix, and nowhere else in `lib/`. The one datetime literal
+  # in the project is the preview epoch. The file system is read by the two modules whose job is to
+  # read this project's own files: the loader of the recordings (at compile time) and this check.
+  @exempt_paths %{
+    ("~U" <> "[") => ["/lib/scrypath_fixtures.ex"],
+    ("File" <> ".") => ["/lib/scrypath_fixtures/recordings.ex", "/lib/scrypath_fixtures/check.ex"]
+  }
+
+  @doc """
+  The calls `:impure_source` forbids in `lib/` source, as the text the check searches for.
+
+  A token matches where a word starts (so `NaiveDateTime` is one problem and not also one for the
+  `DateTime` token it contains) and on a line of code: a whole-line comment is not code, so a
+  comment may name a call. A comment after code on the same line is scanned, and so is a string.
+  Recordings, the README and any file outside `lib/` are never scanned for these.
+  """
+  @spec impure_tokens() :: [String.t()]
+  def impure_tokens, do: @impure_tokens
+
   defp impure_patterns do
-    for token <- impure_tokens() do
+    for token <- @impure_tokens do
       {token, Regex.compile!("(?<![A-Za-z0-9_])" <> Regex.escape(token))}
     end
   end
 
-  # The one datetime literal in the project lives in `lib/scrypath_fixtures.ex` (the preview epoch).
   defp impure_problems(path, content, patterns) do
     if lib_source?(path) do
+      code = without_comment_lines(content)
+
       for {token, pattern} <- patterns,
-          Regex.match?(pattern, content),
-          not (token == "~U" <> "[" and String.ends_with?(path, "/lib/scrypath_fixtures.ex")),
+          Regex.match?(pattern, code),
+          not exempt?(token, path),
           do: {:source, {:impure_source, relative(path), token}}
     else
       []
     end
+  end
+
+  defp without_comment_lines(content), do: Regex.replace(~r/^[ \t]*#.*$/m, content, "")
+
+  defp exempt?(token, path) do
+    @exempt_paths |> Map.get(token, []) |> Enum.any?(&String.ends_with?(path, &1))
   end
 
   # An adopter file is a module or schema under `lib/scrypath_fixtures/<adopter>.ex` or
@@ -516,9 +611,19 @@ defmodule ScrypathFixtures.Check do
     indexes = allowed_indexes(scenario)
 
     task_problems = Enum.flat_map(tasks, &task_problems(scenario, &1, indexes))
+    uid_problems = tasks |> task_uid_problems() |> tag(scenario)
     job_problems = Enum.flat_map(jobs, &job_problems(scenario, &1, indexes))
 
-    task_problems ++ job_problems ++ round_trip_problems(scenario)
+    task_problems ++ uid_problems ++ job_problems ++ round_trip(scenario, job_problems)
+  end
+
+  # A scenario holding a malformed job is not run through the real code: its answer to an
+  # impossible job says nothing about the scenario, and the fake inspector may raise on it. The
+  # shape problem is already reported.
+  defp round_trip(scenario, job_problems) do
+    if Enum.any?(job_problems, &match?({_id, {:job_shape, _job, _field}}, &1)),
+      do: [],
+      else: round_trip_problems(scenario)
   end
 
   defp list_opt(%Scenario{scrypath_opts: opts}, key) do
@@ -623,6 +728,37 @@ defmodule ScrypathFixtures.Check do
     if value in indexes, do: [], else: [{:index_uid, uid, value}]
   end
 
+  # A task with no "indexUid" key has no index name to check: that is `task_keys`' problem.
+  defp task_index(_task, _uid, _indexes), do: []
+
+  # Meilisearch gives every task one uid, never reuses it, and hands uids out in enqueue order, so a
+  # task is never enqueued before the task with the next lower uid. Only tasks whose uid is an
+  # integer and whose "enqueuedAt" parses take part: anything else is the wire guard's or
+  # `unparsable_time`'s problem. A step back in time is reported once, against the later uid.
+  defp task_uid_problems(tasks) do
+    duplicates =
+      for {uid, count} <- tasks |> Enum.map(& &1["uid"]) |> Enum.frequencies() |> Enum.sort(),
+          is_integer(uid),
+          count > 1,
+          do: {:task_uid_unique, uid}
+
+    enqueued =
+      for task <- tasks,
+          is_integer(task["uid"]),
+          %DateTime{} = at <- [parse_stamp(task["enqueuedAt"])],
+          do: {task["uid"], at}
+
+    inversions =
+      enqueued
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.flat_map(fn [{_lower, earlier}, {uid, later}] ->
+        if DateTime.compare(later, earlier) == :lt, do: [{:task_uid_order, uid}], else: []
+      end)
+
+    duplicates ++ inversions
+  end
+
   defp task_times(%Scenario{now: now}, task, uid) do
     stamps = Enum.map(["enqueuedAt", "startedAt", "finishedAt"], &parse_stamp(task[&1]))
 
@@ -662,16 +798,95 @@ defmodule ScrypathFixtures.Check do
 
   # -- jobs ----------------------------------------------------------------------------------
 
+  # A job with the wrong shape is reported for its shape alone: every other rule reads the fields
+  # the shape promises, and the real code's answer to an impossible job says nothing about it.
   defp job_problems(scenario, job, indexes) do
-    List.flatten([
-      job_index(job, indexes),
-      job_schema(job, scenario),
-      job_failures(job),
-      job_attempts(scenario, job),
-      job_times(scenario, job)
-    ])
-    |> tag(scenario)
+    case job_shape(job) do
+      [] ->
+        List.flatten([
+          job_index(job, indexes),
+          job_schema(job, scenario),
+          job_failures(job),
+          job_attempts(scenario, job),
+          job_times(scenario, job),
+          job_coherence(job),
+          job_time_order(job)
+        ])
+        |> tag(scenario)
+
+      shape_problems ->
+        tag(shape_problems, scenario)
+    end
   end
+
+  # The 11 atom keys `ScrypathFixtures.ObanJob.job/1` builds, with the types Oban's job row has.
+  @job_keys ~w(id state worker queue args errors attempt max_attempts attempted_at scheduled_at completed_at)a
+
+  defp job_shape(job) when is_map(job) do
+    if Enum.sort(Map.keys(job)) == Enum.sort(@job_keys) do
+      for {field, valid?} <- job_field_checks(job), not valid?, do: {:job_shape, job.id, field}
+    else
+      [{:job_shape, Map.get(job, :id), :keys}]
+    end
+  end
+
+  defp job_shape(_job), do: [{:job_shape, nil, :keys}]
+
+  # `scheduled_at` is never null in Oban (it defaults to the insert time); the other two stamps are
+  # null until the job is attempted or completed.
+  defp job_field_checks(job) do
+    [
+      state: job.state in ObanJob.states(),
+      worker: job.worker in Map.values(ObanJob.workers()),
+      queue: is_binary(job.queue),
+      args: is_map(job.args),
+      errors: is_list(job.errors),
+      attempt: is_integer(job.attempt) and job.attempt >= 0,
+      max_attempts: is_integer(job.max_attempts) and job.max_attempts >= 1,
+      attempted_at: match?(%DateTime{}, job.attempted_at) or is_nil(job.attempted_at),
+      scheduled_at: match?(%DateTime{}, job.scheduled_at),
+      completed_at: match?(%DateTime{}, job.completed_at) or is_nil(job.completed_at)
+    ]
+  end
+
+  # What Oban's executor does to a row, state by state: it counts an attempt and stamps
+  # `attempted_at` together when it takes the job, records an error for every failed attempt (so a
+  # retryable or discarded job has one), and stamps `completed_at` only on completion. Each rule is
+  # reported with its own name.
+  @attempted_states ~w(executing completed retryable discarded)
+
+  defp job_coherence(job) do
+    attempted? = job.attempt >= 1
+    stamped? = not is_nil(job.attempted_at)
+
+    rules = [
+      attempt_over_max: job.attempt > job.max_attempts,
+      attempt_required: job.state in @attempted_states and not attempted?,
+      attempted_at_mismatch: attempted? != stamped?,
+      errors_required: job.state in ["retryable", "discarded"] and job.errors == [],
+      completed_at_required: job.state == "completed" and is_nil(job.completed_at),
+      completed_at_unexpected: job.state != "completed" and not is_nil(job.completed_at)
+    ]
+
+    for {rule, true} <- rules, do: {:job_state_coherence, job.id, rule}
+  end
+
+  # A job is scheduled, then attempted, then completed. The scheduled time comes before the attempt
+  # only for a job that is running or has run: a retryable job's `scheduled_at` is its next try, and
+  # a cancelled one may never have run.
+  defp job_time_order(job) do
+    ran? = job.state in ["executing", "completed", "discarded"]
+
+    if after?(job.attempted_at, job.completed_at) or
+         (ran? and after?(job.scheduled_at, job.attempted_at)),
+       do: [{:job_time_order, job.id}],
+       else: []
+  end
+
+  defp after?(%DateTime{} = first, %DateTime{} = second),
+    do: DateTime.compare(first, second) == :gt
+
+  defp after?(_first, _second), do: false
 
   defp job_failures(%{id: id, errors: errors}) when is_list(errors) do
     if Enum.all?(errors, &Failures.oban_error?/1), do: [], else: [{:unknown_failure, id}]

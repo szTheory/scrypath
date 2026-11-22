@@ -47,7 +47,7 @@ These record why the new top-level `fixtures/` directory needed no change in som
 
 ## Hostile text
 
-`ScrypathFixtures.Hostile` holds twelve named strings for stress cases: a right-to-left override, bidirectional isolates, a family emoji joined by zero-width joiners, a zero-width space, one letter spelled two ways (precomposed and decomposed), Han and Arabic text, a 511-byte id, a 512-byte id, an unbroken 200-character token and markup text. Every non-ASCII character is an Elixir `\u{...}` escape, so no hidden character is ever typed into source. The check refuses a raw bidirectional control, zero-width character or byte-order mark in any file of this project (`:raw_format_char`); a source file that reads differently from what it runs is the Trojan Source class of problem.
+`ScrypathFixtures.Hostile` holds twelve named strings for stress cases: a right-to-left override, bidirectional isolates, a family emoji joined by zero-width joiners, a zero-width space, one letter spelled two ways (precomposed and decomposed), Han and Arabic text, a 511-byte id, a 512-byte id, an unbroken 200-character token and markup text. Every non-ASCII character is an Elixir `\u{...}` escape, so no hidden character is ever typed into source. The check refuses a raw bidirectional control, zero-width or other invisible formatting character or byte-order mark in any file of this project (`:raw_format_char`); a source file that reads differently from what it runs is the Trojan Source class of problem. The list is `ScrypathFixtures.Check.format_codepoints/0`: U+00AD, U+061C, U+180E, U+200B-U+200F, U+202A-U+202E, U+2060-U+2064, U+2066-U+2069, U+FE00-U+FE0F, U+FEFF and U+E0000-U+E007F.
 
 Hostile text is stress data and nothing else. It lives in one named variation, Shopadelic `:hostile_ids` (scenario id `shopadelic_hostile_ids`, kind `:stress`), and no ordinary record carries it.
 
@@ -76,7 +76,12 @@ Every adopter is fictional, and the data is Scrypath-owned. No record is copied 
 - every scenario label says "(fictional)";
 - every adopter module and schema has a line saying it is a fictional adopter, Scrypath-owned data, with no records copied (`:provenance_missing`);
 - no label, scenario string, README line or `lib/` source makes a compliance claim or uses a sibling canon id (`:denylisted_word`). The words themselves are listed in one attribute of `lib/scrypath_fixtures/check.ex` and nowhere else, which is why that one file is the only exemption from the scan;
-- `lib/` source never reads the wall clock, a random source, the operating system or a repository (`:impure_source`). Every time is `now` minus an offset, and the preview epoch is the one literal.
+- `lib/` source never reads the wall clock, a random source, the operating system, the file system or a repository (`:impure_source`). Every time is `now` minus an offset, and the preview epoch is the one literal. The forbidden calls are the explicit list `ScrypathFixtures.Check.impure_tokens/0`, one planted file each in `fixtures_provenance_test.exs`. A token matches where a word starts, on a line of code: a whole-line comment may name a call, a comment after code on the same line is still scanned, and files outside `lib/` (recordings, this README, scripts) are never scanned for these. The list:
+  - the wall clock: `DateTime.utc_now`, `DateTime.now`, `NaiveDateTime.utc_now`, `NaiveDateTime.local_now`, `Date.utc_today`, `Time.utc_now`, `:erlang.system_time`, `:erlang.monotonic_time`, `:erlang.timestamp`, `:erlang.localtime`, `:erlang.universaltime`, `:calendar.local_time`, `:calendar.universal_time`;
+  - waiting on real time: `Process.sleep`, `:timer.`;
+  - datetime literals, which pin a calendar date (bracket form): `~U[` (allowed only in `lib/scrypath_fixtures.ex`, the preview epoch), `~N[`, `~D[`, `~T[`;
+  - a random source or a value that differs on every call: `:rand.`, `Enum.random`, `Enum.shuffle`, `Enum.take_random`, `:crypto.strong_rand_bytes`, `:erlang.unique_integer`, `UUID.generate`, `UUID.bingenerate`, `UUID.uuid1`, `UUID.uuid4`;
+  - the operating system, the file system and a repository: `System.`, `:os.`, `File.` (allowed only in `lib/scrypath_fixtures/recordings.ex`, which loads the recordings at compile time, and in `lib/scrypath_fixtures/check.ex`, which reads this project's own files), `Repo.`.
 
 ## Recordings
 

@@ -21,7 +21,7 @@ The image tag is the one the repository pins in `compose.yaml`, `examples/scrypa
 bash fixtures/scrypath_fixtures/recordings/record.sh fixtures/scrypath_fixtures/recordings/meilisearch-v1.15
 ```
 
-`record.sh` starts one container named `scrypath-p196-recording` (label `scrypath.task=p196-recording`) on a random loopback port with tmpfs data, sends the requests in the table below, writes each response body to its file and removes the container on any exit. It deletes the `*.json` files in the output directory first, so a re-record leaves no stale file. The JSON files are written by the script and never edited by hand.
+`record.sh` starts one container named `scrypath-p196-recording` (label `scrypath.task=p196-recording`) on a random loopback port with tmpfs data, sends the requests in the table below, writes each response body to a staging directory and removes the container on any exit. It touches the output directory only after every request has succeeded: it then copies the new files in and removes any `*.json` file it did not record, so a re-record leaves no stale file and a failed run (Docker down, a failed pull or request) leaves the committed recordings as they were. The output directory must be a `meilisearch-v*` directory beside the script or a new or empty directory under the system temporary directory; any other directory is refused before Docker starts, with nothing deleted. The JSON files are written by the script and never edited by hand.
 
 Needs: Docker, `curl`, `node`, bash (not zsh). The 60,000-document load that makes a `processing` task visible goes through `--data-binary @file` from a temporary directory the script removes.
 
