@@ -39,6 +39,16 @@ config :scrypath_ops, ScrypathOps.Catalog.PlantedEndpoint,
   render_errors: [formats: [html: ScrypathOpsWeb.ErrorHTML], layout: false],
   server: false
 
+# The catalog's own endpoint (`mix scrypath_ops.catalog.serve`) for test/scrypath_ops_web/catalog_endpoint_test.exs.
+# Tests dispatch conns to it without opening a port: no `http` and `server: false`, so the boundary
+# contract still reads "the test config never starts this server".
+config :scrypath_ops, ScrypathOps.Catalog.Endpoint,
+  secret_key_base: String.duplicate("c", 64),
+  live_view: [signing_salt: "catalogtestlv"],
+  pubsub_server: ScrypathOps.PubSub,
+  render_errors: [formats: [html: ScrypathOpsWeb.ErrorHTML], layout: false],
+  server: false
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 
