@@ -5,17 +5,17 @@ milestone_name: Catalog foundation
 current_phase: 196
 current_phase_name: Fixtures and three adopters
 status: executing
-stopped_at: Completed 196-01-PLAN.md
-last_updated: "2026-11-22T01:33:47.423Z"
+stopped_at: Completed 196-02-PLAN.md
+last_updated: "2026-11-22T01:46:35.873Z"
 last_activity: 2026-11-21
-last_activity_desc: Plan 196-01 complete (fixtures project and Logistify tracer)
-state_head: dbf9a12675a9d7ec746e7d2d005808c11aee47da
+last_activity_desc: Plan 196-02 complete (fixtures boundary: classifier, probes, Docker script, README exit rule)
+state_head: c6916447f35063223fe0f9bc680b50606415df9c
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 17
-  completed_plans: 4
-  percent: 24
+  completed_plans: 5
+  percent: 29
 ---
 
 # Project State
@@ -30,9 +30,9 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 ## Current Position
 
 Phase: 196 (Fixtures and three adopters) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
-Last activity: 2026-11-21 — Plan 196-01 complete (fixtures project and Logistify tracer)
+Last activity: 2026-11-21 — Plan 196-02 complete (fixtures boundary: classifier, probes, Docker script, README exit rule)
 
 
 ## Performance Metrics
@@ -48,6 +48,7 @@ Last activity: 2026-11-21 — Plan 196-01 complete (fixtures project and Logisti
 | Phase 195 P02 | 13 min | 3 tasks | 17 files |
 | Phase 195 P03 | 95min | 3 tasks | 4 files |
 | Phase 196 P01 | 7 min | 2 tasks | 14 files |
+| Phase 196 P02 | 12 min | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,7 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 195]: Continue with the storybook on the maintainer's choice against a tripped cold sample (not a pass): PR cold ops-ui 517 s, first main run after the merge 620 s (over the 548 s line), warm 378 s; the cold excess is mostly the lock-change root-graph cache miss, the storybook's own marginal cost is about +36 s
 - [Phase 196]: Operator-only option keys live once in ScrypathFixtures.Scenario, pinned to lib/scrypath/operator.ex by an AST test — Scrypath.index_contract_drift/2 hands its options straight to Config.resolve!/1, which raises ArgumentError for operator keys, so every caller of resolve!/1 or index_contract_drift/2 passes Scenario.runtime_opts/1 while sync_status/2 and failed_sync_work/2 take the full options.
 - [Phase 196]: Each fixture-check plant changes one field of the real scenario and asserts its exact problem tag beside a positive control — A plant that fails in the builder or asserts only not-ok can pass for the wrong reason; four deliberate breakages (job_index, time_order, operator key list, FixtureEnv restore) each failed only their own control.
+- [Phase 196]: Plan 02: the fixtures Docker-script check is its own if block after the catalog block (the storybook regex needs a single statement), and the mounted probe asserts the .app list because the lock check is vacuous for a path dependency
 
 ### Pending Todos
 - Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
@@ -103,9 +105,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-22T01:33:47.368Z
-Stopped at: Completed 196-01-PLAN.md
-Acting next: execute 196-02-PLAN.md (root accounting for the fixtures project), then 196-03 to 196-05 on the phase branch; Plan 05 pushes it. A Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-22T01:46:35.813Z
+Stopped at: Completed 196-02-PLAN.md
+Acting next: execute 196-03-PLAN.md (recorded Meilisearch payloads and the failure table), then 196-04 and 196-05 on the phase branch; Plan 05 pushes it. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps
