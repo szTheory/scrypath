@@ -1110,6 +1110,198 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     end
   end
 
+  # Each case is mounted through the real router under FixtureEnv. When the page is ready, its
+  # summary and filters, and in every state the whole page, must canonicalize equal to the shared
+  # components' own output for the page's own view-model. The stories render the same functions, so
+  # this is what lets a story claim to show the page. The four page states are all reached: ready,
+  # no schemas, missing backend and an unavailable schema.
+  describe "seam: failed_summary, failed_filters and surface (story output equals production output)" do
+    for {scenario_id, query, state} <- [
+          {:shopadelic_failed_journey, "", :ready},
+          {:shopadelic_failed_journey, "?cause=transport", :ready},
+          {:shopadelic_failed_journey, "?cause=backend_rejected", :ready},
+          {:shopadelic_settings_aligned, "", :ready},
+          {:logistify_history_over_limit_f1, "", :ready},
+          {:wikily_first_delete_failed, "", :ready},
+          {:wikily_unconfigured, "", :no_schemas},
+          {:wikily_missing_backend, "", :missing_backend},
+          {:shopadelic_failed_journey, "?schema=No.Such.Schema", :unavailable}
+        ] do
+      test "#{scenario_id}#{query}: the #{state} page equals the component output", %{conn: conn} do
+        scenario_id = unquote(scenario_id)
+        scenario = ScrypathFixtures.Scenarios.get!(scenario_id, ScrypathFixtures.preview_epoch())
+        on_exit(FixtureEnv.put(scenario))
+
+        {:ok, view, _html} = live(conn, "/ops/failed-sync" <> unquote(query))
+        _ = render_async(view)
+
+        assigns = :sys.get_state(view.pid).socket.assigns
+        now = ScrypathOps.Clock.utc_now()
+        page_view = page_view(assigns, now)
+        mounted = view |> render() |> LazyHTML.from_fragment()
+
+        # The cause is real data: the page reached the state this case names.
+        assert page_view.state == unquote(state)
+
+        if page_view.state == :ready do
+          summary =
+            "[data-testid='failed-sync-load-error'], section[aria-labelledby='failed-sync-summary-heading']"
+
+          mounted_summary = LazyHTML.query(mounted, summary)
+
+          component_summary =
+            component_fragment(&FailedSync.failed_summary/1,
+              view: page_view,
+              mount_path: assigns.mount_path
+            )
+            |> LazyHTML.query(summary)
+
+          assert Enum.count(mounted_summary) > 0
+          assert HtmlCanon.canon(mounted_summary) == HtmlCanon.canon(component_summary)
+
+          if page_view.show_filters? do
+            filters = "#failed-sync-filters"
+            mounted_filters = LazyHTML.query(mounted, filters)
+
+            component_filters =
+              component_fragment(&FailedSync.failed_filters/1, view: page_view)
+              |> LazyHTML.query(filters)
+
+            assert Enum.count(mounted_filters) == 1
+            assert HtmlCanon.canon(mounted_filters) == HtmlCanon.canon(component_filters)
+          end
+        end
+
+        surface_assigns = [
+          view: page_view,
+          mount_path: assigns.mount_path,
+          flash: assigns.flash,
+          shell: assigns.shell,
+          page_title: assigns.page_title,
+          last_refresh_at: assigns.last_refresh_at
+        ]
+
+        page = LazyHTML.query(mounted, "[data-phx-main] > *")
+        component_page = component_fragment(&FailedSync.surface/1, surface_assigns)
+
+        assert Enum.count(page) > 0
+        assert HtmlCanon.canon(page) == HtmlCanon.canon(component_page)
+
+        # Control: the comparison can fail. A different mount path changes every shell link.
+        changed_page =
+          component_fragment(
+            &FailedSync.surface/1,
+            Keyword.put(surface_assigns, :mount_path, "/elsewhere")
+          )
+
+        refute HtmlCanon.canon(page) == HtmlCanon.canon(changed_page)
+      end
+    end
+
+    test "the delete confirmation the mounted page opens equals the component output", %{
+      conn: conn
+    } do
+      scenario =
+        ScrypathFixtures.Scenarios.get!(
+          :shopadelic_failed_journey,
+          ScrypathFixtures.preview_epoch()
+        )
+
+      on_exit(FixtureEnv.put(scenario))
+
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+      refute has_element?(view, "#retry-delete-modal")
+
+      # Job 104 is the failed delete: pressing its rendered Retry opens the confirmation.
+      view
+      |> element("button[data-testid='failed-sync-retry'][phx-value-id='104']")
+      |> render_click()
+
+      assert has_element?(view, "#retry-delete-modal")
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      page_view = page_view(assigns, ScrypathOps.Clock.utc_now())
+      assert page_view.delete_row.id == 104
+
+      mounted =
+        view |> render() |> LazyHTML.from_fragment() |> LazyHTML.query("#retry-delete-modal")
+
+      component =
+        component_fragment(&FailedSync.delete_confirmation/1, row: page_view.delete_row)
+        |> LazyHTML.query("#retry-delete-modal")
+
+      assert Enum.count(mounted) == 1
+      assert HtmlCanon.canon(mounted) =~ "Confirm delete sync work"
+      assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component)
+
+      # Control: a different document list changes the canonical tree.
+      recovery = page_view.delete_row.entry.recovery
+      reference = put_in(recovery.reference, [:payload, "document_ids"], ["OTHER-1"])
+      entry = %{page_view.delete_row.entry | recovery: %{recovery | reference: reference}}
+      changed_row = %{page_view.delete_row | entry: entry}
+
+      changed =
+        component_fragment(&FailedSync.delete_confirmation/1, row: changed_row)
+        |> LazyHTML.query("#retry-delete-modal")
+
+      refute HtmlCanon.canon(mounted) == HtmlCanon.canon(changed)
+    end
+
+    test "the retry receipt the mounted page shows equals the component output", %{conn: conn} do
+      scenario =
+        ScrypathFixtures.Scenarios.get!(
+          :shopadelic_failed_journey,
+          ScrypathFixtures.preview_epoch()
+        )
+
+      on_exit(FixtureEnv.put(scenario))
+
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+      receipt = %{
+        replacement_job: 991,
+        attempt: 1,
+        operation: :upsert,
+        index: "shopadelic_product",
+        generation: 0,
+        handle: "seam-handle",
+        state: :accepted
+      }
+
+      put_live_assigns(view,
+        recovery_receipts: %{FailedSyncView.row_key(journey_entry(101)) => receipt}
+      )
+
+      _ = render_patch(view, ~p"/ops/failed-sync")
+
+      assigns = :sys.get_state(view.pid).socket.assigns
+      page_view = page_view(assigns, ScrypathOps.Clock.utc_now())
+      row = Enum.find(page_view.rows, &(&1.id == 101))
+      assert row.action == :receipt
+
+      selector = "[data-testid='recovery-receipt']"
+      mounted = view |> render() |> LazyHTML.from_fragment() |> LazyHTML.query(selector)
+
+      component =
+        component_fragment(&FailedSync.retry_receipt/1, row: row, mount_path: assigns.mount_path)
+        |> LazyHTML.query(selector)
+
+      assert Enum.count(mounted) == 1
+      assert HtmlCanon.canon(mounted) =~ "Retry queued"
+      assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component)
+
+      # Control: a receipt without a handle has no status link, so it is a different tree.
+      no_handle =
+        component_fragment(&FailedSync.retry_receipt/1,
+          row: %{row | receipt: %{receipt | handle: nil}},
+          mount_path: assigns.mount_path
+        )
+        |> LazyHTML.query(selector)
+
+      refute HtmlCanon.canon(mounted) == HtmlCanon.canon(no_handle)
+    end
+  end
+
   defp put_delete_job!(document_ids) do
     Application.put_env(:scrypath_ops, :oban_jobs, [
       %{
@@ -1202,5 +1394,10 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     (&FailedSync.failed_row/1)
     |> render_component(assigns)
     |> LazyHTML.from_fragment()
+  end
+
+  # A shared component rendered with the given assigns, as a parsed fragment.
+  defp component_fragment(component, assigns) do
+    component |> render_component(assigns) |> LazyHTML.from_fragment()
   end
 end
