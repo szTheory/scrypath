@@ -407,6 +407,39 @@ defmodule ScrypathOps.FixturesRecordingsTest do
       end
     end
 
+    test "the task-failed text sorts map keys and keeps the task struct's declared field order" do
+      at = DateTime.add(ScrypathFixtures.preview_epoch(), -60)
+      failed = build("failed")
+      error = Failures.oban_error(:oban_task_failed, attempt: 8, at: at, task: failed)
+
+      # Plain map keys are sorted ...
+      assert error["error"] =~
+               ~s(reference: %{index_uid: "#{@index}", task_uid: #{failed["uid"]}})
+
+      # ... and the struct's fields are not: id comes after kind and source, as the struct declares.
+      assert error["error"] =~
+               "%Scrypath.Operations.Task{source: :meilisearch, kind: :backend_task, id: #{failed["uid"]}, "
+    end
+
+    test "inspect_stable/1 sorts plain map keys whatever order the VM created their atoms in" do
+      suffix = System.unique_integer([:positive])
+
+      # The atoms are created in reverse alphabetical order, and the VM prints atom keys in creation
+      # order, so plain inspect/1 prints this map out of order (the old text could do the same).
+      zed = String.to_atom("fixture_zed_#{suffix}")
+      alpha = String.to_atom("fixture_alpha_#{suffix}")
+      map = Map.new([{alpha, 1}, {zed, 2}])
+      sorted = "%{#{alpha}: 1, #{zed}: 2}"
+
+      assert inspect(map) == "%{#{zed}: 2, #{alpha}: 1}",
+             "the plant no longer shows the VM's atom-order printing; this guard may be obsolete"
+
+      assert Failures.inspect_stable(map) == sorted
+
+      # Nested maps are sorted too.
+      assert Failures.inspect_stable({:error, %{outer: map}}) == "{:error, %{outer: #{sorted}}}"
+    end
+
     test "the invalid-job entry names the schema as Scrypath encodes it" do
       at = DateTime.add(ScrypathFixtures.preview_epoch(), -60)
 

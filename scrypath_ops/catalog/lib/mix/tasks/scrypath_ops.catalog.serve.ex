@@ -9,9 +9,12 @@ defmodule Mix.Tasks.ScrypathOps.Catalog.Serve do
   The port is `CATALOG_PORT`, default 4003. The server starts no Repo and no code reloader, so it
   needs no database and gives the same pages every run: the stories are code and the fixtures are
   pinned to a fixed instant. If something already listens on the port, the task looks at its
-  `/storybook/welcome` page: a page carrying the catalog's build markers is this catalog already
-  serving (the task says so and exits 0), anything else is another program (the task exits with an
-  error naming it when it can). It never signals that process.
+  `/storybook/welcome` page and compares the checkout and `HEAD` it prints with this checkout's: the
+  same checkout at the same commit is this catalog already serving (the task says so and exits 0).
+  A catalog from another checkout or another commit, and anything that is not a catalog, is an error
+  naming what holds the port when it can. It never signals that process. Uncommitted edits made after
+  a catalog started are not compared; the build facts on the page show whether the tree was dirty
+  when it started.
 
   Before it starts, the task stores `build_info/1` (the checkout, `main` and `HEAD` shas, whether the
   checkout has uncommitted changes, and the fixtures time) so the welcome page can print where the
@@ -32,10 +35,16 @@ defmodule Mix.Tasks.ScrypathOps.Catalog.Serve do
   def run(_args) do
     port = port()
     listening? = listener?(port)
+    info = build_info()
 
-    case port_verdict(listening?, listening? && holder(port), listening? && landing_body(port)) do
+    case port_verdict(
+           listening?,
+           listening? && holder(port),
+           listening? && landing_body(port),
+           info
+         ) do
       :free ->
-        serve(port)
+        serve(port, info)
 
       :ours ->
         Mix.shell().info(
@@ -51,30 +60,88 @@ defmodule Mix.Tasks.ScrypathOps.Catalog.Serve do
   end
 
   @doc """
-  What to do with a port, from three facts about it: whether something listens, what holds it (a
-  description, or nil when unknown) and the body that `#{@landing_path}` returned (nil when the
-  request failed). Pure, so the decision is testable.
+  What to do with a port, from four facts: whether something listens, what holds it (a description,
+  or nil when unknown), the body that `#{@landing_path}` returned (nil when the request failed) and
+  `expected`, this checkout's `build_info/1`. Pure, so the decision is testable.
 
     * `:free` - nothing listens
-    * `:ours` - the listener's landing page carries the `data-catalog-main-sha` build marker, so it
-      is this catalog already serving
-    * `{:held, text}` - anything else; `text` names the holder (or is empty when it is not known)
+    * `:ours` - the listener's landing page carries the catalog build markers and its checkout and
+      `HEAD` are this checkout's, both known: this catalog is already serving
+    * `{:held, text}` - anything else; `text` names the holder (or is empty when it is not known),
+      and for a catalog that is not this checkout at this commit also the checkout and `HEAD` it
+      prints next to this checkout's. A value that reads "unknown" on either side proves nothing,
+      so it is never `:ours`.
   """
-  @spec port_verdict(boolean(), String.t() | nil | false, String.t() | nil | false) ::
-          :free | :ours | {:held, String.t()}
-  def port_verdict(false, _holder, _body), do: :free
+  @spec port_verdict(
+          boolean(),
+          String.t() | nil | false,
+          String.t() | nil | false,
+          %{checkout: String.t(), head_sha: String.t()}
+        ) :: :free | :ours | {:held, String.t()}
+  def port_verdict(false, _holder, _body, _expected), do: :free
 
-  def port_verdict(true, holder, body) do
-    if ours?(body), do: :ours, else: {:held, held_text(holder)}
+  def port_verdict(true, holder, body, %{checkout: _, head_sha: _} = expected) do
+    case catalog_markers(body) do
+      nil ->
+        {:held, held_text(holder)}
+
+      printed ->
+        if same_build?(printed, expected),
+          do: :ours,
+          else: {:held, other_catalog_text(holder, printed, expected)}
+    end
   end
 
-  # The marker is an attribute the welcome page renders. `lazy_html` is a test-only dependency, so
-  # the dev task looks for the attribute with its value quote instead of parsing the document.
-  defp ours?(body) when is_binary(body), do: String.contains?(body, ~s(data-catalog-main-sha="))
-  defp ours?(_body), do: false
+  # The markers are attributes the welcome page renders. `lazy_html` is a test-only dependency, so the
+  # dev task reads them from the markup like `parseCatalogMarkers` in ui-review.mjs: an attribute
+  # inside a tag, its value unescaped. A page without the `data-catalog-main-sha` attribute is not a
+  # catalog; a catalog page missing another marker prints `nil` for it.
+  defp catalog_markers(body) when is_binary(body) do
+    if attribute(body, "data-catalog-main-sha") do
+      %{
+        checkout: attribute(body, "data-catalog-checkout"),
+        head_sha: attribute(body, "data-catalog-head-sha")
+      }
+    end
+  end
+
+  defp catalog_markers(_body), do: nil
+
+  defp attribute(body, name) do
+    case Regex.run(~r/<[a-zA-Z][^>]*?\s#{name}="([^"]*)"/, body) do
+      [_match, value] -> unescape(value)
+      _ -> nil
+    end
+  end
+
+  @entities %{"quot" => "\"", "amp" => "&", "lt" => "<", "gt" => ">", "#39" => "'", "#x27" => "'"}
+
+  defp unescape(value) do
+    Regex.replace(~r/&(quot|amp|lt|gt|#39|#x27);/, value, fn _entity, name ->
+      Map.fetch!(@entities, name)
+    end)
+  end
+
+  defp same_build?(printed, expected) do
+    known?(printed.checkout) and known?(printed.head_sha) and
+      printed.checkout == expected.checkout and printed.head_sha == expected.head_sha
+  end
+
+  defp known?(value), do: is_binary(value) and value not in ["", @unknown]
 
   defp held_text(holder) when holder in [nil, false, ""], do: ""
   defp held_text(holder), do: " by " <> holder
+
+  defp other_catalog_text(holder, printed, expected) do
+    catalog =
+      "a catalog from #{printed.checkout || @unknown} at HEAD #{printed.head_sha || @unknown} " <>
+        "(this checkout: #{expected.checkout} at HEAD #{expected.head_sha})"
+
+    case held_text(holder) do
+      "" -> " by " <> catalog
+      named -> named <> ", " <> catalog
+    end
+  end
 
   @doc """
   Where this catalog comes from, as strings the welcome page prints: `:main_sha` (the checkout's
@@ -134,8 +201,7 @@ defmodule Mix.Tasks.ScrypathOps.Catalog.Serve do
     end
   end
 
-  defp serve(port) do
-    info = build_info()
+  defp serve(port, info) do
     :persistent_term.put(@build_info_key, info)
 
     # Neither the Repo nor the main endpoint starts when the app is not standalone.

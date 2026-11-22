@@ -5,7 +5,7 @@ milestone_name: Catalog foundation
 current_phase: 197
 current_phase_name: Pilot JOB-03, unhealthy verdict to verified retry
 status: executing
-stopped_at: Completed 197-04-PLAN.md
+stopped_at: Phase 197 plans 01-05 merged (PRs #177, #178); paused for Pause 1 (maintainer storybook look)
 last_updated: "2026-11-22T15:21:18.737Z"
 last_activity: 2026-11-22
 last_activity_desc: Completed 197-04 (RecoveryView and recovery components with the D3 fix, the JOB-03 Job story, cumulative parity, coverage, provenance and copy checks, ledger row 11 of 12)
@@ -14,8 +14,8 @@ progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 12
-  percent: 71
+  completed_plans: 13
+  percent: 76
 ---
 
 # Project State
@@ -31,7 +31,7 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 Phase: 197 (Pilot JOB-03, unhealthy verdict to verified retry) — EXECUTING
 Plan: 5 of 5
-Status: Executing Phase 197 (Plans 01 to 04 complete)
+Status: Phase 197 plans 01-05 merged; paused for Pause 1 (maintainer storybook look)
 Last activity: 2026-11-22 — Completed 197-04 (RecoveryView and recovery components with the D3 fix, the JOB-03 Job story, cumulative parity, coverage, provenance and copy checks, ledger row 11 of 12)
 
 
