@@ -29,6 +29,7 @@ defmodule ScrypathOps.MixProject do
     [
       preferred_envs: [
         precommit: :test,
+        "scrypath_fixtures.check_fixtures": :test,
         "opsui.test_a11y": :test,
         "verify.opsui": :test,
         "assets.setup": :dev,
@@ -49,6 +50,7 @@ defmodule ScrypathOps.MixProject do
   defp deps do
     [
       {:scrypath, path: ".."},
+      {:scrypath_fixtures, path: "../fixtures/scrypath_fixtures", only: [:dev, :test]},
       {:sigra, "~> 1.5", optional: true},
       {:phoenix, "~> 1.8.9"},
       {:phoenix_ecto, "~> 4.5"},
@@ -87,6 +89,7 @@ defmodule ScrypathOps.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: [
+        "scrypath_fixtures.check_fixtures",
         "scrypath_ops.check_nav_contract",
         "ecto.create --quiet",
         "ecto.migrate --quiet",
