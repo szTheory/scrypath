@@ -5,17 +5,17 @@ milestone_name: Catalog foundation
 current_phase: 197
 current_phase_name: Pilot JOB-03, unhealthy verdict to verified retry
 status: executing
-stopped_at: Completed 197-02-PLAN.md
-last_updated: "2026-11-22T14:29:39.565Z"
+stopped_at: Completed 197-03-PLAN.md
+last_updated: "2026-11-22T14:53:44.306Z"
 last_activity: 2026-11-22
-last_activity_desc: Completed 197-02 (Search health extraction, first stories, parity capture)
-state_head: f19c4866fd16fffe8e0d871c5734aa0f61189d31
+last_activity_desc: Completed 197-03 (Failed sync extraction, stories, identical-variation and DOM-hygiene checks)
+state_head: ff3e5d083c7eb5a9ad252e85bdf5f3dee62522f0
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 10
-  percent: 59
+  completed_plans: 11
+  percent: 65
 ---
 
 # Project State
@@ -30,9 +30,9 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 ## Current Position
 
 Phase: 197 (Pilot JOB-03, unhealthy verdict to verified retry) — EXECUTING
-Plan: 3 of 5
-Status: Executing Phase 197 (Plans 01 and 02 complete)
-Last activity: 2026-11-22 — Completed 197-02 (Search health extraction, first stories, parity capture)
+Plan: 4 of 5
+Status: Executing Phase 197 (Plans 01 to 03 complete)
+Last activity: 2026-11-22 — Completed 197-03 (Failed sync extraction, stories, identical-variation and DOM-hygiene checks)
 
 
 ## Performance Metrics
@@ -54,6 +54,7 @@ Last activity: 2026-11-22 — Completed 197-02 (Search health extraction, first 
 | Phase 196 P05 | 130 min | 3 tasks | 16 files |
 | Phase 197 P01 | 31 min | 3 tasks | 14 files |
 | Phase 197 P02 | 15 min | 2 tasks | 14 files |
+| Phase 197 P03 | 21m | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 197]: health_verdict/1 renders the setup empty states too, so every story variation renders and the render-all empty-output check stays meaningful
 - [Phase 197]: Search health components take the LiveView's ranked rows and never sort; every ops_time in a component falls back to the posture snapshot, never the clock
 - [Phase 197]: Parity capture pins the test clock for copy surfaces and normalizes the random recovery handle; base and head are compared as canonical trees, never raw text
+- [Phase 197]: The Failed sync row action is a closed retry, receipt or ineligible set that records eligibility only; the LiveView's gate still decides who may act
+- [Phase 197]: failed_summary calls failed_filters so the filter form stays inside the summary section and the DOM is unchanged
+- [Phase 197]: A seam test can only catch wiring faults in the LiveView, so its plants edit what the LiveView passes; the copy-rules scan reads tracked files, so stage new files before the full suite
 
 ### Pending Todos
 - Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
@@ -123,9 +127,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-22T14:29:39.390Z
-Stopped at: Completed 197-02-PLAN.md
-Acting next: execute 197-03 (FailedSyncView, Failed sync components and stories, identical-variation and DOM-hygiene checks) from the journey baseline d913b8b6; Plan 02 ended at f19c4866. The run stops at Pause 1 after Plan 05. A Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-22T14:53:44.184Z
+Stopped at: Completed 197-03-PLAN.md
+Acting next: execute 197-04 (RecoveryView and the recovery components with the D3 fix, the Job story, cumulative parity, coverage, provenance and copy checks, ledger row 11 of 12) from the journey baseline d913b8b6; Plan 03 ended at ff3e5d08. The run stops at Pause 1 after Plan 05. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps
