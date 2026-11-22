@@ -1,0 +1,1 @@
+{"uid":17,"batchUid":16,"indexUid":null,"status":"succeeded","type":"indexSwap","canceledBy":null,"details":{"swaps":[{"indexes":["logistify_shipment","logistify_shipment__reindex"]}]},"error":null,"duration":"PT0.000433792S","enqueuedAt":"2026-11-22T01:53:32.14898318Z","startedAt":"2026-11-22T01:53:32.149169847Z","finishedAt":"2026-11-22T01:53:32.149603639Z"}

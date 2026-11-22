@@ -32,7 +32,7 @@ v1.48 Discovery and onboarding is archived ([audit](milestones/v1.48-MILESTONE-A
 **Phase numbering continues from v1.48 (the first v1.49 phase is 195).** Plan cap is 5 per phase; the milestone stops and re-asks at 20 plans.
 
 - [x] **Phase 195: Mount and prove** - phoenix_storybook mounted dev/test-only with real styling, boundary tests made non-vacuous, and a measured go/no-go recorded (3 plans) (completed 2026-11-21)
-- [ ] **Phase 196: Fixtures and three adopters** - a `fixtures/scrypath_fixtures` project of pure builders and three Scrypath-owned fictional adopters with named states (4 plans)
+- [ ] **Phase 196: Fixtures and three adopters** - a `fixtures/scrypath_fixtures` project of pure builders and three Scrypath-owned fictional adopters with named states (5 plans)
 - [ ] **Phase 197: Pilot JOB-03, unhealthy verdict to verified retry** - mounted journey first, safe extraction into shared components, catalog contract test, stable storybook on 4003; ends with Pause 1 (5 plans)
 - [ ] **Phase 198: Scale** - remaining small screens, Clinicly and Chatly sets, a local browser check; cut by default and sized after Pause 1; ends with Pause 2 (at most 4 plans)
 
@@ -77,7 +77,21 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
   2. Real Meilisearch task payload shapes were recorded once from a task-scoped Docker run (container removed afterward), every fixture failure string comes from a closed table whose entries carry a `source:` pointing at a real Meilisearch error code or Scrypath path, hostile text is stored as escapes, and no failure the library cannot produce is present.
   3. Shopadelic (journey and settings drift), Logistify (deep queue, nothing failed) and Wikily (empty install) each have named states, ordinary data separate from stress variations, and nothing copied from the six sibling brand repos.
   4. The DB-free `check_fixtures` task runs first in its consumers' `test` alias and a planted failing case fails it; two renders with different `now` differ only in time-derived text; `package_metadata_test` asserts `fixtures/` never ships in the Hex tarball; the CI path classifier and `package_contents_test` decisions are recorded; the host's `phase173` fixtures and `?scenario=` branches remain with a recorded deletion trigger.
-**Plans**: 4 estimated (cap 5)
+**Plans**: 4/5 plans executed (cap 5; re-cut from the 4 estimated so each plan stays under 15 files and about 80k tokens; the one `scrypath_ops/mix.exs` edit is in 196-01):
+**Wave 1**
+- [x] 196-01-PLAN.md — `fixtures/scrypath_fixtures` project and the Logistify tracer through the fake client to a rendered `/ops/health`; the single `scrypath_ops/mix.exs` edit (path dependency, `scrypath_fixtures.check_fixtures` first in the `test` alias, `preferred_envs`); DB-free check skeleton with cause-pinned plants; FixtureEnv
+
+**Wave 2** *(blocked on Wave 1 completion; waves are strictly sequential)*
+- [x] 196-02-PLAN.md — root accounting: compat classifier inventory, formatter, namespace fence, non-vacuous tarball refute, path-dependency boundary row and probes, archive list, Docker script, Dockerfile COPY lines, `.dockerignore`; fixtures README with the exit rule, second-consumer definition and phase173 deletion trigger, pinned by a root contract test
+
+**Wave 3** *(blocked on 196-02)*
+- [x] 196-03-PLAN.md — Meilisearch v1.15 payloads re-recorded once from a task-scoped container with provenance; builders and fake-client paging checked against them; closed failure table with `source:`; two-renders-differ-only-in-time test; finding F3 for the maintainer
+
+**Wave 4** *(blocked on 196-02 and 196-03)*
+- [x] 196-04-PLAN.md — Shopadelic (aligned, drift, failed journey), Wikily (unconfigured, missing backend, index not created, first delete failed), Logistify steady and the labelled F1 stress variation; scenario registry; Posture round trip for every scenario; one planted failure per check invariant; child-mix DB-free proof
+
+**Wave 5** *(blocked on 196-04)*
+- [ ] 196-05-PLAN.md — hostile text as escapes in one stress variation rendered escaped; bulk pick with a golden digest; provenance, denylist and source lints; local mirror of every required lane, the `test(ops-ui)` phase PR, hosted cold/warm cost against a same-day control, squash-merge, main-run cold sample, CI-EFFICIENCY record in a post-merge docs PR
 
 ### Phase 197: Pilot JOB-03, unhealthy verdict to verified retry
 **Goal**: One job (Search health row, to Failed sync prefilled, to retry, to return) is covered by a mounted journey test, extracted into components shared with the story, shown in a stable seeded storybook, and held by one catalog contract test; then the run pauses for the maintainer's look.
@@ -111,7 +125,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 195. Mount and prove | 3/3 | Complete    | 2026-11-21 |
-| 196. Fixtures and three adopters | 0/4 | Not started | - |
+| 196. Fixtures and three adopters | 4/5 | In Progress | - |
 | 197. Pilot JOB-03 | 0/5 | Not started | - |
 | 198. Scale | 0/4 | Not started (cut by default) | - |
 

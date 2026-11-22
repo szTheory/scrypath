@@ -4,18 +4,18 @@ milestone: v1.49
 milestone_name: Catalog foundation
 current_phase: 196
 current_phase_name: Fixtures and three adopters
-status: planning
-stopped_at: Phase 195 complete, ready to plan Phase 196
-last_updated: "2026-11-21T23:51:19.518Z"
+status: executing
+stopped_at: Completed 196-04-PLAN.md
+last_updated: "2026-11-22T02:33:16.791Z"
 last_activity: 2026-11-21
-last_activity_desc: Phase 195 complete, transitioned to Phase 196
-state_head: f72af5f5187ca232a67bb13e1b884d4c4e26855c
+last_activity_desc: "Plan 196-04 complete (three adopters with ten named scenarios, registry-driven check with a plant per invariant, child-mix proof, finding F4)"
+state_head: 806d33788aef8609537546ea70459a379e1eb1d9
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 15
-  completed_plans: 3
-  percent: 20
+  total_plans: 17
+  completed_plans: 7
+  percent: 41
 ---
 
 # Project State
@@ -25,14 +25,14 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.49 Catalog foundation: Phase 195 (Mount and prove) is complete; Phase 196 (Fixtures and three adopters) is next. The run stops after Phase 197 for the maintainer's storybook look.
+**Current focus:** Phase 196 — Fixtures and three adopters
 
 ## Current Position
 
-Phase: 196 — Fixtures and three adopters
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-21 — Phase 195 complete, transitioned to Phase 196
+Phase: 196 (Fixtures and three adopters) — EXECUTING
+Plan: 5 of 5
+Status: Ready to execute
+Last activity: 2026-11-21 — Plan 196-04 complete (three adopters with ten named scenarios, registry-driven check with a plant per invariant, child-mix proof, finding F4)
 
 
 ## Performance Metrics
@@ -47,6 +47,10 @@ Last activity: 2026-11-21 — Phase 195 complete, transitioned to Phase 196
 | Phase 195 P01 | 12 min | 3 tasks | 16 files |
 | Phase 195 P02 | 13 min | 3 tasks | 17 files |
 | Phase 195 P03 | 95min | 3 tasks | 4 files |
+| Phase 196 P01 | 7 min | 2 tasks | 14 files |
+| Phase 196 P02 | 12 min | 3 tasks | 14 files |
+| Phase 196 P03 | 24 min | 3 tasks | 41 files |
+| Phase 196 P04 | 24 min | 3 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -67,6 +71,13 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 195]: Planted storybook endpoint is a full request pipeline (Plug.Parsers and render_errors), and render-all crash results carry their cause — Without a parser the query string is dropped and every plant renders the first variation with no theme; without render_errors every crash reads as a missing error view. Pinning the cause per plant keeps a mistyped route from passing as the planted failure.
 - [Phase 195]: Fifth primitive story is ops_sync_status, not the form-field class; the form-field story moves to Phase 197's patterns tier — ops_field is mostly phx-hook behavior that a server-side render-all cannot exercise, so a story for it would claim more than its test proves.
 - [Phase 195]: Continue with the storybook on the maintainer's choice against a tripped cold sample (not a pass): PR cold ops-ui 517 s, first main run after the merge 620 s (over the 548 s line), warm 378 s; the cold excess is mostly the lock-change root-graph cache miss, the storybook's own marginal cost is about +36 s
+- [Phase 196]: Operator-only option keys live once in ScrypathFixtures.Scenario, pinned to lib/scrypath/operator.ex by an AST test — Scrypath.index_contract_drift/2 hands its options straight to Config.resolve!/1, which raises ArgumentError for operator keys, so every caller of resolve!/1 or index_contract_drift/2 passes Scenario.runtime_opts/1 while sync_status/2 and failed_sync_work/2 take the full options.
+- [Phase 196]: Each fixture-check plant changes one field of the real scenario and asserts its exact problem tag beside a positive control — A plant that fails in the builder or asserts only not-ok can pass for the wrong reason; four deliberate breakages (job_index, time_order, operator key list, FixtureEnv restore) each failed only their own control.
+- [Phase 196]: Plan 02: the fixtures Docker-script check is its own if block after the catalog block (the storybook regex needs a single statement), and the mounted probe asserts the .app list because the lock check is vacuous for a path dependency
+- [Phase 196]: Plan 196-03: failure text enters a fixture only through a ScrypathFixtures.Failures table entry (seven entries, each with a resolving source); builders reject an inline error and the check rejects text that is not a table render
+- [Phase 196]: Plan 196-03: recordings are compared by key set and value type only, never by value, so a re-record cannot fail a check for noise; re-record when the pinned image id or server version changes
+- [Phase 196]: 196-04: Scenarios are built by one registry (Scenarios.builders/0); a scenario carries a .invalid meilisearch_url and AppliedSettings answers get_settings/2 by that url, so drift is real index_contract_drift/2 output over recorded settings
+- [Phase 196]: 196-04: Scrypath.sync_status/2 raises ArgumentError without :backend (no error tag); wikily_missing_backend states only a posture expectation and Phase 197 screens must not call Scrypath directly in that state
 
 ### Pending Todos
 - Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
@@ -100,9 +111,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-21T21:47:33.673Z
-Stopped at: Phase 195 complete, ready to plan Phase 196
-Acting next: verify Phase 195 (all three plans are done; PR #171 is merged and the go/no-go record is in docs PR #172), then Phase 196 (fixtures). A Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-22T02:33:16.732Z
+Stopped at: Completed 196-04-PLAN.md
+Acting next: execute 196-05-PLAN.md (hostile text, bulk pick, lints, then the phase PR) on the phase branch; Plan 05 pushes it. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps

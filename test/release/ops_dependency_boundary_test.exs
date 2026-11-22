@@ -13,6 +13,9 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     Module.concat(["MDEx"]),
     Module.concat(["ScrypathOps", "Catalog", "Storybook"])
   ]
+  # The fixtures project (ADR 0002) is a dev and test path dependency of Ops. Nothing that mounts Ops, and
+  # no production build, may carry it. It is a path dependency, so the lock cannot prove its absence.
+  @fixtures_apps [:scrypath_fixtures]
   @absent_modules [
     Module.concat(["Sigra", "Audit"]),
     Module.concat(["Phoenix", "LiveDashboard"]),
@@ -24,7 +27,8 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     Module.concat(["ScrypathOpsWeb", "Telemetry"]),
     Module.concat(["PhoenixStorybook"]),
     Module.concat(["MDEx"]),
-    Module.concat(["ScrypathOps", "Catalog", "Storybook"])
+    Module.concat(["ScrypathOps", "Catalog", "Storybook"]),
+    Module.concat(["ScrypathFixtures"])
   ]
 
   setup_all do
@@ -290,8 +294,10 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
   defp archive_tracked_source!(repo, destination, scratch) do
     archive = Path.join(scratch, "tracked-source.tar")
 
+    # "fixtures" is the path dependency of scrypath_ops: without it the direct dev and test builds fail at
+    # compile with "the dependency is not available", although deps.get --check-locked still exits 0.
     paths =
-      ["mix.exs", "mix.lock", "lib", "priv", "scrypath_ops"]
+      ["mix.exs", "mix.lock", "lib", "priv", "scrypath_ops", "fixtures"]
       |> Enum.filter(fn path ->
         {output, status} =
           System.cmd("git", ["ls-tree", "--name-only", "HEAD", "--", path], cd: repo)
@@ -367,6 +373,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     ~S"""
     defmodule OpsBoundaryMountedProbe do
       @forbidden_apps __FORBIDDEN_APPS__
+      @fixtures_apps __FIXTURES_APPS__
       @forbidden_modules __ABSENT_MODULES__
       @present_modules __PRESENT_MODULES__
       @actions [:saved_search_delete, :failed_work_retry, :swap_live, :reindex, :delete_documents, :hot_apply]
@@ -391,6 +398,13 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
           "optional Sigra became a mandatory Ops application"
         )
         assert!(ScrypathOpsWeb.Telemetry not in modules, "dev telemetry module compiled into a mounted consumer")
+
+        # The fixtures project is a path dependency, so it is in no lock and the lock check below passes for it
+        # in every graph. The .app requirement list here, the loaded and started apps, and the code path of its
+        # module further down are what prove it is absent.
+        for app <- @fixtures_apps do
+          assert!(app not in applications and app not in optional_applications, "#{app} is a requirement of the mounted Ops .app in #{Mix.env()}: #{inspect(applications)}")
+        end
 
         lock = Mix.Dep.Lock.read("mix.lock")
         for app <- @forbidden_apps, do: assert!(not Map.has_key?(lock, app), "#{app} resolved in mounted #{Mix.env()} graph")
@@ -532,8 +546,12 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     """
     |> String.replace(
       "__FORBIDDEN_APPS__",
-      inspect([:sigra | @diagnostic_apps ++ @asset_apps ++ @storybook_apps] -- present_apps)
+      inspect(
+        [:sigra | @diagnostic_apps ++ @asset_apps ++ @storybook_apps ++ @fixtures_apps] --
+          present_apps
+      )
     )
+    |> String.replace("__FIXTURES_APPS__", inspect(@fixtures_apps))
     |> String.replace("__ABSENT_MODULES__", inspect(@absent_modules -- present_modules))
     |> String.replace("__PRESENT_MODULES__", inspect(present_modules))
   end
@@ -601,6 +619,12 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
         storybook_routes = Enum.filter(routes, &String.starts_with?(&1, "/storybook"))
         assert!(routes != [], "DevRouter exposed no routes in #{env}")
         assert!((storybook_routes != []) == storybook?, "/storybook route presence did not match #{env}: #{inspect(storybook_routes)}")
+
+        # The fixtures project exists exactly in dev and test, as a path dependency: no lock entry proves it, so the
+        # .app requirement and the loadable module are the evidence.
+        fixtures? = env in ["dev", "test"]
+        assert!(module_available?(Module.concat(["ScrypathFixtures"])) == fixtures?, "ScrypathFixtures availability did not match #{env}")
+        assert!((:scrypath_fixtures in applications) == fixtures?, ":scrypath_fixtures .app requirement mismatch in #{env}: #{inspect(applications)}")
 
         standalone? = env in ["test", "prod"]
         Application.put_env(:scrypath_ops, :standalone, standalone?)

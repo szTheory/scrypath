@@ -28,10 +28,13 @@ defmodule Scrypath.Release.ShippedDocs do
 
   # Task source trees (planning-time decision: scrypath_ops and the examples are included
   # because a shipped guide tells adopters to run an ops task that lives under scrypath_ops/).
+  # fixtures/ holds the dev and test only fixtures project (ADR 0002), whose check task is repo-only
+  # by construction: it is read here so no shipped file can tell an adopter to run it.
   @task_source_globs [
     "dev/mix/tasks/**/*.ex",
     "scrypath_ops/lib/mix/tasks/**/*.ex",
-    "examples/*/lib/mix/tasks/**/*.ex"
+    "examples/*/lib/mix/tasks/**/*.ex",
+    "fixtures/*/lib/mix/tasks/**/*.ex"
   ]
 
   @shipped_task_glob "lib/**/*.ex"

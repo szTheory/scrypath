@@ -40,7 +40,38 @@ defmodule Mix.Tasks.Verify.NamespaceFenceTest do
       )
 
       assert {:ok, summary} = NamespaceFence.check(root)
-      assert summary.scanned_dirs == ["lib/scrypath/", "scrypath_ops/lib/", "scrypath_ops/test/"]
+
+      assert summary.scanned_dirs == [
+               "lib/scrypath/",
+               "scrypath_ops/lib/",
+               "scrypath_ops/test/",
+               "fixtures/"
+             ]
+    end
+
+    test "flags a planted Sigra reference under fixtures/ and names the file and line" do
+      root = tmp_root()
+
+      write!(
+        root,
+        "fixtures/scrypath_fixtures/lib/x.ex",
+        "defmodule X do\n  # Sigra. must not appear in the fixtures project\nend\n"
+      )
+
+      assert {:error, violations} = NamespaceFence.check(root)
+
+      assert violations == [
+               "fixtures/scrypath_fixtures/lib/x.ex:2:   # Sigra. must not appear in the fixtures project"
+             ]
+    end
+
+    test "an absent fixtures/ tree is tolerated" do
+      root = tmp_root()
+      write!(root, "lib/scrypath/clean.ex", "defmodule Clean do\nend\n")
+
+      refute File.dir?(Path.join(root, "fixtures"))
+      assert {:ok, summary} = NamespaceFence.check(root)
+      assert List.last(summary.scanned_dirs) == "fixtures/"
     end
 
     test "live repository still passes as a canary" do

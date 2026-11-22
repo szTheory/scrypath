@@ -3,6 +3,8 @@ defmodule Scrypath.Release.PackageMetadataTest do
 
   alias Scrypath.MixProject
 
+  @fixtures_tree "fixtures/scrypath_fixtures"
+
   # The HexDocs sidebar contract (DOCS-01): six job-named groups in this order, each listing its pages
   # in this order. ExDoc names a group by its keyword key, sorts groups by the keyword order, and
   # sorts the pages inside a group by their position in `extras`. It warns about none of the mistakes
@@ -134,6 +136,38 @@ defmodule Scrypath.Release.PackageMetadataTest do
     refute "dev" in package_files
     refute "fixtures" in package_files
     refute "storybook" in package_files
+  end
+
+  # fixtures/ never ships (ADR 0002). The literal refutes above go vacuous if the directory is
+  # renamed or an entry such as "." pulls it in, so this test first proves the tree exists (the
+  # positive control) and then that no `files:` entry reaches it. `package_contents_test` needs no
+  # change for the new top-level directory: its `allowed_top_level` is derived from the first
+  # segments of `files:`, so `fixtures` can never be allowed (v1.49 Phase 196 research N8).
+  test "the fixtures project exists and no package entry reaches it" do
+    assert File.dir?("fixtures/scrypath_fixtures"),
+           "fixtures/scrypath_fixtures is gone: update @fixtures_tree and the package_files refutes"
+
+    assert fixtures_reaching_entries(MixProject.project()[:package][:files]) == []
+  end
+
+  test "fixtures_reaching_entries/1 names exactly the entry that reaches the fixtures tree" do
+    real_files = MixProject.project()[:package][:files]
+    assert fixtures_reaching_entries(real_files) == []
+
+    for offending <- [
+          ".",
+          "fixtures",
+          "fixtures/",
+          "fixtures/scrypath_fixtures",
+          "fixtures/scrypath_fixtures/lib",
+          "fix*"
+        ] do
+      assert fixtures_reaching_entries(real_files ++ [offending]) == [offending],
+             "expected #{inspect(offending)} to be reported as reaching #{@fixtures_tree}"
+    end
+
+    # Near misses stay clean, so the check cannot pass by flagging every entry.
+    assert fixtures_reaching_entries(["fixtures_notes.md", "fixturesx", "lib/fixtures"]) == []
   end
 
   test "every root docs file is covered by the package allowlist" do
@@ -324,6 +358,27 @@ defmodule Scrypath.Release.PackageMetadataTest do
                favicon: "brand/assets/icon/favicon-light.svg",
                logo: "brand/assets/logo/scrypath-symbol-light.svg"
              )
+  end
+
+  # The `files:` entries that reach the fixtures tree: "." (the whole repository), the tree itself,
+  # a parent directory of it ("fixtures", "fixtures/"), something below it, or a glob that expands
+  # to any of those. `[]` is a package that keeps the fixtures project out.
+  defp fixtures_reaching_entries(entries), do: Enum.filter(entries, &reaches_fixtures?/1)
+
+  defp reaches_fixtures?(entry) do
+    entry = entry |> String.trim_trailing("/")
+
+    cond do
+      entry == "." ->
+        true
+
+      String.contains?(entry, ["*", "?", "[", "{"]) ->
+        entry |> Path.wildcard() |> Enum.any?(&reaches_fixtures?/1)
+
+      true ->
+        entry == @fixtures_tree or String.starts_with?(@fixtures_tree, entry <> "/") or
+          String.starts_with?(entry, @fixtures_tree <> "/")
+    end
   end
 
   # The configured groups as `{name, members}` with the name as a string, which is how ExDoc reads

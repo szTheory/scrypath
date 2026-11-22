@@ -18,7 +18,7 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Fixtures and three adopters (Phase 196)
 
-- [ ] **FIX-01**: A `fixtures/scrypath_fixtures` Mix project (ADR 0002) holds pure builders that take `now` and emit raw Meilisearch task maps and Oban job maps, so the real `Operator.Status`, `FailedWork` and `Posture` code does the normalizing and only reachable states can be written. The first slice is a tracer bullet: the Logistify builder through the fake client to a rendered posture, before any other builder exists. A recorded exit rule folds the project into `scrypath_ops/` if no second consumer appears by Phase 197.
+- [x] **FIX-01**: A `fixtures/scrypath_fixtures` Mix project (ADR 0002) holds pure builders that take `now` and emit raw Meilisearch task maps and Oban job maps, so the real `Operator.Status`, `FailedWork` and `Posture` code does the normalizing and only reachable states can be written. The first slice is a tracer bullet: the Logistify builder through the fake client to a rendered posture, before any other builder exists. A recorded exit rule folds the project into `scrypath_ops/` if no second consumer appears by Phase 197.
 - [ ] **FIX-02**: Real Meilisearch task payload shapes are recorded once from a task-scoped Docker run (and the container removed afterward). Every failure string in the fixtures comes from a closed table with a `source:` field pointing at a real Meilisearch error code or a Scrypath path; hostile text (markup, very long values, non-Latin text) is stored as escapes. Failures the library cannot produce (per-tenant drift, "11 minutes of lag", per-document size limits, out-of-order replay overwrite on the Oban path) are not fabricated.
 - [ ] **FIX-03**: Three Scrypath-owned fictional adopters exist, each with named states: **Shopadelic** (the journey and settings drift), **Logistify** (a deep queue with nothing failed), **Wikily** (an empty install). Realistic ordinary data comes first; stress cases are separate named variations. Nothing is copied from the six sibling brand repos.
 - [ ] **FIX-04**: A DB-free `check_fixtures` task runs first in the `test` alias of its consumers, with a planted failing case; two renders of a builder with different `now` differ only in time-derived text (no wall-clock reads). `package_metadata_test` (or its sibling) asserts `fixtures/` never ships in the Hex tarball, which ADR 0002 claims but nothing currently asserts. The CI path classifier and `package_contents_test` decisions for the new top-level `fixtures/` are made and recorded. The host's `phase173` fixtures and their `?scenario=` branches stay, with a deletion trigger recorded.
@@ -83,7 +83,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MOUNT-02 | Phase 195 | Complete |
 | MOUNT-03 | Phase 195 | Complete |
 | MOUNT-04 | Phase 195 | Complete |
-| FIX-01 | Phase 196 | Pending |
+| FIX-01 | Phase 196 | Complete |
 | FIX-02 | Phase 196 | Pending |
 | FIX-03 | Phase 196 | Pending |
 | FIX-04 | Phase 196 | Pending |

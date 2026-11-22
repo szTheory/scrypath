@@ -172,6 +172,7 @@ const IRRELEVANT_ENTRIES = {
   "compose.yaml": "demo stack definition",
   docs: "documentation",
   examples: "separate Mix projects with their own lanes",
+  fixtures: "separate Mix project (dev and test only), compiled and tested through scrypath_ops",
   guides: "documentation",
   prompts: "maintainer reference material",
   "release-please-config.json": "release metadata",
