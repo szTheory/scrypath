@@ -25,8 +25,8 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Pilot: JOB-03, unhealthy verdict to verified retry (Phase 197)
 
-- [ ] **PILOT-01**: The mounted journey is written first and passes on current code (`Phoenix.LiveViewTest`, reusing the existing stubs and insert counter): Search health row to Failed sync prefilled with the same index and run (asserted in elements and URL params, not a screenshot), then retry (changed field text and exactly one insert), then the return link back with the same context. Denial paths are covered through the schema allowlist (`That schema is unavailable.`, insert counter 0) and through stale sudo, each with a positive control (the same action with the allowed viewer gives counter 1) and an absence check for protected fixture values. The stale-sudo test at `failed_sync_live_test.exs:540` is repaired so it actually renders the row.
-- [ ] **PILOT-02**: The stale-sudo `return_to` defect (D1: a stale-sudo operator returns to `/` in production instead of the page they left, because only `search_live.ex:122` assigns `:return_to`) is fixed in `scrypath_ops` with its own test. No root `lib/` change.
+- [x] **PILOT-01**: The mounted journey is written first and passes on current code (`Phoenix.LiveViewTest`, reusing the existing stubs and insert counter): Search health row to Failed sync prefilled with the same index and run (asserted in elements and URL params, not a screenshot), then retry (changed field text and exactly one insert), then the return link back with the same context. Denial paths are covered through the schema allowlist (`That schema is unavailable.`, insert counter 0) and through stale sudo, each with a positive control (the same action with the allowed viewer gives counter 1) and an absence check for protected fixture values. The stale-sudo test at `failed_sync_live_test.exs:540` is repaired so it actually renders the row.
+- [x] **PILOT-02**: The stale-sudo `return_to` defect (D1: a stale-sudo operator returns to `/` in production instead of the page they left, because only `search_live.ex:122` assigns `:return_to`) is fixed in `scrypath_ops` with its own test. No root `lib/` change.
 - [ ] **PILOT-03**: Under the PILOT-01 safety net, the Search health and Failed sync surfaces are extracted into pure view-models with closed enums (`Posture.summary/4` split into scan and build) and function components shared by the LiveView and the story. A throwaway rendered-HTML parity capture before and after shows no unintended change, and the PILOT-01 journey stays green unmodified. Slice order: Search health first (cheapest), then Failed sync and recovery.
 - [ ] **PILOT-04**: Stories live in the glossary tiers `primitives/ patterns/ areas/ surfaces/ jobs/`, with the adopter as a variation dimension, JOB ids in file paths (the sidebar search reads only path and name), and both themes shown. Scrypath chrome keeps the Scrypath brand; adopter theming appears in one Hosting story only. Story descriptions claim no more than the linked test proves.
 - [ ] **PILOT-05**: One test file (`catalog_contract_test.exs`) carries render-all, route and component coverage (no hard-coded counts; a literal `@no_story` map with reasons, stale entries failing), no-two-identical-variations, copy lint over rendered variations (the existing `CopyRules` forbidden lists), and DOM hygiene (unique ids, existing `aria-*` targets, accessible names, one `main` landmark per screen-tier story). Each check has one planted failing input. It runs inside the existing `ops-ui` job as required-gate ledger row 11 of 12, with a deletion trigger and expected churn recorded in `CONTRIBUTING.md`; no new required CI context is created.
@@ -87,8 +87,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FIX-02 | Phase 196 | Complete |
 | FIX-03 | Phase 196 | Complete |
 | FIX-04 | Phase 196 | Complete |
-| PILOT-01 | Phase 197 | Pending |
-| PILOT-02 | Phase 197 | Pending |
+| PILOT-01 | Phase 197 | Complete |
+| PILOT-02 | Phase 197 | Complete |
 | PILOT-03 | Phase 197 | Pending |
 | PILOT-04 | Phase 197 | Pending |
 | PILOT-05 | Phase 197 | Pending |
