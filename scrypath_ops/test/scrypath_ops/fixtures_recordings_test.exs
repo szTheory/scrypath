@@ -592,13 +592,7 @@ defmodule ScrypathOps.FixturesRecordingsTest do
          %{scenario: scenario} do
       real = Failures.entry!(:invalid_document_id)
 
-      for bad <- [
-            "99-no-such-recording",
-            "lib/scrypath/does_not_exist.ex",
-            "../../etc/hosts",
-            "/etc/hosts",
-            nil
-          ] do
+      for bad <- ["99-no-such-recording", "lib/scrypath/does_not_exist.ex", nil] do
         planted = %{real | source: bad}
 
         assert {:error, problems} = Check.run(scenarios: [scenario], failures: [planted])
@@ -608,6 +602,39 @@ defmodule ScrypathOps.FixturesRecordingsTest do
 
         refute Enum.any?(problems, &match?({:failures, {:forbidden_failure, _id}}, &1))
       end
+    end
+
+    # The guards in `Check` keep a source inside the repository. A plant proves its guard only if
+    # the spelling would resolve to a real file without it, so each spelling below is first shown to
+    # exist when it is joined onto the repository root the way a guard-free check would join it
+    # (the traversal and the absolute spelling both point at a file that is there), and then shown
+    # to be rejected. Without that first half the plants would be reported as missing whether or not
+    # the guards existed.
+    test "a source that reaches a real file by traversal or by an absolute spelling is failure_source_missing",
+         %{scenario: scenario} do
+      real = Failures.entry!(:invalid_document_id)
+
+      spellings = [
+        # needs the ".." guard: lib/../mix.exs is the repository's own mix.exs
+        {"lib/../mix.exs", ".. guard"},
+        # needs the :relative guard: Path.join re-roots it to lib/scrypath/meilisearch/client.ex
+        {"/lib/scrypath/meilisearch/client.ex", "relative guard"}
+      ]
+
+      for {spelling, guard} <- spellings do
+        assert File.exists?(Path.join(repo_root(), spelling)),
+               "#{spelling} no longer resolves without the #{guard}, so it proves nothing"
+
+        assert {:error, problems} =
+                 Check.run(scenarios: [scenario], failures: [%{real | source: spelling}])
+
+        assert {:failures, {:failure_source_missing, :invalid_document_id}} in problems,
+               "#{spelling} was accepted: the #{guard} is missing"
+      end
+
+      # positive control: the plain relative spelling of the same file is accepted
+      accepted = %{real | source: "lib/scrypath/meilisearch/client.ex"}
+      assert {:ok, %{scenarios: 1}} = Check.run(scenarios: [scenario], failures: [accepted])
     end
 
     test "an entry on the cannot-produce list is a forbidden_failure, by code or by id", %{
