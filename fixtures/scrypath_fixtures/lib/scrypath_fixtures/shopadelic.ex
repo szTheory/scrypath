@@ -3,7 +3,7 @@ defmodule ScrypathFixtures.Shopadelic do
   Shopadelic scenarios. Shopadelic is a fictional online-shop product; the data is for development
   and tests only, Scrypath-owned, and no record is copied from a real product.
 
-  Three named states, all ordinary (none is a stress case):
+  Four named states, three ordinary and one stress variation:
 
     * `:settings_aligned` is a healthy install: succeeded task history, completed jobs, nothing
       pending or failed, and the index settings equal what the schema declares.
@@ -13,6 +13,12 @@ defmodule ScrypathFixtures.Shopadelic do
     * `:failed_journey` is the entry state for the failed-work journey: one failed Meilisearch
       task and four Oban jobs that need a decision (a discarded upsert, a retryable upsert, a
       cancelled upsert and a discarded delete).
+    * `:hostile_ids` is the stress variation, kept apart from the three above and never shown as
+      ordinary data. It carries every string of `ScrypathFixtures.Hostile` in the places the real
+      system can: ids Meilisearch rejects appear only inside the failed tasks that echo them,
+      markup and non-Latin text only inside an echoed document, and the valid long ids only as job
+      `document_ids`. The page shows the unbounded error text it was given (finding F2, handed to
+      the maintainer, not fixed here).
 
   Every failure text comes from `ScrypathFixtures.Failures`. Everything is built from raw wire
   shapes, so the real `Scrypath.sync_status/2` and `Scrypath.failed_sync_work/2` do the
@@ -22,6 +28,7 @@ defmodule ScrypathFixtures.Shopadelic do
   alias ScrypathFixtures.AppliedSettings
   alias ScrypathFixtures.FakeMeilisearchClient
   alias ScrypathFixtures.FakeObanInspector
+  alias ScrypathFixtures.Hostile
   alias ScrypathFixtures.Meili
   alias ScrypathFixtures.ObanJob
   alias ScrypathFixtures.Scenario
@@ -32,20 +39,22 @@ defmodule ScrypathFixtures.Shopadelic do
   @queue :shopadelic_sync
   @index_prefix "shopadelic"
 
-  @states [:settings_aligned, :settings_drift, :failed_journey]
+  @states [:settings_aligned, :settings_drift, :failed_journey, :hostile_ids]
 
   # The document id Meilisearch rejects in the failed task: a space and a slash.
   @bad_document_id "SPD 2041/B"
 
   @doc "The state names `scenario/2` builds."
-  @spec states() :: [:settings_aligned | :settings_drift | :failed_journey]
+  @spec states() :: [:settings_aligned | :settings_drift | :failed_journey | :hostile_ids]
   def states, do: @states
 
   @doc "Builds one named Shopadelic scenario at `now`."
-  @spec scenario(:settings_aligned | :settings_drift | :failed_journey, keyword()) ::
-          Scenario.t()
+  @spec scenario(
+          :settings_aligned | :settings_drift | :failed_journey | :hostile_ids,
+          keyword()
+        ) :: Scenario.t()
   def scenario(state, now: %DateTime{} = now) when state in @states do
-    {settings_state, label, expect} = describe(state)
+    %{settings: settings_state, label: label, kind: kind, expect: expect} = describe(state)
 
     base_opts = [
       backend: Scrypath.Meilisearch,
@@ -65,7 +74,7 @@ defmodule ScrypathFixtures.Shopadelic do
       id: :"shopadelic_#{state}",
       adopter: :shopadelic,
       label: label,
-      kind: :ordinary,
+      kind: kind,
       now: now,
       allowlist: [Product],
       scrypath_opts:
@@ -78,35 +87,61 @@ defmodule ScrypathFixtures.Shopadelic do
     }
   end
 
-  # {which applied settings the scenario's URL serves, label, expectations}
+  # Which applied settings the scenario's URL serves, its label, its kind and its expectations.
   defp describe(:settings_aligned) do
-    {:shopadelic_aligned, "Shopadelic products, settings aligned (fictional)",
-     %{
-       sync_status: :ok,
-       failed_sync_work: :ok,
-       index_contract_drift: :ok,
-       posture: %{state: :ok, headline: "No sync failures found"}
-     }}
+    %{
+      settings: :shopadelic_aligned,
+      label: "Shopadelic products, settings aligned (fictional)",
+      kind: :ordinary,
+      expect: %{
+        sync_status: :ok,
+        failed_sync_work: :ok,
+        index_contract_drift: :ok,
+        posture: %{state: :ok, headline: "No sync failures found"}
+      }
+    }
   end
 
   defp describe(:settings_drift) do
-    {:shopadelic_drift, "Shopadelic products, settings drift (fictional)",
-     %{
-       sync_status: :ok,
-       failed_sync_work: :ok,
-       index_contract_drift: :ok,
-       posture: %{state: :ok, headline: "No sync failures found"}
-     }}
+    %{
+      settings: :shopadelic_drift,
+      label: "Shopadelic products, settings drift (fictional)",
+      kind: :ordinary,
+      expect: %{
+        sync_status: :ok,
+        failed_sync_work: :ok,
+        index_contract_drift: :ok,
+        posture: %{state: :ok, headline: "No sync failures found"}
+      }
+    }
   end
 
   defp describe(:failed_journey) do
-    {:shopadelic_aligned, "Shopadelic products, failed journey (fictional)",
-     %{
-       sync_status: :ok,
-       failed_sync_work: :ok,
-       index_contract_drift: :ok,
-       posture: %{state: :degraded, headline: "Sync jobs and Meilisearch tasks failed"}
-     }}
+    %{
+      settings: :shopadelic_aligned,
+      label: "Shopadelic products, failed journey (fictional)",
+      kind: :ordinary,
+      expect: %{
+        sync_status: :ok,
+        failed_sync_work: :ok,
+        index_contract_drift: :ok,
+        posture: %{state: :degraded, headline: "Sync jobs and Meilisearch tasks failed"}
+      }
+    }
+  end
+
+  defp describe(:hostile_ids) do
+    %{
+      settings: :shopadelic_aligned,
+      label: "Shopadelic products, stress: hostile identifiers and text (fictional)",
+      kind: :stress,
+      expect: %{
+        sync_status: :ok,
+        failed_sync_work: :ok,
+        index_contract_drift: :ok,
+        posture: %{state: :degraded, headline: "Sync jobs and Meilisearch tasks failed"}
+      }
+    }
   end
 
   # -- Meilisearch tasks -----------------------------------------------------------------------
@@ -186,6 +221,59 @@ defmodule ScrypathFixtures.Shopadelic do
     ]
   end
 
+  # Stress only. Every id below is one Meilisearch rejects (a character outside `a-z A-Z 0-9 - _`,
+  # or 512 bytes), so each one is a failed task that echoes it. The markup and the non-Latin words
+  # sit inside a document echoed by a `missing_document_id` failure, as the recording shows.
+  defp failed_tasks(:hostile_ids, now, index) do
+    rejected =
+      Enum.map(
+        [
+          Hostile.bidi_override(),
+          Hostile.bidi_isolates(),
+          Hostile.zwj_family(),
+          Hostile.zero_width_space(),
+          Hostile.nfc(),
+          Hostile.nfd(),
+          Hostile.cjk(),
+          Hostile.arabic(),
+          Hostile.markup()
+        ],
+        &("SPD-" <> &1)
+      ) ++ [Hostile.id_512()]
+
+    invalid_id_tasks =
+      for {id, n} <- Enum.with_index(rejected, 43) do
+        Meili.task(%{
+          type: "documentAdditionOrUpdate",
+          status: "failed",
+          uid: n,
+          index_uid: index,
+          now: now,
+          enqueued_ago: 5_400 - n * 10,
+          failure: {:invalid_document_id, id: id}
+        })
+      end
+
+    echoed_document_task =
+      Meili.task(%{
+        type: "documentAdditionOrUpdate",
+        status: "failed",
+        uid: 43 + length(rejected),
+        index_uid: index,
+        now: now,
+        enqueued_ago: 600,
+        failure:
+          {:missing_document_id,
+           document: [
+             {"title", Hostile.markup() <> " " <> Hostile.cjk() <> " (fictional)"},
+             {"note", Hostile.arabic()},
+             {"status", "active"}
+           ]}
+      })
+
+    invalid_id_tasks ++ [echoed_document_task]
+  end
+
   defp failed_tasks(_state, _now, _index), do: []
 
   # -- Oban jobs -------------------------------------------------------------------------------
@@ -237,6 +325,31 @@ defmodule ScrypathFixtures.Shopadelic do
         attempt: max_attempts,
         ids: delete_ids,
         errors: task_failed_errors(now, index, 9_000, max_attempts)
+      )
+    ]
+  end
+
+  # Stress only. The two long valid ids appear only as `document_ids`, the one place Scrypath
+  # puts an id the server accepted.
+  defp journey_jobs(:hostile_ids, now, index, max_attempts) do
+    [
+      job(now, index, max_attempts, 101, "discarded", :upsert,
+        ago: 7_200,
+        attempt: max_attempts,
+        ids: [Hostile.id_511(), Hostile.token_200()],
+        errors: transport_errors(now, 7_200, max_attempts)
+      ),
+      job(now, index, max_attempts, 102, "retryable", :upsert,
+        ago: 120,
+        attempt: 3,
+        scheduled_in: 480,
+        ids: [Hostile.token_200()],
+        errors: transport_errors(now, 120, 3)
+      ),
+      job(now, index, max_attempts, 103, "completed", :upsert,
+        ago: 300,
+        attempt: 1,
+        ids: [Hostile.id_511()]
       )
     ]
   end

@@ -268,7 +268,7 @@ defmodule ScrypathOps.FixturesRoundTripTest do
       %{scenario: Scenarios.get!(:logistify_history_over_limit_f1, @now)}
     end
 
-    test "it is the only stress scenario, and it says so in its id, kind and label", %{
+    test "it is one of exactly two stress scenarios, and it says so in its id, kind and label", %{
       scenario: scenario
     } do
       assert scenario.kind == :stress
@@ -276,8 +276,9 @@ defmodule ScrypathOps.FixturesRoundTripTest do
       assert scenario.label =~ "finding F1"
       assert scenario.label =~ "(fictional)"
 
+      # The other one is Shopadelic's hostile-text variation (Phase 196 plan 05).
       stress = for s <- Scenarios.all(@now), s.kind == :stress, do: s.id
-      assert stress == [:logistify_history_over_limit_f1]
+      assert stress == [:logistify_history_over_limit_f1, :shopadelic_hostile_ids]
     end
 
     test "ordinary states are registered before their adopter's stress variation", %{

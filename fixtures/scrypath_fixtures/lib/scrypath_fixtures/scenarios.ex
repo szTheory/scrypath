@@ -29,6 +29,7 @@ defmodule ScrypathFixtures.Scenarios do
       {:shopadelic_settings_aligned, &Shopadelic.scenario(:settings_aligned, now: &1)},
       {:shopadelic_settings_drift, &Shopadelic.scenario(:settings_drift, now: &1)},
       {:shopadelic_failed_journey, &Shopadelic.scenario(:failed_journey, now: &1)},
+      {:shopadelic_hostile_ids, &Shopadelic.scenario(:hostile_ids, now: &1)},
       {:wikily_unconfigured, &Wikily.scenario(:unconfigured, now: &1)},
       {:wikily_missing_backend, &Wikily.scenario(:missing_backend, now: &1)},
       {:wikily_index_not_created, &Wikily.scenario(:index_not_created, now: &1)},
