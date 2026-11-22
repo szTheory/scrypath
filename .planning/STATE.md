@@ -4,18 +4,18 @@ milestone: v1.49
 milestone_name: Catalog foundation
 current_phase: 196
 current_phase_name: Fixtures and three adopters
-status: executing
-stopped_at: Completed 196-04-PLAN.md
-last_updated: "2026-11-22T02:33:16.791Z"
-last_activity: 2026-11-21
-last_activity_desc: "Plan 196-04 complete (three adopters with ten named scenarios, registry-driven check with a plant per invariant, child-mix proof, finding F4)"
-state_head: 806d33788aef8609537546ea70459a379e1eb1d9
+status: verifying
+stopped_at: Completed 196-05-PLAN.md
+last_updated: "2026-11-22T04:47:09.515Z"
+last_activity: 2026-11-22
+last_activity_desc: Plan 196-05 complete (hostile text, bulk digest and source lints; phase PR #174 squash-merged on green required checks; hosted cost measured, CI-EFFICIENCY finding 29)
+state_head: 7a18da1213a72e165c00ca8c70570ae8e776039f
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 17
-  completed_plans: 7
-  percent: 41
+  completed_plans: 8
+  percent: 47
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 ## Current Position
 
-Phase: 196 (Fixtures and three adopters) — EXECUTING
+Phase: 196 (Fixtures and three adopters) — all five plans done and merged
 Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-11-21 — Plan 196-04 complete (three adopters with ten named scenarios, registry-driven check with a plant per invariant, child-mix proof, finding F4)
+Status: Phase complete — ready for verification
+Last activity: 2026-11-22 — Plan 196-05 complete (hostile text, bulk digest and source lints; phase PR #174 squash-merged as 7a18da12; hosted cost measured, CI-EFFICIENCY finding 29)
 
 
 ## Performance Metrics
@@ -51,6 +51,7 @@ Last activity: 2026-11-21 — Plan 196-04 complete (three adopters with ten name
 | Phase 196 P02 | 12 min | 3 tasks | 14 files |
 | Phase 196 P03 | 24 min | 3 tasks | 41 files |
 | Phase 196 P04 | 24 min | 3 tasks | 15 files |
+| Phase 196 P05 | 130 min | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 196]: Plan 196-03: recordings are compared by key set and value type only, never by value, so a re-record cannot fail a check for noise; re-record when the pinned image id or server version changes
 - [Phase 196]: 196-04: Scenarios are built by one registry (Scenarios.builders/0); a scenario carries a .invalid meilisearch_url and AppliedSettings answers get_settings/2 by that url, so drift is real index_contract_drift/2 output over recorded settings
 - [Phase 196]: 196-04: Scrypath.sync_status/2 raises ArgumentError without :backend (no error tag); wikily_missing_backend states only a posture expectation and Phase 197 screens must not call Scrypath directly in that state
+- [Phase 196]: 196-05: Hostile text sits only where Meilisearch and Scrypath can carry it (invalid ids only inside their invalid_document_id echoes, markup and non-Latin text only inside one echoed document, the 511-byte id and 200-character token only as valid job document_ids) and lives in one named stress variation, Shopadelic hostile_ids — A stress string placed where the real system cannot produce it would show a state that cannot happen; the render test proves it shows as text with no script element
+- [Phase 196]: 196-05: The fixtures' hosted ops-ui cost is warm 433 s against a same-hour control of 436 s (about 0 s), cold 482 s on the PR and 469 s on the first main run; the advisory 60 s fold threshold was not reached — A cold number is dominated by the BEAM cache miss (finding 26), so cost is read from warm against a same-day control; recorded as CI-EFFICIENCY finding 29
 
 ### Pending Todos
 - Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
@@ -111,9 +114,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-22T02:33:16.732Z
-Stopped at: Completed 196-04-PLAN.md
-Acting next: execute 196-05-PLAN.md (hostile text, bulk pick, lints, then the phase PR) on the phase branch; Plan 05 pushes it. A Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-22T04:47:09.455Z
+Stopped at: Completed 196-05-PLAN.md
+Acting next: verify Phase 196 (all five plans are done and merged), then plan Phase 197, which starts with the fixtures fold evaluation. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps
