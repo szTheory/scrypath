@@ -15,16 +15,14 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   alias Scrypath.Operator.FailedSyncWorkInspection
   alias Scrypath.Operator.FailedWork
+  alias ScrypathOps.FailedSyncView
   alias ScrypathOps.Integrations.Sigra.Gating
   alias ScrypathOps.OperatorSelection
+  alias ScrypathOpsWeb.Components.FailedSync
 
-  @causes [:validation, :transport, :backend_rejected, :queue_exhausted, :unknown]
-  @cause_params Map.new(@causes, &{Atom.to_string(&1), &1})
+  @cause_params Map.new(FailedSyncView.causes(), &{Atom.to_string(&1), &1})
   @load_concurrency 4
   @load_timeout 15_000
-  @record_id_preview 3
-  @clamp_length 240
-  @known_metadata [:worker, :queue, :index, :task_uid, :type]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -79,7 +77,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
     causes = params |> Map.get("cause", []) |> List.wrap() |> parse_causes()
 
-    {:noreply, push_patch(socket, to: filter_path(socket.assigns.mount_path, schemas, causes))}
+    {:noreply,
+     push_patch(socket,
+       to: FailedSyncView.filter_path(socket.assigns.mount_path, schemas, causes)
+     )}
   end
 
   def handle_event("retry", params, socket) do
@@ -188,19 +189,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       end
     end)
     |> Enum.uniq()
-  end
-
-  defp filter_path(mount_path, schemas, causes) do
-    base = String.trim_trailing(mount_path, "/")
-
-    query =
-      Enum.map(schemas, &{"schema", OperatorSelection.canonical(&1)}) ++
-        Enum.map(causes, &{"cause", Atom.to_string(&1)})
-
-    case query do
-      [] -> "#{base}/failed-sync"
-      pairs -> "#{base}/failed-sync?#{URI.encode_query(pairs)}"
-    end
   end
 
   defp allowed?(schema), do: schema in ScrypathOps.Schemas.allowlist()
@@ -470,21 +458,14 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   # ── Rows ───────────────────────────────────────────────────────────────────
 
-  defp all_rows(assigns) do
-    case Map.get(assigns, :loads) do
-      loads when is_list(loads) -> for {_mod, {:ok, rows}} <- loads, row <- rows, do: row
-      _ -> []
-    end
-  end
-
   defp find_row(socket, params) do
     id = to_string(Map.get(params, "id", ""))
     schema = Map.get(params, "schema")
     source = Map.get(params, "source")
 
     matches =
-      socket.assigns
-      |> all_rows()
+      socket.assigns.loads
+      |> FailedSyncView.all_rows()
       |> Enum.filter(fn row ->
         to_string(row.id) == id and
           (is_nil(schema) or OperatorSelection.canonical(row.schema) == schema) and
@@ -497,757 +478,45 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     end
   end
 
-  defp row_by_key(socket, key), do: Enum.find(all_rows(socket.assigns), &(row_key(&1) == key))
-
-  defp row_key(row), do: "#{OperatorSelection.canonical(row.schema)}|#{row.source}|#{row.id}"
-
-  defp row_dom_id(row) do
-    "#{OperatorSelection.canonical(row.schema)}-#{row.source}-#{row.id}"
-    |> String.replace(~r/[^A-Za-z0-9_-]+/, "-")
-  end
-
-  defp in_schema_scope(rows, []), do: rows
-  defp in_schema_scope(rows, schemas), do: Enum.filter(rows, &(&1.schema in schemas))
-
-  defp in_cause_scope(rows, []), do: rows
-  defp in_cause_scope(rows, causes), do: Enum.filter(rows, &(cause(&1) in causes))
-
-  defp visible_rows(assigns) do
-    assigns
-    |> all_rows()
-    |> in_schema_scope(assigns.schema_filter)
-    |> in_cause_scope(assigns.cause_filter)
-    |> Enum.sort_by(
-      &(&1.last_attempt_at || &1.failed_at || ~U[0001-01-01 00:00:00Z]),
-      {:desc, DateTime}
-    )
-  end
-
-  defp cause(%{reason_class: class}) when class in @causes, do: class
-  defp cause(_row), do: :unknown
-
-  # Schema facet counts follow the cause filter; cause facet counts follow the schema filter.
-  defp schema_facets(assigns) do
-    rows = assigns |> all_rows() |> in_cause_scope(assigns.cause_filter)
-    errors = Map.new(load_errors(%{assigns: assigns}))
-
-    Enum.map(assigns.schema_allowlist, fn mod ->
-      schema_rows = Enum.filter(rows, &(&1.schema == mod))
-
-      %{
-        module: mod,
-        name: OperatorSelection.canonical(mod),
-        short_name: schema_short_name(mod),
-        count: length(schema_rows),
-        failed: Enum.count(schema_rows, &(&1.state == :failed)),
-        retrying: Enum.count(schema_rows, &(&1.state == :retrying)),
-        error?: Map.has_key?(errors, mod),
-        selected?: mod in assigns.schema_filter
-      }
-    end)
-  end
-
-  defp cause_facets(assigns) do
-    counts =
-      assigns
-      |> all_rows()
-      |> in_schema_scope(assigns.schema_filter)
-      |> Enum.frequencies_by(&cause/1)
-
-    @causes
-    |> Enum.map(fn cause ->
-      %{
-        cause: cause,
-        value: Atom.to_string(cause),
-        label: cause_label(cause),
-        count: Map.get(counts, cause, 0),
-        selected?: cause in assigns.cause_filter
-      }
-    end)
-    |> Enum.filter(&(&1.count > 0 or &1.selected?))
-    |> Enum.with_index()
-    |> Enum.sort_by(fn {facet, index} -> {-facet.count, index} end)
-    |> Enum.map(&elem(&1, 0))
-  end
-
-  defp scoped_errors(assigns) do
-    errors = load_errors(%{assigns: assigns})
-
-    case assigns.schema_filter do
-      [] -> errors
-      schemas -> Enum.filter(errors, fn {mod, _} -> mod in schemas end)
-    end
-  end
-
-  defp all_scoped_failed?(assigns) do
-    scope =
-      case assigns.schema_filter do
-        [] -> assigns.schema_allowlist
-        schemas -> schemas
-      end
-
-    scope != [] and length(scoped_errors(assigns)) == length(scope)
-  end
-
-  defp filtered?(assigns), do: assigns.schema_filter != [] or assigns.cause_filter != []
-
-  defp schema_short_name(mod),
-    do: mod |> OperatorSelection.canonical() |> String.split(".") |> List.last()
-
-  defp single_scope_schema(%{schema_filter: [mod]}), do: mod
-  defp single_scope_schema(%{schema_allowlist: [mod]}), do: mod
-  defp single_scope_schema(_assigns), do: nil
-
-  defp sync_and_index_path(mount_path, nil),
-    do: "#{String.trim_trailing(mount_path, "/")}/sync-and-index"
-
-  defp sync_and_index_path(mount_path, mod),
-    do: OperatorSelection.path(mount_path, "sync-and-index", mod)
-
-  # ── Copy ───────────────────────────────────────────────────────────────────
-
-  defp summary_kind(rows, assigns) do
-    cond do
-      rows != [] -> :warning
-      filtered?(assigns) and all_rows(assigns) != [] -> :neutral
-      scoped_errors(assigns) != [] -> :partial
-      true -> :success
-    end
-  end
-
-  defp summary_headline(rows, assigns) do
-    failed = Enum.count(rows, &(&1.state == :failed))
-    retrying = Enum.count(rows, &(&1.state == :retrying))
-
-    cond do
-      rows != [] ->
-        [failed > 0 && "#{failed} failed", retrying > 0 && "#{retrying} retrying"]
-        |> Enum.filter(& &1)
-        |> Enum.join(", ")
-
-      filtered?(assigns) and all_rows(assigns) != [] ->
-        "No sync work matches these filters"
-
-      scoped_errors(assigns) != [] ->
-        "No failed or retrying sync work in the schemas that loaded"
-
-      true ->
-        "No failed or retrying sync work"
-    end
-  end
-
-  defp summary_guidance(rows) do
-    failed = Enum.count(rows, &(&1.state == :failed))
-    retrying = Enum.count(rows, &(&1.state == :retrying))
-
-    retry_copy =
-      if Enum.any?(rows, &(&1.state == :failed and &1.recovery)), do: ", then retry", else: ""
-
-    failed_copy =
-      case failed do
-        0 -> nil
-        1 -> "Review the error and fix its cause#{retry_copy}."
-        _ -> "Review the errors and fix their causes#{retry_copy}."
-      end
-
-    retrying_copy =
-      case {failed, retrying} do
-        {_, 0} -> nil
-        {0, 1} -> "It will retry automatically."
-        {0, _} -> "They will retry automatically."
-        {_, 1} -> "The retrying item will run again automatically."
-        {_, _} -> "Retrying items will run again automatically."
-      end
-
-    [failed_copy, retrying_copy] |> Enum.filter(& &1) |> Enum.join(" ")
-  end
-
-  defp cause_label(:validation), do: "Invalid data"
-  defp cause_label(:transport), do: "Couldn't reach Meilisearch"
-  defp cause_label(:backend_rejected), do: "Meilisearch rejected it"
-  defp cause_label(:queue_exhausted), do: "Retries used up"
-  defp cause_label(_), do: "Unknown cause"
-
-  defp cause_guidance(%{recovery: nil} = row), do: cause_label(cause(row)) <> "."
-
-  defp cause_guidance(row) do
-    case {cause(row), row.state} do
-      {:validation, _} -> "Invalid data: fix the record, then retry."
-      {:queue_exhausted, _} -> "Retries used up. Fix the cause, then retry."
-      {cause, :retrying} -> "#{cause_label(cause)}. This will retry automatically."
-      {:transport, _} -> "Couldn't reach Meilisearch. Check that it's running, then retry."
-      {:backend_rejected, _} -> "Meilisearch rejected it. Check the index, then retry."
-      {_, _} -> "Unknown cause. Read the error, then retry."
-    end
-  end
-
-  defp retry_eligibility(%{source: :meilisearch}),
-    do: "Meilisearch tasks can't be retried here. Resubmit the change from your app."
-
-  defp retry_eligibility(%{operation: :unknown}),
-    do: "The operation is unknown, so this can't be retried here."
-
-  defp retry_eligibility(_),
-    do: "The job didn't keep its record IDs, so it can't be retried here."
-
-  defp operation_label(:upsert), do: "Add or update"
-  defp operation_label(:delete), do: "Delete"
-  defp operation_label(_), do: "Unknown operation"
-
-  # Failed sync work is only ever failed or retrying; it does not observe pending work, so it
-  # never renders Clear or Pending.
-  defp row_sync_status(:retrying), do: :retrying
-  defp row_sync_status(_state), do: :failed
-
-  defp source_label(%{source: :meilisearch, id: id}), do: "Meilisearch task ##{id}"
-
-  defp source_label(%{metadata: metadata, id: id}) do
-    case Map.get(metadata, :queue) do
-      queue when is_binary(queue) and queue != "" -> "Oban #{queue} ##{id}"
-      queue when is_atom(queue) and not is_nil(queue) -> "Oban #{queue} ##{id}"
-      _ -> "Oban job ##{id}"
-    end
-  end
-
-  defp record_ids(%{recovery: %{reference: reference}}) do
-    case get_in(reference, [:payload, "document_ids"]) do
-      ids when is_list(ids) -> ids
-      _ -> nil
-    end
-  end
-
-  defp record_ids(_row), do: nil
-
-  defp record_count_label(row) do
-    case record_ids(row) do
-      nil -> nil
-      [_] -> "1 record"
-      ids -> "#{length(ids)} records"
-    end
-  end
-
-  defp record_id_preview(row) do
-    case record_ids(row) do
-      nil ->
-        nil
-
-      [] ->
-        nil
-
-      ids ->
-        shown = ids |> Enum.take(@record_id_preview) |> Enum.map_join(", ", &to_string/1)
-        extra = length(ids) - @record_id_preview
-        {shown, if(extra > 0, do: " and #{extra} more")}
-    end
-  end
-
-  defp clamp?(reason) when is_binary(reason),
-    do: String.length(reason) > @clamp_length or length(String.split(reason, "\n")) > 3
-
-  defp clamp?(_reason), do: false
-
-  defp detail_facts(row) do
-    metadata = row.metadata || %{}
-
-    known =
-      [
-        {"Worker", Map.get(metadata, :worker)},
-        {"Meilisearch index", Map.get(metadata, :index) || (row.recovery && row.recovery.index)},
-        {"Attempts", attempts_label(row)},
-        {"Meilisearch task type", Map.get(metadata, :type)},
-        {"Meilisearch task",
-         if(Map.get(metadata, :task_uid) != row.id, do: Map.get(metadata, :task_uid))}
-      ]
-      |> Enum.reject(fn {_label, value} -> value in [nil, ""] end)
-
-    other =
-      metadata
-      |> Enum.reject(fn {key, _} -> key in @known_metadata end)
-      |> Enum.sort_by(fn {key, _} -> to_string(key) end)
-      |> Enum.map(fn {key, value} -> {humanize_key(key), value} end)
-
-    Enum.map(known ++ other, fn {label, value} -> {label, display_value(value)} end)
-  end
-
-  defp next_attempt_at(%{state: :retrying} = row), do: Map.get(row, :next_attempt_at)
-  defp next_attempt_at(_row), do: nil
-
-  defp attempts_label(%{attempt: attempt, max_attempts: max})
-       when is_integer(attempt) and is_integer(max),
-       do: "#{attempt} of #{max}"
-
-  defp attempts_label(%{attempt: attempt}) when is_integer(attempt), do: "#{attempt}"
-  defp attempts_label(_row), do: nil
-
-  defp humanize_key(key) do
-    key |> to_string() |> String.replace("_", " ") |> String.capitalize()
-  end
-
-  defp display_value(value) when is_binary(value), do: value
-  defp display_value(value) when is_atom(value), do: OperatorSelection.canonical(value)
-  defp display_value(value), do: inspect(value)
-
-  defp job_args(%{recovery: %{reference: %{payload: payload}}}) when is_map(payload) do
-    case Jason.encode(payload, pretty: true) do
-      {:ok, json} -> json
-      _ -> inspect(payload, pretty: true)
-    end
-  end
-
-  defp job_args(_row), do: nil
-
-  defp load_error_text(reason), do: inspect(reason, pretty: true)
-
-  # ── Delete confirmation ────────────────────────────────────────────────────
-
-  defp delete_confirmation_row(assigns) do
-    case assigns.delete_confirmation do
-      key when is_binary(key) ->
-        assigns
-        |> all_rows()
-        |> Enum.find(&(row_key(&1) == key and &1.operation == :delete and &1.recovery))
-
-      _ ->
-        nil
-    end
-  end
-
-  defp delete_confirmation_ids(row),
-    do: get_in(row.recovery.reference, [:payload, "document_ids"]) || []
-
-  defp delete_confirmation_index(row),
-    do: row.recovery.index || Map.get(row.metadata, :index) || "unknown"
-
-  defp delete_confirmation_description(row) do
-    count = length(delete_confirmation_ids(row))
-
-    "Retry deletion of #{document_count_label(count)} for #{OperatorSelection.canonical(row.schema)} in #{delete_confirmation_index(row)}."
-  end
-
-  # `1 document`, `3 documents`: the singular reads correctly in the description, the count line
-  # and the confirm label, so one helper builds all three.
-  defp document_count_label(1), do: "1 document"
-  defp document_count_label(count), do: "#{count} documents"
-
-  defp recovery_handoff_path(mount_path, schema, receipt) do
-    base = String.trim_trailing(mount_path, "/")
-
-    query =
-      URI.encode_query(%{
-        "schema" => OperatorSelection.canonical(schema),
-        "recovery" => receipt.handle,
-        "recovery_generation" => receipt.generation
-      })
-
-    "#{base}/sync-and-index?#{query}"
-  end
+  defp row_by_key(socket, key),
+    do: Enum.find(FailedSyncView.all_rows(socket.assigns.loads), &(row_key(&1) == key))
+
+  # The receipts map is keyed by the view's own key, so the page can show a receipt on its row.
+  defp row_key(row), do: FailedSyncView.row_key(row)
 
   # ── Render ─────────────────────────────────────────────────────────────────
 
   @impl true
   def render(assigns) do
-    rows = visible_rows(assigns)
-    any_rows? = all_rows(assigns) != []
-    filtered? = filtered?(assigns)
-
-    assigns =
-      assigns
-      |> assign(:rows, rows)
-      |> assign(:errors, scoped_errors(assigns))
-      |> assign(:all_failed?, all_scoped_failed?(assigns))
-      |> assign(:filtered?, filtered?)
-      |> assign(:filtered_out?, rows == [] and filtered? and any_rows?)
-      |> assign(
-        :hidden_count,
-        if(filtered?, do: length(all_rows(assigns)) - length(rows), else: 0)
-      )
-      |> assign(:show_filters?, any_rows? or filtered?)
-      |> assign(:summary_kind, summary_kind(rows, assigns))
-      |> assign(:summary_headline, summary_headline(rows, assigns))
-      |> assign(:schema_facets, schema_facets(assigns))
-      |> assign(:cause_facets, cause_facets(assigns))
-      |> assign(:handoff_schema, single_scope_schema(assigns))
-      |> assign(:delete_row, delete_confirmation_row(assigns))
+    assigns = assign(assigns, :view, view(assigns))
 
     ~H"""
-    <Layouts.app
+    <FailedSync.surface
+      view={@view}
       mount_path={@mount_path}
       flash={@flash}
       shell={@shell}
       page_title={@page_title}
-      ops_main_width={:wide}
-    >
-      <.ops_toolbar class="items-end gap-4">
-        <.ops_page_header
-          title={@page_title}
-          subtitle="Each row is sync work that didn't reach Meilisearch. Retry queues the same records again and sends their current data."
-        />
-        <.ops_refresh_control
-          id="failed-sync-refresh"
-          checked_at={@last_refresh_at}
-          phx-click="refresh"
-          aria_label="Refresh failed sync work"
-        />
-      </.ops_toolbar>
-
-      <.ops_trail current={:failed_sync} />
-
-      <.ops_empty_state :if={@scope_error == :no_schemas} title="No schemas configured.">
-        Add allowlisted schema modules with
-        <.ops_inline_code>schema_allowlist</.ops_inline_code>
-        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
-      </.ops_empty_state>
-
-      <.ops_status
-        :if={@scope_error == :unavailable}
-        kind={:error}
-        title="That schema is unavailable."
-        role="alert"
-      >
-        It isn't in the schema allowlist.
-        <.link
-          patch={"#{String.trim_trailing(@mount_path, "/")}/failed-sync"}
-          class="link underline underline-offset-2"
-        >
-          Show all schemas
-        </.link>
-      </.ops_status>
-
-      <.ops_empty_state :if={@loads == :missing_backend} title="Runtime not configured">
-        Configure the Scrypath runtime under
-        <.ops_inline_code>:scrypath_ops</.ops_inline_code>
-        — see <.ops_inline_code>scrypath_ops/README.md</.ops_inline_code>, then refresh.
-      </.ops_empty_state>
-
-      <div :if={is_list(@loads)} class="space-y-ops-page-gap">
-        <.ops_status
-          :for={{mod, reason} <- @errors}
-          kind={:error}
-          title={"Failed sync work could not load for #{schema_short_name(mod)}"}
-          role="alert"
-          data-testid="failed-sync-load-error"
-        >
-          <p>
-            {OperatorSelection.canonical(mod)} couldn't be checked, so its failures aren't listed.
-            Check backend and queue configuration, then refresh.
-          </p>
-          <.ops_code_block
-            class="mt-2"
-            variant={:compact}
-            label={"Load error for #{schema_short_name(mod)}"}
-            text={load_error_text(reason)}
-            copy
-            inline_copy
-            copy_label="Copy error"
-            copy_success="Error copied"
-          />
-        </.ops_status>
-
-        <section
-          :if={not @all_failed?}
-          aria-labelledby="failed-sync-summary-heading"
-          class="space-y-3"
-        >
-          <.ops_verdict
-            kind={@summary_kind}
-            headline={@summary_headline}
-            headline_id="failed-sync-summary-heading"
-            data-testid="failed-sync-summary"
-          >
-            <span :if={@rows != []}>{summary_guidance(@rows)}</span>
-            <span :if={@rows != [] and @hidden_count > 0} data-testid="failed-sync-filter-note">
-              {@hidden_count} more hidden by filters.
-              <.link
-                patch={filter_path(@mount_path, [], [])}
-                class="link underline underline-offset-2"
-              >
-                Clear filters
-              </.link>
-            </span>
-            <span :if={@filtered_out?}>
-              <.link
-                patch={filter_path(@mount_path, [], [])}
-                class="link underline underline-offset-2"
-              >
-                Clear filters
-              </.link>
-              to see all failed and retrying work.
-            </span>
-            <span :if={@rows == [] and not @filtered_out?}>
-              No failures were found in the available history. Pending work and document freshness are checked on Sync and index.
-            </span>
-          </.ops_verdict>
-
-          <.form
-            :if={@show_filters?}
-            for={%{}}
-            id="failed-sync-filters"
-            phx-change="filter"
-            class="ops-failed-filters"
-          >
-            <fieldset :if={length(@schema_allowlist) > 1} class="ops-failed-filters__group">
-              <legend class="ops-failed-filters__legend">Schema</legend>
-              <label
-                :for={facet <- @schema_facets}
-                class={[
-                  "ops-filter-chip",
-                  facet.selected? && "ops-filter-chip--selected",
-                  facet.count == 0 && !facet.error? && "ops-filter-chip--quiet"
-                ]}
-                title={facet.name}
-                data-testid="failed-sync-schema-filter"
-              >
-                <input
-                  type="checkbox"
-                  name="schema[]"
-                  value={facet.name}
-                  checked={facet.selected?}
-                />
-                <span>{facet.short_name}{" "}</span>
-                <span :if={facet.error?} class="ops-filter-chip__count">
-                  couldn't load
-                </span>
-                <span :if={!facet.error?} class="ops-filter-chip__count">
-                  {facet.count}<span class="sr-only">
-                    {" "}({facet.failed} failed, {facet.retrying} retrying)</span>
-                </span>
-              </label>
-            </fieldset>
-            <fieldset
-              :if={@cause_facets != []}
-              class="ops-failed-filters__group"
-            >
-              <legend class="ops-failed-filters__legend">Cause</legend>
-              <label
-                :for={facet <- @cause_facets}
-                class={[
-                  "ops-filter-chip",
-                  facet.selected? && "ops-filter-chip--selected",
-                  facet.count == 0 && "ops-filter-chip--quiet"
-                ]}
-                data-testid="failed-sync-cause-filter"
-              >
-                <input
-                  type="checkbox"
-                  name="cause[]"
-                  value={facet.value}
-                  checked={facet.selected?}
-                />
-                <span>{facet.label}{" "}</span>
-                <span class="ops-filter-chip__count">{facet.count}</span>
-              </label>
-            </fieldset>
-          </.form>
-        </section>
-
-        <section
-          :if={@rows != []}
-          aria-labelledby="failed-sync-list-heading"
-          class="ops-failed-list"
-        >
-          <h2 id="failed-sync-list-heading" class="sr-only">Failed and retrying sync work</h2>
-          <article
-            :for={row <- @rows}
-            id={"failed-row-#{row_dom_id(row)}"}
-            class="ops-failed-row"
-            data-testid="failed-sync-row"
-            data-state={row.state}
-          >
-            <div class="ops-failed-row__facts">
-              <.ops_sync_status status={row_sync_status(row.state)} />
-              <h3 class="ops-failed-row__title">
-                <span title={OperatorSelection.canonical(row.schema)} data-ops-identity>
-                  {schema_short_name(row.schema)}
-                </span>
-                <span aria-hidden="true">·</span>
-                {operation_label(row.operation)}
-              </h3>
-              <span class="ops-failed-row__sep" aria-hidden="true">·</span>
-              <span>{source_label(row)}</span>
-              <span :if={record_count_label(row)} class="ops-failed-row__sep" aria-hidden="true">
-                ·
-              </span>
-              <span :if={record_count_label(row)} data-testid="failed-sync-records">
-                {record_count_label(row)}<span :if={preview = record_id_preview(row)}>:
-                  <code class="ops-failed-row__ids">{elem(preview, 0)}</code>{elem(preview, 1)}</span>
-              </span>
-              <span class="ops-failed-row__sep" aria-hidden="true">·</span>
-              <span class="ops-failed-row__time">
-                <span class="sr-only">Last attempt</span>
-                <.ops_time
-                  id={"failed-attempt-#{row_dom_id(row)}"}
-                  dt={row.last_attempt_at || row.failed_at}
-                  state_text="No attempt time recorded"
-                  operational
-                />
-              </span>
-              <span :if={next_attempt_at(row)} class="ops-failed-row__sep" aria-hidden="true">
-                ·
-              </span>
-              <span
-                :if={next_attempt_at(row)}
-                class="ops-failed-row__time"
-                data-testid="failed-sync-next-try"
-              >
-                <.ops_time
-                  id={"failed-next-try-#{row_dom_id(row)}"}
-                  dt={next_attempt_at(row)}
-                  label="Next try"
-                  operational
-                />
-              </span>
-            </div>
-
-            <div :if={row.reason} class="ops-failed-row__error">
-              <.ops_code_block
-                id={"failed-reason-#{row_dom_id(row)}"}
-                variant={:compact}
-                label="Error"
-                text={row.reason}
-                copy
-                inline_copy
-                clamp={clamp?(row.reason)}
-                copy_label="Copy error"
-                copy_success="Error copied"
-                data-testid="failed-sync-reason"
-              />
-            </div>
-
-            <div
-              :if={row.recovery && is_nil(@recovery_receipts[row_key(row)])}
-              class="ops-failed-row__actions"
-            >
-              <button
-                type="button"
-                class="ops-text-action"
-                phx-click="retry"
-                phx-value-id={row.id}
-                phx-value-schema={OperatorSelection.canonical(row.schema)}
-                phx-value-source={row.source}
-                data-testid="failed-sync-retry"
-              >
-                Retry
-              </button>
-            </div>
-
-            <.ops_status
-              :if={receipt = @recovery_receipts[row_key(row)]}
-              class="ops-failed-row__receipt"
-              kind={:neutral}
-              title="Retry queued"
-              role="status"
-              data-testid="recovery-receipt"
-            >
-              Oban job #{receipt.replacement_job} will {if receipt.operation == :delete,
-                do: "delete",
-                else: "add or update"} records in <.ops_inline_code>{receipt.index}</.ops_inline_code>.
-              Completion has not been confirmed. Original job #{row.id} is retained.
-              <.link
-                :if={receipt.handle}
-                navigate={recovery_handoff_path(@mount_path, row.schema, receipt)}
-                class="ml-2 min-h-ops-control link link-primary underline underline-offset-2"
-              >
-                Check sync status
-              </.link>
-            </.ops_status>
-
-            <div class="ops-failed-row__foot">
-              <p class="ops-failed-row__guidance">
-                {cause_guidance(row)}
-                <span :if={is_nil(row.recovery)} data-testid="failed-sync-eligibility">
-                  {retry_eligibility(row)}
-                </span>
-              </p>
-              <.ops_disclosure
-                id={"failed-detail-#{row_dom_id(row)}"}
-                summary="More details"
-                variant={:compact}
-                class="ops-failed-row__details"
-              >
-                <dl :if={detail_facts(row) != []} class="ops-failed-details">
-                  <div :for={{label, value} <- detail_facts(row)}>
-                    <dt>{label}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                </dl>
-                <.ops_code_block
-                  :if={job_args(row)}
-                  class="mt-2"
-                  variant={:compact}
-                  label="Job args"
-                  text={job_args(row)}
-                  copy
-                  inline_copy
-                  copy_label="Copy job args"
-                  copy_success="Job args copied"
-                />
-                <p :if={detail_facts(row) == [] and is_nil(job_args(row))}>
-                  No further details were recorded.
-                </p>
-              </.ops_disclosure>
-            </div>
-          </article>
-        </section>
-
-        <p :if={@rows != []} class="ops-search-query-hint">
-          <.ops_help_link href={"#{@mount_path}/help#recovery"}>
-            Help with sync failures and recovery
-          </.ops_help_link>
-        </p>
-      </div>
-
-      <.ops_handoff :if={is_list(@loads)}>
-        <:step
-          navigate={sync_and_index_path(@mount_path, @handoff_schema)}
-          hint="Check pending work and index settings —"
-        >
-          Check sync and index
-        </:step>
-      </.ops_handoff>
-
-      <.ops_modal
-        :if={@delete_row}
-        id="retry-delete-modal"
-        title="Confirm delete sync work"
-        description={delete_confirmation_description(@delete_row)}
-        action_label="retry delete"
-        initial_focus="[data-ops-modal-cancel]"
-        cancel_event="cancel_retry_delete"
-      >
-        <.form for={%{}} phx-submit="confirm_retry_delete" class="space-y-3">
-          <div class="rounded-ops-surface border border-base-300 p-ops-3 text-ops-body">
-            <p>
-              Schema
-              <.ops_inline_code>{OperatorSelection.canonical(@delete_row.schema)}</.ops_inline_code>
-            </p>
-            <p>
-              Index
-              <.ops_inline_code>{delete_confirmation_index(@delete_row)}</.ops_inline_code>
-            </p>
-            <p>{document_count_label(length(delete_confirmation_ids(@delete_row)))}</p>
-            <ul class="mt-2 list-inside list-disc break-all font-mono text-ops-sm">
-              <li :for={document_id <- delete_confirmation_ids(@delete_row)}>
-                {inspect(document_id)}
-              </li>
-            </ul>
-          </div>
-          <div class="flex justify-between gap-2">
-            <.ops_button
-              type="button"
-              phx-click="cancel_retry_delete"
-              variant={:default}
-              aria-label="Keep failed work and close"
-              data-ops-modal-cancel
-            >
-              Keep failed work and close
-            </.ops_button>
-            <.ops_button type="submit" variant={:primary}>
-              Retry deleting {document_count_label(length(delete_confirmation_ids(@delete_row)))}
-            </.ops_button>
-          </div>
-        </.form>
-      </.ops_modal>
-    </Layouts.app>
+      last_refresh_at={@last_refresh_at}
+    />
     """
+  end
+
+  # The one place the clock is read for this page: every time on it is measured against this instant.
+  defp view(assigns) do
+    scope = %{
+      error: assigns.scope_error,
+      allowlist: assigns.schema_allowlist,
+      schema_filter: assigns.schema_filter,
+      cause_filter: assigns.cause_filter,
+      delete_confirmation: assigns.delete_confirmation
+    }
+
+    FailedSyncView.build(
+      assigns.loads,
+      scope,
+      assigns.recovery_receipts,
+      ScrypathOps.Clock.utc_now()
+    )
   end
 end
