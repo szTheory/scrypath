@@ -2,10 +2,11 @@ defmodule Mix.Tasks.Verify.NamespaceFence do
   @moduledoc """
   Fails when Sigra references leak outside the allowed integration namespace.
 
-  The fence scans the repo-owned `lib/scrypath/`, `scrypath_ops/lib/`, and
-  `scrypath_ops/test/` trees. Only the Sigra integration namespace and the
-  bounded OPSUI LiveView surfaces that consume that integration are allowed to
-  contain `Sigra.` references inside `scrypath_ops`.
+  The fence scans the repo-owned `lib/scrypath/`, `scrypath_ops/lib/`,
+  `scrypath_ops/test/`, and `fixtures/` trees. Only the Sigra integration
+  namespace and the bounded OPSUI LiveView surfaces that consume that
+  integration are allowed to contain `Sigra.` references inside `scrypath_ops`.
+  The fixtures project (ADR 0002) has no Sigra exception.
   """
 
   use Mix.Task
@@ -24,7 +25,8 @@ defmodule Mix.Tasks.Verify.NamespaceFence do
      [
        "scrypath_ops/test/scrypath_ops/integrations/sigra/",
        "scrypath_ops/test/scrypath_ops_web/live/"
-     ]}
+     ]},
+    {"fixtures/", []}
   ]
 
   @impl true
