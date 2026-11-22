@@ -157,7 +157,9 @@ defmodule ScrypathFixtures.Shopadelic do
   end
 
   # The index was created five days ago and its settings applied just after; then 38 batches of
-  # product updates and two deletes landed over the last twelve hours.
+  # product updates and two deletes landed over the last twelve hours. Meilisearch hands out uids in
+  # enqueue order, so the history ends (the two deletes, about 6,100 seconds ago) before the first
+  # failed task below begins (no more than 5,400 seconds ago), as the check requires.
   defp history(now, index, settings_state) do
     creation =
       Meili.task(%{
@@ -190,7 +192,7 @@ defmodule ScrypathFixtures.Shopadelic do
           uid: n,
           index_uid: index,
           now: now,
-          enqueued_ago: 43_200 - n * 1_000,
+          enqueued_ago: 43_200 - n * 900,
           documents: rem(n, 3) + 1
         })
       end
@@ -203,7 +205,7 @@ defmodule ScrypathFixtures.Shopadelic do
           uid: n,
           index_uid: index,
           now: now,
-          enqueued_ago: 2_000 - n * 10
+          enqueued_ago: 6_500 - n * 10
         })
       end
 

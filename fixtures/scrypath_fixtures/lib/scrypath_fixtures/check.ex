@@ -61,6 +61,8 @@ defmodule ScrypathFixtures.Check do
     :unexpected_outcome,
     :task_keys,
     :index_uid,
+    :task_uid_unique,
+    :task_uid_order,
     :time_order,
     :unparsable_time,
     :meili_cancelled_spelling,
@@ -600,9 +602,10 @@ defmodule ScrypathFixtures.Check do
     indexes = allowed_indexes(scenario)
 
     task_problems = Enum.flat_map(tasks, &task_problems(scenario, &1, indexes))
+    uid_problems = tasks |> task_uid_problems() |> tag(scenario)
     job_problems = Enum.flat_map(jobs, &job_problems(scenario, &1, indexes))
 
-    task_problems ++ job_problems ++ round_trip_problems(scenario)
+    task_problems ++ uid_problems ++ job_problems ++ round_trip_problems(scenario)
   end
 
   defp list_opt(%Scenario{scrypath_opts: opts}, key) do
@@ -705,6 +708,37 @@ defmodule ScrypathFixtures.Check do
 
   defp task_index(%{"indexUid" => value}, uid, indexes) do
     if value in indexes, do: [], else: [{:index_uid, uid, value}]
+  end
+
+  # A task with no "indexUid" key has no index name to check: that is `task_keys`' problem.
+  defp task_index(_task, _uid, _indexes), do: []
+
+  # Meilisearch gives every task one uid, never reuses it, and hands uids out in enqueue order, so a
+  # task is never enqueued before the task with the next lower uid. Only tasks whose uid is an
+  # integer and whose "enqueuedAt" parses take part: anything else is the wire guard's or
+  # `unparsable_time`'s problem. A step back in time is reported once, against the later uid.
+  defp task_uid_problems(tasks) do
+    duplicates =
+      for {uid, count} <- tasks |> Enum.map(& &1["uid"]) |> Enum.frequencies() |> Enum.sort(),
+          is_integer(uid),
+          count > 1,
+          do: {:task_uid_unique, uid}
+
+    enqueued =
+      for task <- tasks,
+          is_integer(task["uid"]),
+          %DateTime{} = at <- [parse_stamp(task["enqueuedAt"])],
+          do: {task["uid"], at}
+
+    inversions =
+      enqueued
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.flat_map(fn [{_lower, earlier}, {uid, later}] ->
+        if DateTime.compare(later, earlier) == :lt, do: [{:task_uid_order, uid}], else: []
+      end)
+
+    duplicates ++ inversions
   end
 
   defp task_times(%Scenario{now: now}, task, uid) do

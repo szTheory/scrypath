@@ -26,6 +26,12 @@ defmodule ScrypathOps.FixturesCheckTest do
   @doc "Every tag this module plants, read from the plant table itself."
   def planted_tags, do: plants() |> Enum.map(& &1.tag) |> Enum.uniq()
 
+  # Every plant runs once, here; the tests of "one planted failure per invariant" read the same
+  # results (a plant costs a full round trip through the real Scrypath code).
+  setup_all do
+    %{results: for(plant <- plants(), do: {plant, Check.run(plant.opts)})}
+  end
+
   describe "positive controls" do
     test "the registry is clean and the count is the number of registered scenarios" do
       expected = length(Scenarios.all(@now))
@@ -57,11 +63,8 @@ defmodule ScrypathOps.FixturesCheckTest do
   end
 
   describe "one planted failure per invariant" do
-    test "every plant returns its own tag, and no tag that is not its own" do
-      failures =
-        for plant <- plants(), reduce: [] do
-          acc -> acc ++ plant_failures(plant)
-        end
+    test "every plant returns its own tag, and no tag that is not its own", %{results: results} do
+      failures = Enum.flat_map(results, fn {plant, result} -> plant_failures(plant, result) end)
 
       assert failures == [], Enum.join(failures, "\n")
     end
@@ -70,15 +73,63 @@ defmodule ScrypathOps.FixturesCheckTest do
       assert MapSet.new(planted_tags()) == MapSet.new(Check.invariants())
     end
 
-    test "every problem any plant produces carries a tag Check.invariants/0 lists" do
+    test "every problem any plant produces carries a tag Check.invariants/0 lists", %{
+      results: results
+    } do
       returned =
-        for plant <- plants(), reduce: MapSet.new() do
+        for {_plant, result} <- results, reduce: MapSet.new() do
           acc ->
-            assert {:error, problems} = Check.run(plant.opts)
+            assert {:error, problems} = result
             MapSet.union(acc, MapSet.new(problem_tags(problems)))
         end
 
       assert MapSet.to_list(returned) -- Check.invariants() == []
+    end
+  end
+
+  describe "task uids, and a task that lacks a key" do
+    setup do
+      %{deep: Scenarios.get!(:logistify_deep_queue, @now)}
+    end
+
+    test "the order of the list is not the order of the uids", %{deep: deep} do
+      # Meilisearch lists newest first; only uid against enqueue time is checked
+      assert {:ok, _summary} = Check.run(scenarios: [change_tasks(deep, &Enum.reverse/1)])
+    end
+
+    test "tasks enqueued in the same instant may take ascending uids", %{deep: deep} do
+      # the last waiting task of the deep queue was enqueued 30 seconds ago
+      same_instant = change_tasks(deep, &(&1 ++ [task_enqueued(deep, 700, 30)]))
+      assert {:ok, _summary} = Check.run(scenarios: [same_instant])
+
+      later = change_tasks(deep, &(&1 ++ [task_enqueued(deep, 700, 10)]))
+      assert {:ok, _summary} = Check.run(scenarios: [later])
+    end
+
+    test "a missing uid is not a duplicate, and an inversion is reported once", %{deep: deep} do
+      id = deep.id
+      first = task_at(deep, 0)
+
+      # one task far in the past with a high uid: reported against that uid, not against the rest
+      assert {:error, [{^id, {:task_uid_order, 700}}]} =
+               Check.run(
+                 scenarios: [change_tasks(deep, &(&1 ++ [task_enqueued(deep, 700, 5_400)]))]
+               )
+
+      # a uid that is not an integer is the wire guard's problem; the uid checks skip it
+      planted = change_tasks(deep, fn [t | rest] -> [Map.delete(t, "uid") | rest] end)
+      assert {:error, problems} = Check.run(scenarios: [planted])
+      assert problem_tags(problems) -- [:task_keys, :wire_guard, :unexpected_outcome] == []
+      refute :task_uid_unique in problem_tags(problems)
+      refute :task_uid_order in problem_tags(problems)
+      assert first["uid"] == 1
+    end
+
+    test "a task with no indexUid is reported as task_keys and nothing raises", %{deep: deep} do
+      id = deep.id
+      planted = change_tasks(deep, fn [t | rest] -> [Map.delete(t, "indexUid") | rest] end)
+
+      assert {:error, [{^id, {:task_keys, 1}}]} = Check.run(scenarios: [planted])
     end
   end
 
@@ -154,11 +205,29 @@ defmodule ScrypathOps.FixturesCheckTest do
         scenarios: [change_tasks(deep, fn [t | rest] -> [Map.delete(t, "duration") | rest] end)],
         problem: {:task_keys, uid}
       ),
+      # a task with no "indexUid" has no name to check: it is reported as task_keys, not raised
+      plant(:task_keys, "a task with no index uid", id,
+        scenarios: [change_tasks(deep, fn [t | rest] -> [Map.delete(t, "indexUid") | rest] end)],
+        problem: {:task_keys, uid}
+      ),
       plant(:index_uid, "a task on an index the scenario does not own", id,
         scenarios: [
           change_tasks(deep, fn [t | rest] -> [Map.put(t, "indexUid", "elsewhere") | rest] end)
         ],
         problem: {:index_uid, uid, "elsewhere"}
+      ),
+      plant(:task_uid_unique, "a uid used by two tasks", id,
+        scenarios: [change_tasks(deep, fn [t | rest] -> [t, t | rest] end)],
+        problem: {:task_uid_unique, uid}
+      ),
+      # the Shopadelic cause: a task with a higher uid that was enqueued long before the lower ones
+      plant(:task_uid_order, "a task enqueued before the task with the next lower uid", id,
+        scenarios: [
+          change_tasks(deep, fn tasks ->
+            tasks ++ [task_enqueued(deep, 700, 5_400)]
+          end)
+        ],
+        problem: {:task_uid_order, 700}
       ),
       plant(:time_order, "a task that finishes before it was enqueued", id,
         scenarios: [
@@ -347,8 +416,8 @@ defmodule ScrypathOps.FixturesCheckTest do
   end
 
   # Everything wrong with how one plant was reported; an empty list means it was reported cleanly.
-  defp plant_failures(plant) do
-    case Check.run(plant.opts) do
+  defp plant_failures(plant, result) do
+    case result do
       {:ok, _summary} ->
         ["#{plant.name}: the plant was not reported at all"]
 
@@ -388,6 +457,18 @@ defmodule ScrypathOps.FixturesCheckTest do
   # -- helpers -------------------------------------------------------------------------------
 
   defp problem_tags(problems), do: for({_id, tuple} <- problems, uniq: true, do: elem(tuple, 0))
+
+  # A succeeded task on the scenario's index with the given uid, enqueued `ago` seconds before now.
+  defp task_enqueued(scenario, uid, ago) do
+    Meili.task(%{
+      type: "documentAdditionOrUpdate",
+      status: "succeeded",
+      uid: uid,
+      index_uid: scenario |> task_at(0) |> Map.fetch!("indexUid"),
+      now: scenario.now,
+      enqueued_ago: ago
+    })
+  end
 
   defp change_tasks(scenario, fun), do: update_in(scenario.scrypath_opts[:meilisearch_tasks], fun)
   defp change_jobs(scenario, fun), do: update_in(scenario.scrypath_opts[:oban_jobs], fun)

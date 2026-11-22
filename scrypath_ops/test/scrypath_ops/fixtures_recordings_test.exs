@@ -701,7 +701,8 @@ defmodule ScrypathOps.FixturesRecordingsTest do
         uid: @failed_uid,
         index_uid: index,
         now: now,
-        enqueued_ago: 100,
+        # the highest uid is the newest task: the deep queue's last task was enqueued 30 s ago
+        enqueued_ago: 10,
         failure: {:invalid_document_id, id: "LSH 2026/04"}
       })
 
