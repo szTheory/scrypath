@@ -12,9 +12,9 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
   #   - E-03 `ops_condition`: "Not observed", "Not checked", "Queue not used" and "Unavailable"
   #     are plain muted words with no icon, no status and no color of their own, so something
   #     nobody looked at can never read as healthy or as failed.
-  #   - E-17 notices, statuses and verdicts: one Panel surface with a 2px inline-start rule. Failed
-  #     color only for errors, Retrying amber for warnings and partial results, Control Edge for
-  #     everything else; no cue dot, no tint, no shadow, no Plum or green.
+  #   - E-17 notices, statuses and verdicts: one Panel surface with a full 1px border and no
+  #     one-sided bar. Failed color only for errors, Retrying amber for warnings and partial
+  #     results, the Hairline for everything else; no cue dot, no tint, no shadow, no Plum or green.
   #   - E-16 loading: `ops_loading` and the refresh button show a literal word. `ops_loading`
   #     keeps the word in a `role="status"` node with no `aria-busy` on it or above it, and marks
   #     its static Sunken bars (the stand-in for the loading content) `aria-busy`, with no
@@ -275,22 +275,22 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
       assert surface_modifiers(html) == ["ops-notice-surface--error"]
     end
 
-    test "the stylesheet draws a Panel with a 2px inline-start rule and no shadow or tint" do
+    test "the stylesheet draws a Panel with a full 1px border and no one-sided bar, shadow or tint" do
       surface = css_rule(".ops-notice-surface")
 
       assert surface =~ "border: 1px solid var(--color-base-300)"
-      assert surface =~ "border-inline-start-width: 2px"
+      refute surface =~ "border-inline-start", "a notice never draws a one-sided bar"
       assert surface =~ "background-color: var(--color-base-100)"
       assert surface =~ "box-shadow: none"
 
       assert css_rule(".ops-notice-surface--error") =~
-               "border-inline-start-color: var(--ops-status-failed)"
+               "border-color: var(--ops-status-failed)"
 
       assert css_rule(".ops-notice-surface--warning") =~
-               "border-inline-start-color: var(--ops-status-retrying)"
+               "border-color: var(--ops-status-retrying)"
 
       assert css_rule(".ops-notice-surface--neutral") =~
-               "border-inline-start-color: var(--ops-control-edge)"
+               "border-color: var(--color-base-300)"
 
       assert css_rule(".ops-notice-surface--error .ops-notice-surface__title") =~
                "color: var(--ops-status-failed)"
@@ -369,7 +369,7 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
 
   # ── Plan 05: buttons, destructive confirms and row actions ───────────────────────────────
 
-  @button_variants [:default, :primary, :secondary, :ghost]
+  @button_variants [:default, :primary, :ghost]
 
   defp count(html, selector) do
     html |> LazyHTML.from_fragment() |> LazyHTML.query(selector) |> Enum.count()
@@ -720,17 +720,17 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
 
       assert Enum.any?(
                rule_bodies(".ops-flash > .alert"),
-               &(&1 =~ "border-inline-start-width: 2px")
+               &(&1 =~ "border: 1px solid var(--ops-control-edge)")
              )
 
       assert Enum.any?(
                rule_bodies(".ops-flash--info > .alert"),
-               &(&1 =~ "border-inline-start-color: var(--ops-control-edge)")
+               &(&1 =~ "border-color: var(--ops-control-edge)")
              )
 
       assert Enum.any?(
                rule_bodies(".ops-flash--error > .alert"),
-               &(&1 =~ "border-inline-start-color: var(--ops-status-failed)")
+               &(&1 =~ "border-color: var(--ops-status-failed)")
              )
 
       for selector <- [".ops-flash--info > .alert", ".ops-flash--error > .alert"] do

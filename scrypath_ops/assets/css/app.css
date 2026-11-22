@@ -89,6 +89,7 @@
   --ops-selection: #2b2130;
   --ops-theme-selection: #2b2130;
   --ops-control-edge: #8f7f94;
+  --ops-primary-hover: #e4a3d4;
   --ops-text-muted: #bbaac0;
   --ops-status-failed: #ff9a6b;
   --ops-status-retrying: #e3b25c;
@@ -138,6 +139,7 @@
   --ops-selection: #ebdfe7;
   --ops-theme-selection: #ebdfe7;
   --ops-control-edge: #8a7a8e;
+  --ops-primary-hover: #5e2051;
   --ops-text-muted: #5e5360;
   --ops-status-failed: #b0360b;
   --ops-status-retrying: #8a5a00;
@@ -609,16 +611,14 @@
     background: var(--ops-surface-1);
   }
 
-  /* Notices, statuses and verdicts share one surface: Panel fill, a 1px Hairline on three sides
-     and a 2px inline-start rule that carries the kind. No tint, no shadow, no cue dot. The rule
-     is Failed for errors, Retrying amber for warnings and partial results, and Control Edge for
-     everything else (info, success, running, neutral). Plum is never an info color and green is
-     only for Clear. The title takes the rule's color only for the two status kinds; every other
-     title and all body text stay Ink. */
+  /* Notices, statuses and verdicts share one surface: Panel fill and a full 1px border. The
+     border is the Hairline for neutral kinds (info, success, running, neutral), Failed for
+     errors and Retrying amber for warnings and partial results. No one-sided bar, no tint, no
+     shadow, no cue dot. Plum is never an info color and green is only for Clear. The title takes
+     the status color only for the two status kinds; every other title and all body text stay
+     Ink. The 2px inline-start line is the selection signature and means "selected" only. */
   .ops-notice-surface {
     border: 1px solid var(--color-base-300);
-    border-inline-start-width: 2px;
-    border-inline-start-color: var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
     background-color: var(--color-base-100);
     box-shadow: none;
@@ -628,15 +628,15 @@
   }
 
   .ops-notice-surface--error {
-    border-inline-start-color: var(--ops-status-failed);
+    border-color: var(--ops-status-failed);
   }
 
   .ops-notice-surface--warning {
-    border-inline-start-color: var(--ops-status-retrying);
+    border-color: var(--ops-status-retrying);
   }
 
   .ops-notice-surface--neutral {
-    border-inline-start-color: var(--ops-control-edge);
+    border-color: var(--color-base-300);
   }
 
   .ops-notice-surface__title {
@@ -705,6 +705,12 @@
   .ops-segmented-btn:disabled {
     color: var(--ops-text-muted);
     cursor: not-allowed;
+  }
+
+  /* Inline code wraps at spaces first and breaks inside an identifier only when the identifier is
+     longer than a whole line, so a short index name never splits mid-word. */
+  .ops-inline-code {
+    overflow-wrap: break-word;
   }
 
   /* A badge is plain muted text for a non-sync label (the Search run state). No pill, no border,
@@ -2117,11 +2123,10 @@
 }
 
 /* Alert utilities outrank the component layer; the toast surface must win in both themes. It is
-   an overlay (LD-3): Panel fill, a 1px Control Edge border and the overlay shadow, plus the 2px
-   inline-start rule (neutral for info, Failed for an error). No tint. */
+   an overlay (LD-3): Panel fill, a full 1px border (Control Edge for info, Failed for an error)
+   and the overlay shadow. No one-sided bar, no tint. */
 .ops-flash > .alert {
   border: 1px solid var(--ops-control-edge);
-  border-inline-start-width: 2px;
   border-radius: var(--radius-ops-overlay);
   background-color: var(--color-base-100);
   color: var(--color-base-content);
@@ -2129,11 +2134,11 @@
 }
 
 .ops-flash--info > .alert {
-  border-inline-start-color: var(--ops-control-edge);
+  border-color: var(--ops-control-edge);
 }
 
 .ops-flash--error > .alert {
-  border-inline-start-color: var(--ops-status-failed);
+  border-color: var(--ops-status-failed);
 }
 
 /* Task baseline: controls and evidence use shared tokens without nested framing. */
@@ -2395,8 +2400,10 @@
 /* Button colors. daisyUI sets .btn colors in the utilities layer, so a components-layer color
    never reaches the button: these rules are authored here, after it, in the same layer.
    Default button (outline, also :secondary): Panel fill, Ink text, opaque Control Edge border
-   (LD-15). Hover and press fill is Sunken, never Selected (LD-13). Plum button: hover underlines
-   the label and keeps its fill. Disabled: muted text, Control Edge border, opaque. There is no
+   (LD-15). Hover and press fill is Sunken, never Selected (LD-13). Plum button: hover moves the
+   fill one step (--ops-primary-hover: darker Plum in light, lighter Orchid in dark) and never
+   underlines the label. `[data-ops-state="hover"]` renders the same hover look without a pointer,
+   for the storybook's static render. Disabled: muted text, Control Edge border, opaque. There is no
    danger fill: Failed orange is a status color, never a button (LD-2). */
 @layer utilities {
   .ops-btn.btn-outline {
@@ -2406,14 +2413,13 @@
     box-shadow: none;
   }
 
-  .ops-btn:hover:not(:disabled):not(.btn-primary),
+  .ops-btn:is(:hover, [data-ops-state="hover"]):not(:disabled):not(.btn-primary),
   .ops-btn:active:not(:disabled):not(.btn-primary) {
     background-color: var(--ops-sunken);
   }
 
-  .ops-btn.btn-primary:hover:not(:disabled) {
-    background-color: var(--color-primary);
-    text-decoration-line: underline;
+  .ops-btn.btn-primary:is(:hover, [data-ops-state="hover"]):not(:disabled) {
+    background-color: var(--ops-primary-hover);
   }
 
   .ops-btn.btn-primary:active:not(:disabled) {

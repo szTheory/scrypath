@@ -181,7 +181,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Button styling wrapper for operator actions."
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :ghost]
+    values: [:default, :primary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -191,7 +191,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-hook phx-value-id phx-value-source phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger aria-label aria-controls)
+      ~w(phx-click phx-hook phx-value-id phx-value-source phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger data-ops-state aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
@@ -224,7 +224,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :ghost]
+    values: [:default, :primary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -268,7 +268,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :ghost]
+    values: [:default, :primary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -303,7 +303,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :ghost]
+    values: [:default, :primary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -1542,15 +1542,22 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Inline code text with consistent operator sizing."
+  @doc """
+  Inline code text with consistent operator sizing.
+
+  The tag is written without whitespace around the slot so no space renders inside the code or
+  before the punctuation that follows it. A long identifier wraps only when it cannot fit on a line
+  of its own (`overflow-wrap`), never in the middle of a word that would have fit.
+  """
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
   def ops_inline_code(assigns) do
     ~H"""
-    <code class={["font-mono text-ops-body tabular-nums break-all", @class]}>
-      {render_slot(@inner_block)}
-    </code>
+    <code
+      class={["ops-inline-code font-mono text-ops-body tabular-nums", @class]}
+      phx-no-format
+    >{render_slot(@inner_block)}</code>
     """
   end
 
@@ -1845,8 +1852,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   # `ops_button/1` and `ops_link_button/1`. Height + press feel live in `.ops-btn`;
   # radius is the `rounded-ops-control` utility so it wins over daisyUI's layer.
   # There is no danger variant: a destructive confirm is the dialog's one Plum button with its
-  # consequence in the label (Failed orange is a status color, never a button). `:secondary`
-  # reads like `:default`; `:ghost` is the borderless variant for icon-only and refresh controls.
+  # consequence in the label (Failed orange is a status color, never a button). There are three
+  # variants: `:default` (outline), `:primary` (the one Plum button per scope) and `:ghost` (borderless,
+  # for icon-only and refresh controls). A fourth was removed because it rendered like `:default`.
   defp button_classes(variant, size) do
     [
       "btn ops-btn rounded-ops-control",
@@ -1856,7 +1864,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       size == :md && "btn-md",
       variant == :primary && "btn-primary",
       variant == :ghost && "btn-ghost",
-      variant in [:default, :secondary] && "btn-outline"
+      variant == :default && "btn-outline"
     ]
   end
 

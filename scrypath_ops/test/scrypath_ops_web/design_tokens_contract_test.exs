@@ -161,8 +161,8 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     retained = rule(".ops-time__retained")
     assert retained =~ "font-size: var(--text-ops-body)"
 
-    # Notices carry their kind in a 2px inline-start rule, not a cue dot.
-    assert rule(".ops-notice-surface") =~ "border-inline-start-width: 2px"
+    # Notices carry their kind in a full 1px border, not a one-sided bar or a cue dot.
+    refute rule(".ops-notice-surface") =~ "border-inline-start"
     refute css() =~ ".ops-notice-surface__cue"
 
     # Search health markup lives in the shared components the page and the catalog both render, so
@@ -191,13 +191,20 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
   test "button hover and press fill is Sunken, never Selected, and every control edge is opaque" do
     hover =
       rule(
-        ".ops-btn:hover:not(:disabled):not(.btn-primary),\n  .ops-btn:active:not(:disabled):not(.btn-primary)"
+        ".ops-btn:is(:hover, [data-ops-state=\"hover\"]):not(:disabled):not(.btn-primary),\n  .ops-btn:active:not(:disabled):not(.btn-primary)"
       )
 
     assert hover =~ "background-color: var(--ops-sunken)"
     refute hover =~ "--ops-selected"
     refute hover =~ "--ops-selection"
     refute css() =~ "btn-error"
+
+    # The Plum button's hover is a fill step, never an underline.
+    primary_hover =
+      rule(".ops-btn.btn-primary:is(:hover, [data-ops-state=\"hover\"]):not(:disabled)")
+
+    assert primary_hover =~ "background-color: var(--ops-primary-hover)"
+    refute primary_hover =~ "text-decoration"
 
     default = rule(".ops-btn.btn-outline")
     assert default =~ "background-color: var(--color-base-100)"
