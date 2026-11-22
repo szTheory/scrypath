@@ -50,6 +50,9 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
       assert "scrypath_ops.saved_searches.validate" in names,
              "scrypath_ops/lib/mix/tasks no longer yields names"
 
+      assert "scrypath_ops.catalog.serve" in names,
+             "scrypath_ops/catalog/lib/mix/tasks no longer yields names"
+
       assert "scrypath.seed" in names, "examples/*/lib/mix/tasks no longer yields names"
       assert "e2e.prepare_search" in names, "examples/*/lib/mix/tasks no longer yields names"
     end
