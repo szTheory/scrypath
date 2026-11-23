@@ -145,7 +145,7 @@ defmodule Mix.Tasks.ScrypathOps.Catalog.Serve do
 
   @doc """
   Where this catalog comes from, as strings the welcome page prints: `:main_sha` (the checkout's
-  `origin/main`), `:head_sha`, `:dirty` (`"true"`, `"false"`), `:checkout` (the top-level directory)
+  `origin/main`), `:head_sha`, `:dirty` (`"true"`, `"false"`), `:checkout` (the top-level directory, with the home directory shown as `~`)
   and `:epoch` (the fixtures time). A value git cannot give is `"unknown"`.
 
   `run` takes the git arguments and returns what `System.cmd/3` returns (`{output, exit_status}`);
@@ -196,10 +196,26 @@ defmodule Mix.Tasks.ScrypathOps.Catalog.Serve do
   defp checkout(run) do
     case git_output(run, ["rev-parse", "--show-toplevel"]) do
       {:ok, ""} -> @unknown
-      {:ok, path} -> path
+      {:ok, path} -> display_path(path, System.user_home())
       :error -> @unknown
     end
   end
+
+  @doc """
+  A checkout path as the welcome page prints it: the home directory becomes `~`, so the page, the
+  terminal line and every log never carry the account name. Anything outside the home directory is
+  unchanged. Pure, so the rule is testable.
+  """
+  @spec display_path(String.t(), String.t() | nil) :: String.t()
+  def display_path(path, home) when is_binary(home) and home != "" do
+    cond do
+      path == home -> "~"
+      String.starts_with?(path, home <> "/") -> "~" <> String.replace_prefix(path, home, "")
+      true -> path
+    end
+  end
+
+  def display_path(path, _home), do: path
 
   defp serve(port, info) do
     :persistent_term.put(@build_info_key, info)

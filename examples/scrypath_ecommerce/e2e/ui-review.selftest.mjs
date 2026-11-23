@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
 import { test } from "node:test";
-import { captureDisposableMatrix, captureSurface, checkStorybook, configureDisposableFontProfile, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, parseCatalogMarkers, prepareCaptureStateInPage, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, storybookErrors, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, captureSurface, checkStorybook, configureDisposableFontProfile, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, displayPath, entryFixtureErrors, isCanonicalOrigin, parseCatalogMarkers, prepareCaptureStateInPage, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, storybookErrors, surfaces, themes, viewports } from "./ui-review.mjs";
 
 const require = createRequire(import.meta.url);
 const { domStateErrors } = require("../../../scripts/ci/ui_preservation.cjs");
@@ -429,6 +429,14 @@ test("a different preview worktree or omitted main commits cannot masquerade as 
 });
 
 const storybookCurrent = { expectedCheckout: "/work/preview", printedCheckout: "/work/preview", printedMain: "0123456789ab", printedHead: "fedcba987654", localMain: "0123456789ab", localHead: "fedcba987654", remoteMain: "0123456789abcdef0123456789abcdef01234567", mainIncluded: true, markersFound: true, reachable: true };
+
+test("displayPath prints the home directory as ~ and leaves other paths alone", () => {
+  assert.equal(displayPath("/home/someone/work/scrypath", "/home/someone"), "~/work/scrypath");
+  assert.equal(displayPath("/home/someone", "/home/someone"), "~");
+  assert.equal(displayPath("/home/someone2/work", "/home/someone"), "/home/someone2/work", "a longer name is not the home directory");
+  assert.equal(displayPath("/srv/ci/checkout", "/home/someone"), "/srv/ci/checkout");
+  assert.equal(displayPath("/srv/ci/checkout", ""), "/srv/ci/checkout");
+});
 
 test("storybookErrors passes a current storybook and names each cause separately", () => {
   assert.deepEqual(storybookErrors(storybookCurrent), []);

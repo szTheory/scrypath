@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { lstat, mkdir, readFile, readlink, realpath, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -107,6 +108,14 @@ export function previewSourceErrors(expected, mounted, mainIncluded, endpointMat
   if (!endpointMatches) errors.push("Review URL does not match the verified preview container's published loopback port.");
   if (!mainCurrent) errors.push("origin/main is stale against the remote main ref. Refresh and reconcile main before treating this preview as latest.");
   return errors;
+}
+
+// A checkout path as the storybook prints it: the home directory is `~`, so the page never carries the
+// account name (see `display_path/2` in scrypath_ops.catalog.serve.ex). Pure given `home`.
+export function displayPath(checkout, home = os.homedir()) {
+  if (!home) return checkout;
+  if (checkout === home) return "~";
+  return checkout.startsWith(`${home}/`) ? `~${checkout.slice(home.length)}` : checkout;
 }
 
 const catalogMarkerAttributes = { mainSha: "data-catalog-main-sha", headSha: "data-catalog-head-sha", dirty: "data-catalog-dirty", checkout: "data-catalog-checkout", epoch: "data-catalog-epoch" };
@@ -859,7 +868,7 @@ async function preflight() {
       included: runGit(["merge-base", "refs/remotes/origin/main", "HEAD"]).trim() === runGit(["rev-parse", "refs/remotes/origin/main"]).trim()
     };
     const block = JSON.parse(await readFile(path.join(repoRoot, ".planning", "UI-PREVIEW.json"), "utf8")).storybook;
-    storybook = await checkStorybook({ block, expectedCheckout: await realpath(repoRoot), localMain: local.main, localHead: local.head, remoteMain: remote.value, mainIncluded: local.included });
+    storybook = await checkStorybook({ block, expectedCheckout: displayPath(await realpath(repoRoot)), localMain: local.main, localHead: local.head, remoteMain: remote.value, mainIncluded: local.included });
   } catch (error) { storybook = { ok: false, errors: [`Storybook check could not run: ${error.message}`] }; }
   if (remote.error) {
     // AGENTS.md: when the remote cannot be verified, neither surface is claimed to be latest.
