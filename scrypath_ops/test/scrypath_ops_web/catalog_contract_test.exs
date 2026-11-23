@@ -994,6 +994,18 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       assert Serve.port_verdict(false, "beam.smp (pid 1)", page, expected) == :free
     end
 
+    test "display_path/2 prints the home directory as ~ so no page or log carries the account name" do
+      assert Serve.display_path("/home/someone/work/scrypath", "/home/someone") ==
+               "~/work/scrypath"
+
+      assert Serve.display_path("/home/someone", "/home/someone") == "~"
+      # A longer account name is not the home directory.
+      assert Serve.display_path("/home/someone2/work", "/home/someone") == "/home/someone2/work"
+      assert Serve.display_path("/srv/ci/checkout", "/home/someone") == "/srv/ci/checkout"
+      assert Serve.display_path("/srv/ci/checkout", nil) == "/srv/ci/checkout"
+      assert Serve.display_path("/srv/ci/checkout", "") == "/srv/ci/checkout"
+    end
+
     test "port_verdict/4 is :ours for this checkout at this commit, read back from the real page" do
       # The path holds characters the page escapes, so reading it back also exercises the unescaping.
       expected = build_facts(~s(/work/a&b "c" <d>), "bbbbbbbbbbbb")
