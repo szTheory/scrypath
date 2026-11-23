@@ -918,6 +918,17 @@
     if (document.body) useProductFont();
     else document.addEventListener("DOMContentLoaded", useProductFont, { once: true });
   })();
+  (function() {
+    const style = document.createElement("style");
+    style.id = "ops-catalog-shell";
+    style.textContent = [
+      "html:has(#psb-main) { background-color: var(--psb-color-sidebar); color-scheme: normal; }",
+      "@media (min-width: 1024px) {",
+      "  #psb-main { margin: 0; border-width: 0 0 0 1px; border-radius: 0; box-shadow: none; }",
+      "}"
+    ].join("\n");
+    document.head.appendChild(style);
+  })();
   window.storybook = {
     Hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation }
   };
