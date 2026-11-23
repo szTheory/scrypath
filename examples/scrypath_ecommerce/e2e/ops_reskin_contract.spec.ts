@@ -1355,7 +1355,7 @@ test.describe("ops re-skin contract", () => {
 
   for (const viewport of VIEWPORT_NAMES) {
     for (const mode of THEME_MODES.slice(0, 2)) {
-      test(`[P-04] the Plum button underlines its label on hover and keeps its fill (${themeSlug(mode)}, ${viewport})`, async ({
+      test(`[P-04] the Plum button changes its fill on hover and never underlines its label (${themeSlug(mode)}, ${viewport})`, async ({
         browser
       }) => {
         const { page, close } = await newThemedPage(browser, mode, viewport);
@@ -1366,14 +1366,14 @@ test.describe("ops re-skin contract", () => {
           const read = (): Promise<{ bg: string; decoration: string }> =>
             button.evaluate((el) => {
               const cs = getComputedStyle(el);
-              return { bg: cs.backgroundColor, decoration: cs.textDecorationLine };
+              return { bg: `${cs.backgroundColor} ${cs.filter}`, decoration: cs.textDecorationLine };
             });
           await page.mouse.move(0, 0);
           const rest = await read();
           await button.hover();
-          await expect.poll(async () => (await read()).decoration).toContain("underline");
+          await expect.poll(async () => (await read()).bg).not.toBe(rest.bg);
           const hover = await read();
-          expect(hover.bg, "hover keeps the fill").toBe(rest.bg);
+          expect(hover.decoration, "hover never underlines the label").not.toContain("underline");
         } finally {
           await close();
         }

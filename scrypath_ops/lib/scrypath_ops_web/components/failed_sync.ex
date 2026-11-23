@@ -196,13 +196,14 @@ defmodule ScrypathOpsWeb.Components.FailedSync do
         do: "delete",
         else: "add or update"} records in <.ops_inline_code>{@row.receipt.index}</.ops_inline_code>.
       Completion has not been confirmed. Original job #{@row.id} is retained.
-      <.link
-        :if={@row.receipt.handle}
-        navigate={recovery_handoff_path(@mount_path, @row.schema, @row.receipt)}
-        class="ml-2 min-h-ops-control link link-primary underline underline-offset-2"
-      >
-        Check sync status
-      </.link>
+      <div :if={@row.receipt.handle} class="mt-ops-2">
+        <.link
+          navigate={recovery_handoff_path(@mount_path, @row.schema, @row.receipt)}
+          class="inline-flex min-h-ops-control items-center link link-primary underline underline-offset-2"
+        >
+          Check sync status
+        </.link>
+      </div>
     </.ops_status>
     """
   end

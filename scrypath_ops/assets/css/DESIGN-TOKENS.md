@@ -227,7 +227,7 @@ inventory names every current export; add new exports here with their role consu
 | `ops_verdict` | Outcome surface with a visible label and headline. The optional `status` attr renders `ops_sync_status` before the headline; `kind` sets the rule (Failed for `:error`, Retrying amber for `:warning`, Control Edge for the rest) and the Control room and Search health derive both from the worst row, never from the coarse posture state, with one exception: while a refresh issue is showing, the Control room drops the `Clear` word (a failed refresh leaves an earlier observation on screen, and `Clear` needs an observation) and keeps `Failed`, `Retrying` and `Pending`. Evidence and next-step content stay readable |
 | `ops_sync_status` | The one place the four sync-status words and shapes render. Statuses `:failed`, `:retrying`, `:pending`, `:clear` render the word first (600 weight, title case: `Failed`, `Retrying`, `Pending`, `Clear`) and then an `aria-hidden` 16px bar icon whose `data-shape` is `notched`, `bottom-filled`, `hollow` or `filled`. Word and icon take `--ops-status-<status>` through `currentColor`; hooks are `[data-sync-status]` on the span and `[data-shape]` on the svg. The icon never appears without its word and has no role or name |
 | `ops_condition` | A plain muted word for something nobody looked at: `Not observed`, `Not checked`, `Queue not used` or `Unavailable` (a closed set, weight 400, no icon, no status color). `Clear` needs an observation and is rendered by `ops_sync_status` instead; a zero count from an unobserved source never earns it. Hook: `.ops-condition`, `[data-condition]` |
-| `ops_notice`, `ops_status`, `ops_tone_chip` | Panel (`--color-base-100`) with a 1px Hairline on three sides and a 2px inline-start rule, no tint, no shadow, no cue dot. Rule by kind: `:error` Failed (rule and title), `:warning` and `:partial` Retrying amber (rule and title), `:info`, `:success`, `:running` and `:neutral` the Control Edge rule with an Ink title. Body text is Ink. `ops_status` keeps `data-status-kind`; its `neutral` attr is accepted but no longer changes the surface. `ops_tone_chip` rides the same surface |
+| `ops_notice`, `ops_status`, `ops_tone_chip` | Panel (`--color-base-100`) with a full 1px border, no one-sided bar, no tint, no shadow, no cue dot. Border by kind: `:error` Failed (border and title), `:warning` and `:partial` Retrying amber (border and title), `:info`, `:success`, `:running` and `:neutral` the Hairline with an Ink title. Body text is Ink. `ops_status` keeps `data-status-kind`; its `neutral` attr is accepted but no longer changes the surface. `ops_tone_chip` rides the same surface |
 | `ops_badge`, `ops_metric`, `ops_metric_grid` | `ops_badge` is plain muted text (12px, 600) for non-sync labels such as the Search run state; it never carries a sync status. `ops_metric` has no cue icon: state shows as the value color, `data-ops-metric-tone` stays. None of the three is used for a sync status |
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles. `ops_intent_card` is words only: no icon and no "Start here" flag |
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception. `ops_empty_hero` has no mark icon. `ops_loading` always shows its `label` word and sets `aria-busy="true"` on its region; the `:bars` lines are static Sunken blocks (the last one a `--short` class, never an inline width) and nothing animates |
@@ -255,7 +255,7 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 | --- | --- |
 | Decorative shell wash and separate sliding theme-selection pill | Keep `.ops-shell` flat; use the three visible System/Light/Dark buttons and their explicit selected state. |
 | Extra top margins on direct `:ops` shell children | Let the shell's `space-y-4` own the page rhythm; add spacing inside the component group that needs it. |
-| Broad status-colored verdict or metric surfaces | Keep summary surfaces on the Panel; state is a 2px inline-start rule plus an explicit status word from `ops_sync_status`, never a tint, a cue dot or an icon. |
+| Broad status-colored verdict or metric surfaces | Keep summary surfaces on the Panel; state is the surface's full 1px status border plus an explicit status word from `ops_sync_status`, never a tint, a cue dot, an icon or a one-sided bar. |
 | Hidden radios presented as schema cards | One schema is read-only context; multiple schemas use visible native radios in plain stacked rows, with full module names available. |
 | Panels around individual actions or native disclosures | Action groups provide spacing; buttons carry their own affordance. Disclosures remain unframed. Group rows with headings, spacing, or separators. |
 | Repeated “Operator workspace” page eyebrow | The actual page heading provides orientation. |
@@ -331,7 +331,8 @@ page. `ui-tokens.test.mjs` ("live scroll padding clears the sticky header") enfo
   the outline default (Panel fill, Ink text, opaque Control Edge border; hover and press are
   `--ops-sunken`, never `--ops-selected`). There is no danger variant and no error button class: a
   destructive confirm is the dialog's one Plum button, named by its consequence, with Cancel focused.
-  Plum buttons underline their label on hover and keep their fill.
+  Plum buttons keep their Plum fill and dim to 88% brightness on hover (a darker fill in both themes; 7.6:1 text contrast in light, 5.9:1 in dark; no gradient, no color mix, no new hex) and never underline their label.
+  Buttons come in three variants: `:default` (outline), `:primary` and `:ghost`.
 - **Row actions** (`.ops-text-action`) are underlined Ink text, 14px 600, with a 40px target and a 2px
   underline on hover. They share one computed style; nothing else may override it. Prose links are
   Plum (Orchid in dark) and underlined at rest.
@@ -396,17 +397,17 @@ class attributes. These read source declarations, not rendered size. Demo host C
 emits the daisyUI `btn-xs` class (11px) is caught only by the `size: :xs` caller check and by
 the browser spec on the advisory lane; computed size stays browser-only.
 
-## Status / tone: the notice rule scheme and the sync-status words
+## Status / tone: the notice border scheme and the sync-status words
 
 Notices, statuses, verdicts and tone chips share one surface: `.ops-notice-surface` plus one
 modifier chosen by `notice_modifier/1` in `ops_ui.ex` (the single mapping authority). The table is for those surfaces only. `ops_badge` is not one
 of them: its `kind` is only a data attribute with no visual effect:
 
-| Kind | Modifier | Rule (inline-start, 2px) | Title |
+| Kind | Modifier | Border (full, 1px) | Title |
 | --- | --- | --- | --- |
 | `:error` | `--error` | `--ops-status-failed` | Failed color |
 | `:warning`, `:partial` | `--warning` | `--ops-status-retrying` | Retrying amber |
-| `:info`, `:success`, `:running`, `:neutral` | `--neutral` | `--ops-control-edge` | Ink |
+| `:info`, `:success`, `:running`, `:neutral` | `--neutral` | `--color-base-300` (Hairline) | Ink |
 
 Plum is never an info color and green appears only on `Clear`, so a success notice stays a
 neutral rule. There are no `.ops-tone-*` tinted fills, no `.ops-badge-*` tinted variants and no

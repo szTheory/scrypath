@@ -1941,9 +1941,6 @@
   .mb-ops-4 {
     margin-bottom: var(--spacing-ops-4);
   }
-  .ml-2 {
-    margin-left: calc(var(--spacing) * 2);
-  }
   .status {
     display: inline-block;
     aspect-ratio: 1 / 1;
@@ -3306,8 +3303,6 @@
   }
   .ops-notice-surface {
     border: 1px solid var(--color-base-300);
-    border-inline-start-width: 2px;
-    border-inline-start-color: var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
     background-color: var(--color-base-100);
     box-shadow: none;
@@ -3316,13 +3311,13 @@
     color: var(--color-base-content);
   }
   .ops-notice-surface--error {
-    border-inline-start-color: var(--ops-status-failed);
+    border-color: var(--ops-status-failed);
   }
   .ops-notice-surface--warning {
-    border-inline-start-color: var(--ops-status-retrying);
+    border-color: var(--ops-status-retrying);
   }
   .ops-notice-surface--neutral {
-    border-inline-start-color: var(--ops-control-edge);
+    border-color: var(--color-base-300);
   }
   .ops-notice-surface__title {
     display: flex;
@@ -3373,6 +3368,9 @@
   .ops-segmented-btn:disabled {
     color: var(--ops-text-muted);
     cursor: not-allowed;
+  }
+  .ops-inline-code {
+    overflow-wrap: break-word;
   }
   .ops-badge {
     display: inline-flex;
@@ -4529,17 +4527,16 @@
 }
 .ops-flash > .alert {
   border: 1px solid var(--ops-control-edge);
-  border-inline-start-width: 2px;
   border-radius: var(--radius-ops-overlay);
   background-color: var(--color-base-100);
   color: var(--color-base-content);
   box-shadow: var(--shadow-ops-overlay);
 }
 .ops-flash--info > .alert {
-  border-inline-start-color: var(--ops-control-edge);
+  border-color: var(--ops-control-edge);
 }
 .ops-flash--error > .alert {
-  border-inline-start-color: var(--ops-status-failed);
+  border-color: var(--ops-status-failed);
 }
 @layer components {
   .ops-signal-metrics--retained {
@@ -5476,12 +5473,11 @@
     color: var(--color-base-content);
     box-shadow: none;
   }
-  .ops-btn:hover:not(:disabled):not(.btn-primary), .ops-btn:active:not(:disabled):not(.btn-primary) {
+  .ops-btn:is(:hover, [data-ops-state="hover"]):not(:disabled):not(.btn-primary), .ops-btn:active:not(:disabled):not(.btn-primary) {
     background-color: var(--ops-sunken);
   }
-  .ops-btn.btn-primary:hover:not(:disabled) {
-    background-color: var(--color-primary);
-    text-decoration-line: underline;
+  .ops-btn.btn-primary:is(:hover, [data-ops-state="hover"]):not(:disabled) {
+    filter: brightness(0.88);
   }
   .ops-btn.btn-primary:active:not(:disabled) {
     background-color: var(--color-primary);

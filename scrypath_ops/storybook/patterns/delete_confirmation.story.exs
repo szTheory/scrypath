@@ -14,7 +14,9 @@ defmodule ScrypathOps.Catalog.Stories.Patterns.DeleteConfirmation do
   @seam "Mounted scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs"
 
   def function, do: &ScrypathOpsWeb.Components.FailedSync.delete_confirmation/1
-  def container, do: :iframe
+  # The dialog is a fixed overlay, so it adds no height of its own: without a minimum height the
+  # frame collapses to a sliver. The height fits the dialog with one document id.
+  def container, do: {:iframe, style: "min-height: 30rem;"}
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.FailedSyncLive]
 
