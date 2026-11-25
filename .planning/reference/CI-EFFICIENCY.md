@@ -120,6 +120,8 @@ Bot PR serialization (2026-11-20): four Dependabot PRs merged one at a time beca
 
 32. **A hosted `ops-ui` red that a local run would have caught (2026-11-25, PR #186, run 45689519439).** A new `scrypath_ops/catalog/lib` module was missing from the two probe lists in `test/release/ops_dependency_boundary_test.exs`. That test is `:integration`, so a plain `mix test` and `pre_push.sh` skip it. **Local mirror:** for any change under `scrypath_ops/`, run `mix verify.ops_ui`; the cheap list check alone is `mix test test/release/ops_dependency_boundary_test.exs --include integration` with the test's line number. **Candidate:** move that list check out of the integration tag so the root suite runs it.
 
+33. **A permanently red advisory lane hid new advisories (2026-11-25).** `deep-quality` was already red for the cloak cause, so advisories published 2026-11-21 and 2026-11-24 (flop critical; db_connection and phoenix high) sat unread across PRs #185 and #186 until the v1.49 closeout security check. Patched as lock-only updates. **Candidate:** have the audit step print the finding set against a recorded known list, so a new advisory is a visibly different result; keep it fail-closed. Until then, read the lane's findings before calling it the known red.
+
 **All after-numbers above are expectations until the first hosted run of this PR measures them.** That run shows the real `repository-contracts` duration, the start and wait step timings, and the `compat-path` job's own duration; compat savings need a docs-only or website-only PR to show, and the concurrency change shows only when two main pushes overlap. Record the measured numbers next to each finding, replacing the estimates, and do not round them toward the estimate.
 
 ## Release (CD) timings
