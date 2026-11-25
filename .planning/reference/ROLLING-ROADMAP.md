@@ -2,6 +2,10 @@
 
 The maintainer approved this order and these working rules after a research fan-out and a grilling round. Pick up the first unfinished item. `STATE.md` records progress.
 
+## v1.49 closeout input for the next milestone (2026-11-25)
+
+The storybook review is closed and recorded in [PAUSE-2-FEEDBACK.md](../research/storybook-catalog/PAUSE-2-FEEDBACK.md); its "For v1.50 input" list and the [v1.49 audit](../milestones/v1.49-MILESTONE-AUDIT.md) are inputs to the next milestone choice. SEED-005 (AI-operable Scrypath) is a candidate to weigh, not approved scope.
+
 ## Working rules
 
 - One PR per coherent slice. Squash-merge it once the required checks (`core`, `package`, `repository-contracts`, `backend`, `ecommerce-mounted`) pass. `deep-quality (advisory)` is expected to be red until sigra makes `cloak_ecto` optional; see below.

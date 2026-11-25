@@ -35,6 +35,8 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Scale (Phase 198, cut by default; sized after Pause 1)
 
+Cut by the maintainer on 2026-11-22. SCALE-01 to SCALE-03 were not built; remaining breadth is CATB-01.
+
 - [ ] **SCALE-01**: Stories exist for the remaining small screens (Control room, help, and the failed-sync remainder), each covered by the PILOT-05 checks without a new gate. Search and Sync-and-index only if the Pause 1 feedback asks.
 - [ ] **SCALE-02**: A Clinicly story set shows only denials the product really has (schema allowlist, stale sudo; ScrypathOps has no read-denial), and a Chatly set shows a reindex swap and CJK text. If real denials cannot support a never-index headline, the default is to proceed with real denials.
 - [ ] **SCALE-03**: A local browser check (at most 10 fixed iframe URLs, 375 and 1280 wide, light, dark and system-dark) fails on serious or critical axe findings, page-level horizontal overflow, and a theme probe that proves the sandbox applies the theme; an ExUnit test asserts every listed URL resolves to a story. It runs locally first and is advisory if it ever runs hosted; it is not a required gate.
@@ -45,7 +47,7 @@ Every criterion below is an executable check, a recorded number or a recorded de
 - [x] **FLOW-02**: Each phase stays within its plan cap (5), and the milestone stops and re-asks at 20 plans. Ask-first items stay ask-first: an ADR 0001 trigger tripping or a no-go; a new required CI context or branch-protection change; changing root `lib/` behavior (including findings F1 and F2); copying from the six sibling brand repos; a runtime dependency beyond the storybook subtree.
 - [x] **FLOW-03**: `.planning/config.json`, `.planning/state.json` and `.impeccable/config.json` are never staged; every commit names its paths explicitly. Every phase's local mirror of each required lane runs before a push (pre-push confidence), and a skipped one has a recorded reason.
 - [x] **FLOW-04**: Findings F1 (`Tasks.list_sync_tasks` truncates history at 1,000 tasks though Meilisearch keeps about 1M), F2 (the ops UI prints Meilisearch error messages unbounded), D2 (retry receipts are per-process) and the test-hygiene items in SYNTHESIS are recorded and handed to the maintainer, not fixed, unless the maintainer says so.
-- [ ] **FLOW-05**: The milestone-end review happens after the last executed phase and before the audit: the storybook is refreshed to current `main`, the maintainer is told what UI changed and where to look, and the run waits (AGENTS.md "Milestone-end review"). The feedback note is folded into the v1.50 input.
+- [x] **FLOW-05**: The milestone-end review happens after the last executed phase and before the audit: the storybook is refreshed to current `main`, the maintainer is told what UI changed and where to look, and the run waits (AGENTS.md "Milestone-end review"). The feedback note is folded into the v1.50 input.
 
 ## v2 Requirements
 
@@ -94,14 +96,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PILOT-05 | Phase 197 | Complete |
 | PILOT-06 | Phase 197 | Complete |
 | PILOT-07 | Phase 197 | Complete |
-| SCALE-01 | Phase 198 | Pending |
-| SCALE-02 | Phase 198 | Pending |
-| SCALE-03 | Phase 198 | Pending |
+| SCALE-01 | Phase 198 (cut by the maintainer, 2026-11-22) | Cut, deferred |
+| SCALE-02 | Phase 198 (cut by the maintainer, 2026-11-22) | Cut, deferred |
+| SCALE-03 | Phase 198 (cut by the maintainer, 2026-11-22) | Cut, deferred |
 | FLOW-01 | Phase 195 (standing, every phase) | Complete |
 | FLOW-02 | Phase 195 (standing, every phase) | Complete |
 | FLOW-03 | Phase 195 (standing, every phase) | Complete |
 | FLOW-04 | Phase 195 (standing, every phase) | Complete |
-| FLOW-05 | Phase 198 (also runs after Phase 197 if 198 is cut) | Pending |
+| FLOW-05 | Ran after Phase 197 (198 cut); closed 2026-11-25, [record](research/storybook-catalog/PAUSE-2-FEEDBACK.md) | Complete |
 
 **Coverage:**
 - v1 requirements: 23 total
