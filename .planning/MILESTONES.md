@@ -1,5 +1,36 @@
 # Milestones
 
+## v1.49 Catalog foundation (Shipped: 2026-11-25)
+
+**Phases completed:** 3 phases, 13 plans, 37 tasks
+
+**Closeout:** override, chosen by the maintainer on 2026-11-25. The three phase verifications passed
+but predate the storybook review changes, so the tool grades them stale; an integration check and a
+security check ran on the newer code, and the last fixes were checked by the closing session only.
+Phase 198 was cut. Audit `tech_debt`. Known verification overrides: 4 newly acknowledged (195 to 197
+freshness, 198 not run), 4 earlier artifact acknowledgments still suppressed.
+
+### Known Gaps
+
+- SCALE-01, SCALE-02, SCALE-03: cut with Phase 198; the remaining breadth is CATB-01 (v1.51).
+
+**Key accomplishments:**
+- phoenix_storybook 1.5 mounted at /storybook in dev and test only, behind an outside-the-quote route guard, with prod graph, route table, Docker script and tarball absence proofs that each have a planted failing case.
+- Five primitives render through the real storybook iframe route in light and dark with the production stylesheet and the nine operator hooks, and the same render-all code is proven to fail on a raising story, an empty story and unknown variation ids.
+- The storybook costs the hosted `ops-ui` job 517 s cold on the PR and 620 s cold on the first main run, and 378 s warm, against a 368 s baseline; the 620 s sample tripped the cold trigger, the maintainer chose to continue, the phase PR (#171) is merged and the decision is recorded in `GO-NO-GO.md` and an ADR 0001 amendment.
+- A dev/test-only `fixtures/scrypath_fixtures` project whose pure closed-enum builders feed raw Meilisearch task maps and Oban job maps through a fake client to the real `Scrypath.sync_status/2`, rendered by LiveViewTest on `/ops/health` as a neutral pending verdict with nothing failed, plus a DB-free eleven-invariant check that runs first in the ops `test` alias.
+- The new top-level `fixtures/` is now accounted for in every boundary the repository draws: CI classifier, formatter, namespace fence, Hex package, a path-dependency-aware boundary row, the direct and mounted integration probes, the Docker verify script, the Dockerfile and `.dockerignore`. The README records the exit rule and the phase173 deletion trigger, and a root contract test pins them. Every new check has a planted failure that asserts its own cause.
+- The fixture shapes now rest on 31 payloads recorded from a real Meilisearch v1.15.2 server instead of memory: builders and the fake client are checked against them, every failure string comes from a closed table with a resolving source, two renders at different clocks are proven to differ only in time text, and the swap-task blind spot is recorded as finding F3.
+- Ten named scenarios across Shopadelic, Logistify and Wikily, all built from raw wire shapes and checked through the real normalizers, drift code and operator posture, with an F1 stress state kept apart and labelled, and every one of 21 check invariants planted and proven to fail for its own cause.
+- The last fixture rules (hostile text as escapes in one stress variation, a deterministic bulk digest, provenance and denied-word and purity lints, each with a planted failure) landed, and the whole phase shipped as PR #174 with every required check green on the exact head and a measured hosted cost of about zero seconds over a same-day control.
+- The JOB-03 journey is green on the unmodified LiveView code, the stale-sudo return defect (D1) is fixed with a test that fails without the fix, and the storybook now serves from a database-free loopback server in the product font.
+- Search health now renders through shared function components over a pure `Posture.build/3`; three glossary-tier stories show the same markup the page does, and a canonical-tree parity capture over 54 pages shows no change from the commit before the extraction.
+- Failed sync now renders through shared function components over a pure `FailedSyncView.build/4`; six stories show the same markup the page does, a parity capture shows no change from the commit before the extraction, and the catalog contract test now fails on identical variations and broken DOM hygiene.
+- Sync and index's two recovery areas now render through a pure `RecoveryView` and shared components, which fixes defect D3 (the page crashed on an unresolved recovery handle) by construction; the JOB-03 Job story exists; and the catalog contract test now covers coverage, provenance and copy as ledger row 11 of 12.
+- The storybook now opens on a Start here page that says where it comes from (`main@sha`, served HEAD, checkout, frozen time); `npm run ui:preflight` checks it independently of the 4002 preview and refuses an old or foreign one; the whole phase shipped as PR #177 (squash `33aac70f`) with every required lane green on the exact head; both preview surfaces now serve that `main` from the retained checkout with the 4002 data untouched (the storybook on 4013, because another project holds 4003); and the Pause 1 note, the 4013 deviation and the hosted cost record are written. The run stops here and waits for the maintainer.
+
+---
+
 ## v1.48 Discovery and onboarding (Shipped: 2026-11-21)
 
 **Phases completed:** 2 phases, 6 plans, 18 tasks

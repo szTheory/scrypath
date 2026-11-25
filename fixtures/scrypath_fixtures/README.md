@@ -61,7 +61,7 @@ The placement rule is that a string goes only where Meilisearch and Scrypath can
 
 `scrypath_ops/test/scrypath_ops_web/live/fixtures_hostile_render_test.exs` renders the scenario on the failed sync page and the health page and asserts that the markup shows as text and no script element is created. It does not assert that long text is truncated: unbounded error text is finding F2.
 
-The other stress variation is Logistify `history_over_limit`, which reproduces finding F1 (task history over 1,000). Both findings, with F3 and F4 found while building this project, are written up in [`196-FINDINGS.md`](../../.planning/phases/196-fixtures-and-three-adopters/196-FINDINGS.md) and are handed to the maintainer, not fixed here.
+The other stress variation is Logistify `history_over_limit`, which reproduces finding F1 (task history over 1,000). Both findings, with F3 and F4 found while building this project, are written up in [`196-FINDINGS.md`](../../.planning/milestones/v1.49-phases/196-fixtures-and-three-adopters/196-FINDINGS.md) and are handed to the maintainer, not fixed here.
 
 ## Bulk data and the golden digest
 

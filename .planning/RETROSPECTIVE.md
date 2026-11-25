@@ -820,7 +820,40 @@ Unknown observation stays unknown; original failure history remains evidence. Ca
 
 No paid visual judge or added CI lane. Focused local runs invalidated only affected checks; hosted full browser104/104 took5.9 minutes. Model/session spend was not measured and is not estimated here.
 
+## Milestone: v1.49 — Catalog foundation
+
+**Shipped:** 2026-11-25 | **Phases:** 3 (195 to 197; 198 cut) | **Plans:** 13 | **Requirements:** 20 of 23 (3 cut) | **PRs:** #171, #174, #177, review #180 to #186 and the closeout (no Hex release)
+
+### What Was Built
+- phoenix_storybook mounted in ScrypathOps for dev and test only, with production-graph, route and tarball absence proofs.
+- `fixtures/scrypath_fixtures`: three fictional adopters built from recorded Meilisearch payload shapes.
+- The JOB-03 journey, pure view modules shared by the pages and the stories, one catalog contract test and a seeded storybook.
+
+### What Worked
+- Writing the mounted journey before extracting components kept the pages unchanged.
+- The maintainer's review in the storybook produced specific, quickly fixable feedback.
+- An independent integration check at close found defects every earlier check had passed.
+
+### What Was Inefficient
+- The contract tests rendered only the iframe route, so a broken Light theme on story pages passed them and the maintainer review.
+- A hosted `ops-ui` red came from not running `mix verify.ops_ui` locally.
+- Security verification of the phases was skipped until the closeout.
+- The advisory quality lane stayed red for a known cause, which hid new dependency advisories.
+
+### Patterns Established
+- Plain tier names (Screens, Flows); whole components at full width, code only for primitives.
+- Story frames mirror the picked theme and take their content height.
+
+### Key Lessons
+- A permanently red advisory lane stops being read: read its findings on every closeout, or make known causes explicit so a new one stands out.
+
+### Cost Observations
+- Model mix: not measured.
+- Notable: the closeout integration and security checks together used about 840k subagent tokens.
+
 ## Cross-Milestone Trends
+
+- v1.49: check a review tool in the reviewer's own conditions (a dark OS, the story page and not only the iframe route), and run each required lane's own command before pushing.
 
 - v1.48: prove each guard both ways (real files pass, planted failures fail) and inventory every pin before changing it; let a recorded checkpoint decide optional scope; follow redirects before recording a "live" fact.
 
@@ -834,6 +867,7 @@ No paid visual judge or added CI lane. Focused local runs invalidated only affec
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.49 | 195-197 | Dev-only storybook on fictional adopters, one job end to end, maintainer review in the catalog |
 | v1.48 | 192-193 | Docs truth, single-job README, HexDocs regroup by job, drift guards with planted failures, evidence-based cut of the website phase |
 | v1.47 | 188.1, 189-191 | Website in the new identity, copy guarded by one data table, old identity deleted, path classifier |
 | v1.46 | 186-188 | Offline-pinned brand identity, ops re-skin with one status vocabulary, branded README and HexDocs |
