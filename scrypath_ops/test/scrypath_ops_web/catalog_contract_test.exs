@@ -289,6 +289,19 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     end
   end
 
+  describe "area frames" do
+    test "every area story stretches its component the way its screen does" do
+      areas =
+        Enum.filter(loaded_stories(), fn {path, _story} -> CatalogChecks.tier(path) == :area end)
+
+      refute areas == []
+
+      for {path, story} <- areas do
+        assert story.container() == ScrypathOps.Catalog.Frames.area(), path
+      end
+    end
+  end
+
   describe "copy rules over every rendered variation" do
     test "no rendered story spells text a global copy row forbids", %{
       rendered: rendered,
