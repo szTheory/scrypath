@@ -14,6 +14,8 @@ milestone audit, complete and cleanup steps wait for the maintainer's "ok".
 | 7 | 2026-11-25 | all of the former `surfaces/` tier | "why are we calling \"screens\" \"surfaces\" ... let's change that plz" | wording | Renamed to Screens |
 | 8 | 2026-11-25 | former `jobs/` tier | "i prefer \"User flows\" or \"Flows\" for now" | wording | Renamed to Flows |
 | 9 | 2026-11-25 | screen and flow stories | "it's showing code on the right but i really just want to see the actual screen there" | review ergonomics | Full width, code hidden for Screens and Flows |
+| 10 | 2026-11-25 | pattern and area stories | "agreed with ur rec" (hide code there too; only primitives keep it) | review ergonomics | Full width, code hidden for everything but primitives |
+| 11 | 2026-11-25 | area stories | "yeah" (stretch areas to the width they have on the real screen) | review fidelity | Area frames stretch |
 
 ## For v1.50 input
 

@@ -14,7 +14,7 @@ defmodule ScrypathOps.Catalog.Stories.Areas.FailedSummary do
   @seam "Mounted scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs"
 
   def function, do: &ScrypathOpsWeb.Components.FailedSync.failed_summary/1
-  def container, do: :iframe
+  def container, do: ScrypathOps.Catalog.Frames.area()
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.FailedSyncLive]
 

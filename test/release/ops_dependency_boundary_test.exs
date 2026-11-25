@@ -16,6 +16,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     Module.concat(["ScrypathOps", "Catalog", "Storybook"]),
     Module.concat(["ScrypathOps", "Catalog", "Endpoint"]),
     Module.concat(["ScrypathOps", "Catalog", "Router"]),
+    Module.concat(["ScrypathOps", "Catalog", "Frames"]),
     Module.concat(["Mix", "Tasks", "ScrypathOps", "Catalog", "Serve"])
   ]
   # The fixtures project (ADR 0002) is a dev and test path dependency of Ops. Nothing that mounts Ops, and
@@ -35,6 +36,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     Module.concat(["ScrypathOps", "Catalog", "Storybook"]),
     Module.concat(["ScrypathOps", "Catalog", "Endpoint"]),
     Module.concat(["ScrypathOps", "Catalog", "Router"]),
+    Module.concat(["ScrypathOps", "Catalog", "Frames"]),
     Module.concat(["Mix", "Tasks", "ScrypathOps", "Catalog", "Serve"]),
     Module.concat(["ScrypathFixtures"])
   ]
