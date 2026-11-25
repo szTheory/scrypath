@@ -161,6 +161,8 @@ defmodule ScrypathOpsWeb.CatalogJourneyTest do
       assert receipt_text =~ "Retry queued"
       assert receipt_text =~ "Oban job #991"
       assert receipt_text =~ "Original job #101 is retained"
+      # The row and receipt stories claim this line.
+      assert receipt_text =~ "Completion has not been confirmed."
 
       assert :sys.get_state(failed.pid).socket.assigns.flash == %{
                "info" => "Retry queued · queue job 991"
@@ -189,9 +191,10 @@ defmodule ScrypathOpsWeb.CatalogJourneyTest do
       sync_doc = sync |> render_async() |> LazyHTML.from_fragment()
       assert sync_doc |> LazyHTML.query("#ordinary-recovery") |> Enum.count() == 1
 
-      assert sync_doc
-             |> LazyHTML.query("#recovery-observation")
-             |> text() =~ "Retry queued"
+      observation = sync_doc |> LazyHTML.query("#recovery-observation") |> text()
+      assert observation =~ "Retry queued"
+      # The recovery status story claims refresh only observes.
+      assert observation =~ "Refresh never resubmits work."
 
       assert sync_doc
              |> LazyHTML.query("[data-testid='recovery-evidence']")

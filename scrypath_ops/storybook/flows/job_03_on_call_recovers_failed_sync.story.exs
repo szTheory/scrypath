@@ -22,7 +22,7 @@ defmodule ScrypathOps.Catalog.Stories.Flows.Job03OnCallRecoversFailedSync do
   @journey "Mounted scrypath_ops/test/scrypath_ops_web/live/catalog_journey_test.exs"
 
   def function, do: &ScrypathOpsWeb.Components.FailedSync.screen/1
-  def container, do: :iframe
+  def container, do: ScrypathOps.Catalog.Frames.full_width()
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.FailedSyncLive]
 

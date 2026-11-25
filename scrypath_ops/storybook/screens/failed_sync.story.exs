@@ -15,7 +15,7 @@ defmodule ScrypathOps.Catalog.Stories.Screens.FailedSync do
   @seam "Mounted scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs"
 
   def function, do: &ScrypathOpsWeb.Components.FailedSync.screen/1
-  def container, do: :iframe
+  def container, do: ScrypathOps.Catalog.Frames.full_width()
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.FailedSyncLive]
 

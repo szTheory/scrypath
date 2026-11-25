@@ -5,11 +5,35 @@ import {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsT
 
 import {OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation} from "./ops_search"
 
-// The storybook puts the theme on <body>; the ops System rules key on the <html> attribute.
-// "system" (or anything else) sets nothing, so the ops stylesheet follows the browser preference.
+// The storybook puts the theme on <body>; the ops System rules key on the <html> attribute. The
+// /storybook/iframe route also names the theme in the query, but the frames on a story page are
+// srcdoc documents with no query, so a story frame mirrors its body's attribute. "system" (or
+// anything else) sets nothing, so the ops stylesheet follows the browser preference.
 ;(function () {
-  const theme = new URLSearchParams(window.location.search).get("theme")
-  if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme)
+  const root = document.documentElement
+  const apply = (theme) => {
+    if (theme === "light" || theme === "dark") root.setAttribute("data-theme", theme)
+    else root.removeAttribute("data-theme")
+  }
+  const query = new URLSearchParams(window.location.search).get("theme")
+  if (query) apply(query)
+  const mirror = () => {
+    // Only a story frame; the storybook's own page keeps its own theme handling.
+    if (!document.getElementById("psb-iframe-container")) return
+    const sync = () => {
+      if (document.body.hasAttribute("data-theme")) apply(document.body.getAttribute("data-theme"))
+    }
+    sync()
+    new MutationObserver(sync).observe(document.body, {attributes: true, attributeFilter: ["data-theme"]})
+    // A story page sizes each frame to its content. The operator shell asks for at least a window's
+    // height, which inside a frame is the frame's own height plus the header: the bottom is cut off.
+    if (window.location.href !== "about:srcdoc") return
+    const style = document.createElement("style")
+    style.textContent = "#psb-iframe-container .ops-shell-frame, #psb-iframe-container .min-h-screen { min-height: 0; }"
+    document.head.appendChild(style)
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mirror, {once: true})
+  else mirror()
 })()
 
 // The storybook sandbox class sets `font-family: serif` on <body>, and that beats the product
@@ -45,6 +69,16 @@ import {OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation} from "./ops_search"
   ].join("\n")
   document.head.appendChild(style)
 })()
+
+// The library keeps a rendered story frame when only the theme changes (its id does not name the
+// theme), so the storybook's own page passes the newly picked theme on to the frames it holds.
+window.addEventListener("phx:navigate", () => {
+  const theme = new URLSearchParams(window.location.search).get("theme")
+  if (!theme) return
+  document.querySelectorAll("#psb-main iframe").forEach((frame) => {
+    frame.contentDocument?.body?.setAttribute("data-theme", theme)
+  })
+})
 
 window.storybook = {
   Hooks: {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation}
