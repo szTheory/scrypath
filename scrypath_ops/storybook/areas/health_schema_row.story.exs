@@ -16,7 +16,7 @@ defmodule ScrypathOps.Catalog.Stories.Areas.HealthSchemaRow do
   @mounted "Mounted scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs"
 
   def function, do: &ScrypathOpsWeb.Components.SearchHealth.health_schema_row/1
-  def container, do: ScrypathOps.Catalog.Frames.area()
+  def container, do: ScrypathOps.Catalog.Frames.full_width()
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.PostureLive]
 

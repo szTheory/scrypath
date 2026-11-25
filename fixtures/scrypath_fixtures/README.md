@@ -14,6 +14,8 @@ The `preferred_envs` entry in `scrypath_ops/mix.exs` runs it in the test environ
 
 ## Exit rule
 
+Decision (maintainer, 2026-11-22): the project stays separate. Revisit when the phase173 host spec is ported or at v1.51. The rule below is the test that decision answered.
+
 Fold this project into `scrypath_ops/catalog/` if no second consumer appears by Phase 197. A second consumer is a Mix project other than `scrypath_ops` that lists `scrypath_fixtures` in its deps (the candidate is the demo host replacing its phase173 copy). The decision is evaluated at the start of Phase 197 planning. Module names stay stable, so folding is a rename.
 
 The cost input is the warm ops-ui delta against a same-day control, recorded by Phase 196 in `.planning/reference/CI-EFFICIENCY.md`. A delta above about 60 s also argues for folding. That threshold is advisory, from prep note B (`.planning/research/catalog-prep/B-fixtures-and-adopters.md`, the D1 revisit trigger and its adversarial pass). It is not an ADR trigger and does not stop a run by itself.
@@ -59,7 +61,7 @@ The placement rule is that a string goes only where Meilisearch and Scrypath can
 
 `scrypath_ops/test/scrypath_ops_web/live/fixtures_hostile_render_test.exs` renders the scenario on the failed sync page and the health page and asserts that the markup shows as text and no script element is created. It does not assert that long text is truncated: unbounded error text is finding F2.
 
-The other stress variation is Logistify `history_over_limit`, which reproduces finding F1 (task history over 1,000). Both findings, with F3 and F4 found while building this project, are written up in [`196-FINDINGS.md`](../../.planning/phases/196-fixtures-and-three-adopters/196-FINDINGS.md) and are handed to the maintainer, not fixed here.
+The other stress variation is Logistify `history_over_limit`, which reproduces finding F1 (task history over 1,000). Both findings, with F3 and F4 found while building this project, are written up in [`196-FINDINGS.md`](../../.planning/milestones/v1.49-phases/196-fixtures-and-three-adopters/196-FINDINGS.md) and are handed to the maintainer, not fixed here.
 
 ## Bulk data and the golden digest
 

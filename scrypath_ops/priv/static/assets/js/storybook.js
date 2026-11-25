@@ -908,8 +908,27 @@
 
   // js/storybook.js
   (function() {
-    const theme = new URLSearchParams(window.location.search).get("theme");
-    if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
+    const root = document.documentElement;
+    const apply = (theme) => {
+      if (theme === "light" || theme === "dark") root.setAttribute("data-theme", theme);
+      else root.removeAttribute("data-theme");
+    };
+    const query = new URLSearchParams(window.location.search).get("theme");
+    if (query) apply(query);
+    const mirror = () => {
+      if (!document.getElementById("psb-iframe-container")) return;
+      const sync = () => {
+        if (document.body.hasAttribute("data-theme")) apply(document.body.getAttribute("data-theme"));
+      };
+      sync();
+      new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ["data-theme"] });
+      if (window.location.href !== "about:srcdoc") return;
+      const style = document.createElement("style");
+      style.textContent = "#psb-iframe-container .ops-shell-frame, #psb-iframe-container .min-h-screen { min-height: 0; }";
+      document.head.appendChild(style);
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mirror, { once: true });
+    else mirror();
   })();
   (function() {
     const useProductFont = () => {
@@ -936,6 +955,13 @@
     ].join("\n");
     document.head.appendChild(style);
   })();
+  window.addEventListener("phx:navigate", () => {
+    const theme = new URLSearchParams(window.location.search).get("theme");
+    if (!theme) return;
+    document.querySelectorAll("#psb-main iframe").forEach((frame) => {
+      frame.contentDocument?.body?.setAttribute("data-theme", theme);
+    });
+  });
   window.storybook = {
     Hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation }
   };

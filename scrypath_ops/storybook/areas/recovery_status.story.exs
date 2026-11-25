@@ -22,7 +22,7 @@ defmodule ScrypathOps.Catalog.Stories.Areas.RecoveryStatus do
   @d3_test "Mounted scrypath_ops/test/scrypath_ops_web/live/sync_drift_live_test.exs · Claim: an unresolved recovery handle renders a closed unavailable state"
 
   def function, do: &ScrypathOpsWeb.Components.Recovery.recovery_status/1
-  def container, do: ScrypathOps.Catalog.Frames.area()
+  def container, do: ScrypathOps.Catalog.Frames.full_width()
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.SyncDriftLive]
 

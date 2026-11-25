@@ -289,15 +289,21 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     end
   end
 
-  describe "area frames" do
-    test "every area story stretches its component the way its screen does" do
-      areas =
-        Enum.filter(loaded_stories(), fn {path, _story} -> CatalogChecks.tier(path) == :area end)
+  describe "full-width frames" do
+    test "every area, screen and flow story fills its width the way the product does" do
+      tiers = [:area, :screen, :flow]
 
-      refute areas == []
+      stories =
+        Enum.filter(loaded_stories(), fn {path, _story} -> CatalogChecks.tier(path) in tiers end)
 
-      for {path, story} <- areas do
-        assert story.container() == ScrypathOps.Catalog.Frames.area(), path
+      assert stories
+             |> Enum.map(fn {path, _} -> CatalogChecks.tier(path) end)
+             |> Enum.uniq()
+             |> Enum.sort() ==
+               Enum.sort(tiers)
+
+      for {path, story} <- stories do
+        assert story.container() == ScrypathOps.Catalog.Frames.full_width(), path
       end
     end
   end
@@ -917,7 +923,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       end
     end
 
-    test "the welcome page sets the product font itself, because storybook.js does not load in the shell",
+    test "the welcome page sets the product font on its own sandbox container",
          %{conn: conn} do
       {:ok, _view, html} = live(conn, "/storybook/welcome")
 

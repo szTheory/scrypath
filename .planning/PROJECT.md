@@ -30,19 +30,13 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **Discovery and onboarding direction (maintainer, 2026-11-20):** The README, website, HexDocs and guides must form one coherent journey for people meeting Scrypath for the first time, people starting to use it, and people returning to troubleshoot or dig deeper. Each surface has one job, content is owned once and linked rather than restated, link lists stay short, and onboarding the library is a product surface in its own right. The README is currently too long, especially "Choose a route"; the website is an old-identity starting point that should be refreshed goal-first (Impeccable for design, `ux-writing` for copy, brand voice, honest claims) with permanent upkeep guards. The first slice of it became the v1.48 milestone on 2026-11-21 (below); the rest stays direction, not approved scope. See `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`, `seeds/SEED-004-website-refresh.md` and the README todo. Read it before changing any of those surfaces.
 
-## Current Milestone: v1.49 Catalog foundation
+## Current Milestone
 
-**Goal:** A thin, trustworthy component catalog (phoenix_storybook) for ScrypathOps, built on Scrypath-owned fictional adopter data, with one job (JOB-03: unhealthy verdict to verified retry) carried end to end, so the maintainer can look at the UI and give feedback in a stable place.
-
-**Target features:**
-- Mount and prove phoenix_storybook in `scrypath_ops` as a dev/test-only dependency, with a measured go/no-go against ADR 0001's triggers (Phase 195).
-- A `fixtures/scrypath_fixtures` project (ADR 0002) with pure builders that emit raw Meilisearch task and Oban job maps, and three adopters: Shopadelic, Logistify, Wikily (Phase 196).
-- The JOB-03 pilot: a mounted journey first, then shared function components under it, stories in the glossary tiers, one test file with the catalog checks, and the `storybook` block in `UI-PREVIEW.json` (Phase 197). Pause 1: the maintainer's storybook look sizes Phase 198.
-- Optional scale-up, cut by default: remaining small screens, Clinicly (real denials only), Chatly (Phase 198). Pause 2: milestone-end storybook review before the audit.
-
-**Decision source:** the maintainer's 2026-10-25 decision (ADR 0001, UI engine D1), reconfirmed 2026-11-21 after the feedback session; the final shape is `research/catalog-prep/SYNTHESIS.md` (about 15 plans, stop and re-ask at 20). No Hex release inside this milestone. v1.50 Adopter-ready follows (phases 199 to 201).
+None open. v1.49 Catalog foundation closed on 2026-11-25; see [its archive](milestones/v1.49-ROADMAP.md).
 
 ## Current State
+
+v1.49 **Catalog foundation** is on `main` and archived: Phases 195 to 197, 13 plans, 20 of 23 requirements (Phase 198 and its three scale requirements were cut by the maintainer). ScrypathOps has a dev-and-test-only phoenix_storybook, three fictional adopters in `fixtures/scrypath_fixtures`, and one job (unhealthy verdict to verified retry) covered by a mounted journey and stories that render the same components as the pages. The maintainer reviewed it and the storybook-review changes are merged: tiers named Primitives, Patterns, Areas, Screens and Flows, and code shown only for primitives. The [audit](milestones/v1.49-MILESTONE-AUDIT.md) is `tech_debt`; it records unpatched dependency advisories. Not proven: how the screens read to anyone but the maintainer, and viewport coverage of that review. No Hex release.
 
 v1.48 **Discovery and onboarding** is on `main` (PRs #160, #163, #164) and archived: Phases 192 and 193, 6 plans, 13 of 16 requirements, audit `tech_debt` with no unsatisfied requirement. No Hex-shipped doc tells an adopter to run a repo-only task (one derived invariant, with the Canonical Adopter Contract text changed in the same commit), the README is a 590-word single-job page with one quick path that ends in a real `Scrypath.search/3` result, the built docs are scanned for self-links, dead targets and dead anchors, the HexDocs sidebar is grouped by job in six groups with a five-item first group (no guide renamed, merged or deleted), and guards keep the install line, own-docs URLs, README and golden-path schema snippets and banned wording from drifting. Hex 0.3.20 carries Phase 192; the Phase 193 regroup reaches HexDocs only with the next release (needs the maintainer's explicit yes). The optional website phase and SITE-07 to SITE-09 were cut at the entry-point checkpoint because traffic is effectively nil ([CHECKPOINT.md](research/v1.48-prep/CHECKPOINT.md): 5 unique GitHub visitors in 14 days, 0 stars, no outside report ever). Not proven: how the README and shrunk overview read, live hex.pm rendering, whether the grouping matches how readers look. Carried: `scrypath_ops` posture resolves a guide path that does not exist under `scrypath_ops/` (pre-existing, unfixed); the install-line guard turns the release PR red at the next minor bump by design.
 
@@ -54,10 +48,7 @@ The [v1.46 audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no un
 
 ## Next Milestone Goals
 
-v1.49 Catalog foundation is the active milestone (above). After it: v1.50 Adopter-ready ("Testing your app" guide, a fresh-consumer walk, then maybe highlight/crop or a paging guard after an API-grilling session), then catalog breadth and announce-readiness; see `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
-
-<details>
-<summary>Historical milestone planning, source cutoffs and delivery context through v1.45</summary>
+Not yet chosen. The adopted order puts v1.50 Adopter-ready next ("Testing your app" guide, a fresh-consumer walk, then maybe highlight/crop or a paging guard after an API-grilling session), then catalog breadth and announce-readiness; see `reference/ROLLING-ROADMAP.md`. Inputs from the v1.49 review are listed there. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 ## Archived history
 
@@ -226,9 +217,9 @@ Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** (fresh `REQUI
 
 ## Release Train Posture
 
-- **Active milestone:** None open. v1.48 is closed and archived; v1.49 Catalog foundation is prepared (`.planning/MILESTONE-CONTEXT.md`, `.planning/research/catalog-prep/SYNTHESIS.md`) and not yet opened. v1.45 keeps its qualified historical verification overrides. Hex publication remains a separate maintainer yes. Older dated readiness and approval limits retain their original cutoffs.
+- **Active milestone:** None open. v1.49 Catalog foundation is closed and archived. v1.45 keeps its qualified historical verification overrides. Hex publication remains a separate maintainer yes. Older dated readiness and approval limits retain their original cutoffs.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Current goals:** Open v1.49 Catalog foundation (spike first) after the two pre-work PRs merge. No Hex release without the maintainer's explicit yes.
+- **Current goals:** Patch the dependency advisories recorded in the v1.49 audit, then choose the next milestone. No Hex release without the maintainer's explicit yes.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new product UI surfaces, and unrelated workflow expansion remain out of scope. The one recorded exception is the ScrypathOps component catalog (phoenix_storybook, a maintainer decision of 2026-10-25, ADR 0001): it is a dev and test review surface inside `scrypath_ops/`, never part of the Hex package or a production route, and it is not a new product UI surface.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
@@ -240,7 +231,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
 
-**Latest planning archive:** v1.48 Discovery and onboarding (2026-11-21, on `main`); see [archive](milestones/v1.48-ROADMAP.md). Phase 192 shipped in Hex 0.3.20; the Phase 193 regroup is unreleased. Before it: v1.47 Brand completion (2026-11-20), see [archive](milestones/v1.47-ROADMAP.md). Before that: v1.46 Brand foundation and re-skin (2026-11-19), see [archive](milestones/v1.46-ROADMAP.md). Before that: v1.45 Foundation and CI (2026-11-01), see [archive](milestones/v1.45-ROADMAP.md).
+**Latest planning archive:** v1.49 Catalog foundation (2026-11-25, on `main`); see [archive](milestones/v1.49-ROADMAP.md). Not released to Hex. Before it: v1.48 Discovery and onboarding (2026-11-21), see [archive](milestones/v1.48-ROADMAP.md); Phase 192 shipped in Hex 0.3.20 and the Phase 193 regroup is unreleased. Before that: v1.47 Brand completion (2026-11-20), see [archive](milestones/v1.47-ROADMAP.md). Before that: v1.46 Brand foundation and re-skin (2026-11-19), see [archive](milestones/v1.46-ROADMAP.md). Before that: v1.45 Foundation and CI (2026-11-01), see [archive](milestones/v1.45-ROADMAP.md).
 
 **v1.42 — ScrypathOps operator/admin UI** (2026-10-04): Phase 172, eight plans, eight OPUX requirements. Consistent shared controls/copy, accessible dialogs and schema selection, exact-work recovery and guarded promotion, 104 passing hosted browser tests and the warranted Scrypath0.3.15 release. See `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
@@ -284,6 +275,10 @@ measured pure hot paths did not justify speculative optimization.
 
 | Decision | Outcome |
 |----------|---------|
+| Keep phoenix_storybook after the cold CI cost trigger tripped. | v1.49 Phase 195: maintainer's choice against a tripped sample, recorded in ADR 0001, not a pass. |
+| Cut Phase 198 and keep the fixtures project separate. | v1.49, 2026-11-22: revisit the fold at the phase173 port or v1.51; remaining breadth is CATB-01. |
+| Name catalog tiers Primitives, Patterns, Areas, Screens and Flows, and show code only for primitives. | ✓ v1.49 maintainer storybook review, 2026-11-25. |
+| Close v1.49 with stale phase reports instead of re-verifying. | Maintainer, 2026-11-25: integration and security checks ran on the newer code; the last fixes were checked by the closing session only. |
 | Preserve source-bound phase reports and explicitly record historical freshness overrides at archive. | Qualified closeout authorized 2026-11-01; fresh candidate/final-source machine gates remain mandatory, with no debt-risk or design approval. |
 | Exclude maintainer tooling through actual archive and compiled-consumer proof rather than hidden documentation filters. | ✓ Phase 183 — real package/path consumers and documentation-identity mutation regressions; contributor commands retain intended environments. |
 | Keep historical quick tasks outside the current milestone archive. | Maintainer selected the recommendation on 2026-11-01; their older provenance remains visible. |
@@ -387,6 +382,9 @@ clause and the Multi uniqueness exception).
 
 ### Validated
 
+- ✓ A dev-and-test-only storybook for ScrypathOps that cannot reach a production build or the Hex package, with its CI cost measured and decided (MOUNT-01..04) — v1.49
+- ✓ Reachable-state-only fixtures for three fictional adopters, checked before the tests run (FIX-01..04) — v1.49
+- ✓ One job from unhealthy verdict to verified retry covered by a mounted journey, shared components, a catalog contract test, a seeded storybook and the maintainer's review (PILOT-01..07) — v1.49
 - ✓ No Hex-shipped doc names a repo-only task, enforced by a derived invariant and a matching Canonical Adopter Contract; README is a 590-word single-job page with working links; built docs have no self-link, dead target or dead anchor (TRUTH-01..03, README-01..03) — v1.48
 - ✓ HexDocs sidebar grouped by job (five-item first group, every extra in exactly one group), `guides/overview.md` shrunk at the same URL, and guards for install line, own-docs URLs, snippet parity and banned wording plus the same-PR rule (DOCS-01..02, GUARD-01..03) — v1.48
 - ✓ Entry-point signal recorded once and the optional website phase cut on evidence (SIGNAL-01) — v1.48
@@ -494,7 +492,7 @@ clause and the Multi uniqueness exception).
 
 ### Active
 
-None defined. v1.48's requirements are archived in [the v1.48 requirements archive](milestones/v1.48-REQUIREMENTS.md) (SITE-07 to SITE-09 were cut, not met); v1.47's 18 are in [the v1.47 archive](milestones/v1.47-REQUIREMENTS.md); the next milestone defines its own. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
+None defined. v1.49's requirements are archived in [the v1.49 requirements archive](milestones/v1.49-REQUIREMENTS.md) (SCALE-01 to SCALE-03 were cut, not met); v1.48's are in [the v1.48 archive](milestones/v1.48-REQUIREMENTS.md); v1.47's 18 are in [the v1.47 archive](milestones/v1.47-REQUIREMENTS.md); the next milestone defines its own. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
 
 ### Out of Scope
 
@@ -511,7 +509,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has locally archived planning milestones through **`v1.45`**; branch archives and published Hex versions have separate delivery evidence. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
+The repository has locally archived planning milestones through **`v1.49`**; branch archives and published Hex versions have separate delivery evidence. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
 ## Evolution
 
@@ -524,4 +522,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-21 after v1.49 milestone start.*
+*Last updated: 2026-11-25 after the v1.49 milestone.*

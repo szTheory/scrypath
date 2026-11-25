@@ -26,7 +26,7 @@
   "sync_layout_followup": ".planning/reference/UI-SYNC-LAYOUT-FOLLOWUP.md",
   "pause_handoff": ".planning/.continue-here.md",
   "structured_handoff": ".planning/HANDOFF.json",
-  "runtime_checked_at": "2026-11-22T16:50:36Z",
+  "runtime_checked_at": "2026-11-25T00:00:00Z",
   "runtime_status": "running",
   "implementation_head": "33aac70fa7d6cb90dcc6eee34ca8cc599c52d214",
   "iteration3_merge": "427dd1ab95c791cd51630fbdc83fc16af90e1926",
@@ -51,10 +51,10 @@
     "branch": "ui/next",
     "base_main": "f0b39b319a31dbc19b3b78d37bfe11b001b0257c",
     "landing": "/storybook/welcome",
-    "start": "cd /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops && mkdir -p tmp && { ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.5 nohup mix scrypath_ops.catalog.serve > tmp/catalog.log 2>&1 & echo $! > tmp/catalog.pid; }",
-    "stop": "kill $(cat /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops/tmp/catalog.pid)",
+    "start": "export CATALOG_PORT=4013 && cd \"$HOME/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops\" && mkdir -p tmp && { ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.5 nohup mix scrypath_ops.catalog.serve > tmp/catalog.log 2>&1 & echo $! > tmp/catalog.pid; }",
+    "stop": "kill \"$(cat \"$HOME/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops/tmp/catalog.pid\")\"",
     "seed": "code: fixtures at ScrypathFixtures.preview_epoch/0, 2026-11-20T14:00:00Z; no database",
-    "status": "Running from the named checkout at main f0b39b31 on port 4013 (accepted deviation, see deviation). Landing page prints main@f0b39b319a31; npm run ui:preflight reports the preview and the storybook green. Review note: .planning/research/storybook-catalog/PAUSE-1-PHASE-197.md.",
+    "status": "Serving on port 4013 (accepted deviation, see deviation). `npm run ui:preflight` checks live whether it matches the current main; no sha is recorded here. Review record: .planning/research/storybook-catalog/PAUSE-2-FEEDBACK.md.",
     "runtime_checked_at": "2026-11-22T16:50:36Z",
     "deviation": {
       "summary": "ROADMAP success criterion 5 and PILOT-06 name 127.0.0.1:4003. Another project's process holds 4003, so this storybook serves on 4013 until the maintainer frees 4003. Nothing in this repo may stop that process.",
@@ -68,7 +68,7 @@
       },
       "serving_port": 4013,
       "start": "export CATALOG_PORT=4013 && cd /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops && mkdir -p tmp && { ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.5 nohup mix scrypath_ops.catalog.serve > tmp/catalog.log 2>&1 & echo $! > tmp/catalog.pid; }",
-      "move_back": "1. Free 4003 (the holder's owner stops it; lsof -nP -iTCP:4003 -sTCP:LISTEN must print nothing). 2. Stop this storybook with the block's stop command, then run the block's start command (no CATALOG_PORT) from /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops. 3. In .planning/UI-PREVIEW.json set storybook.url to http://127.0.0.1:4003, storybook.port to 4003 and delete storybook.deviation (preflight reads the port from url and port, which must agree). 4. From /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/examples/scrypath_ecommerce run npm run ui:preflight.",
+      "move_back": "1. Free 4003 (the holder's owner stops it; lsof -nP -iTCP:4003 -sTCP:LISTEN must print nothing). 2. Stop this storybook with the block's stop command, then run the block's start command without its CATALOG_PORT export from ~/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops. 3. In .planning/UI-PREVIEW.json set storybook.url to http://127.0.0.1:4003, storybook.port to 4003 and delete storybook.deviation (preflight reads the port from url and port, which must agree). 4. From ~/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/examples/scrypath_ecommerce run npm run ui:preflight.",
       "accepted": "Maintainer, 2026-11-22: use another port; 4013 is the recorded serving port. The default stays 4003 and move_back remains valid if 4003 is freed later."
     }
   }

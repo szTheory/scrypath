@@ -1,7 +1,12 @@
 # v1.49 milestone-end storybook review (Pause 2)
 
-Started 2026-11-22. Storybook on `127.0.0.1:4013`, serving `main`. The review is still open: the
-milestone audit, complete and cleanup steps wait for the maintainer's "ok".
+Started 2026-11-22, closed 2026-11-25 when the maintainer answered "ok" to the open review. Storybook
+on `127.0.0.1:4013`, serving `main`; the last round was shown at the merge of PR #186. Rows 1 to 11
+are fixed or planted. No feedback row is left open.
+
+Viewport was not recorded for any row (the reports came with screenshots, not sizes). Rows name the
+catalog entry; where no variation is named, the report applied to all of them. The review machine runs
+a dark OS.
 
 | # | Date | Catalog entry, state, theme | Maintainer's words | Kind | Outcome |
 |---|------|-----------------------------|--------------------|------|---------|
@@ -16,8 +21,16 @@ milestone audit, complete and cleanup steps wait for the maintainer's "ok".
 | 9 | 2026-11-25 | screen and flow stories | "it's showing code on the right but i really just want to see the actual screen there" | review ergonomics | Full width, code hidden for Screens and Flows |
 | 10 | 2026-11-25 | pattern and area stories | "agreed with ur rec" (hide code there too; only primitives keep it) | review ergonomics | Full width, code hidden for everything but primitives |
 | 11 | 2026-11-25 | area stories | "yeah" (stretch areas to the width they have on the real screen) | review fidelity | Area frames stretch |
+| 12 | 2026-11-25 | the whole catalog | "ok" | review closed | Audit, complete and cleanup may run |
+| 13 | 2026-11-25, found by the milestone audit after the review closed | every story page, Light theme on a dark OS | not a maintainer report | rendering | Fixed in the closeout: frames mirror the picked theme, including a switch in place; screens and flows fill their width like areas and are no longer cut off at the bottom |
 
 ## For v1.50 input
 
 - SEED-005 is a candidate to weigh at milestone selection. It is not approved scope.
 - Keep new catalog entries in the plain tier names (playbook C40).
+- Patterns still sit centred in their frame; only areas were stretched. Change it if the next review says so.
+- Handed to the maintainer and not started: findings F1, F2, D2, F3, F4 and review items WR-03, WR-04 and
+  IN-01 to IN-09 (`197-REVIEW-DISPOSITION.md`).
+- Offered and undecided: removing the home path from older tracked files (preview tooling would have to
+  expand `~`).
+- CI candidate: move the catalog module list check out of the integration tag (CI-EFFICIENCY item 32).
