@@ -919,6 +919,8 @@
     else document.addEventListener("DOMContentLoaded", useProductFont, { once: true });
   })();
   (function() {
+    const stories = "story-variations-scrypath_ops_catalog_stories_";
+    const composed = `[id^="${stories}"]:not([id^="${stories}primitives_"]) .psb-variation-block`;
     const style = document.createElement("style");
     style.id = "ops-catalog-shell";
     style.textContent = [
@@ -926,10 +928,11 @@
       "@media (min-width: 1024px) {",
       "  #psb-main { margin: 0; border-width: 0 0 0 1px; border-radius: 0; box-shadow: none; }",
       "}",
-      // A whole screen or flow is read by looking at it, so drop the code block under each variation.
-      // The library names each story's wrapper after its module (`screens` and `flows` tiers).
-      '[id^="story-variations-scrypath_ops_catalog_stories_screens_"] .psb-variation-block > [id$="-code"],',
-      '[id^="story-variations-scrypath_ops_catalog_stories_flows_"] .psb-variation-block > [id$="-code"] { display: none; }'
+      // Only a primitive is read alongside its code. Patterns, areas, screens and flows are read by
+      // looking at them, so their preview takes the full width and the code block is dropped. The
+      // library names each story's wrapper after its module, which carries the tier.
+      `${composed} > [id$="-component"] { grid-column: 1 / -1; }`,
+      `${composed} > [id$="-code"] { display: none; }`
     ].join("\n");
     document.head.appendChild(style);
   })();

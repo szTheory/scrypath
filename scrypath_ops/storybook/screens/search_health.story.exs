@@ -14,8 +14,6 @@ defmodule ScrypathOps.Catalog.Stories.Screens.SearchHealth do
 
   def function, do: &ScrypathOpsWeb.Components.SearchHealth.screen/1
   def container, do: :iframe
-  # Full width, and the catalog hides the code pane beside a whole screen (see storybook.js).
-  def layout, do: :one_column
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.PostureLive]
 
