@@ -253,7 +253,7 @@ defmodule Scrypath.MeilisearchTest do
              )
 
     assert_received {:request, "POST", "/indexes/tenant_searchable_post/documents", headers, body}
-    assert {"x-meili-api-key", "secret-key"} in headers
+    assert {"authorization", "Bearer secret-key"} in headers
     assert body == %{"_json" => [%{"id" => 5, "title" => "Hello"}]}
 
     assert {:ok, %{"taskUid" => 22, "status" => "enqueued"}} =

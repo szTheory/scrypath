@@ -54,7 +54,9 @@ defmodule Scrypath.Meilisearch.ClientTest do
       stub = Module.concat(__MODULE__, GetSettingsHeaderMergeStub)
 
       Req.Test.stub(stub, fn conn ->
-        assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == ["api-key-144"]
+        # Meilisearch reads only the bearer Authorization header; a keyed server answers 401 otherwise.
+        assert Plug.Conn.get_req_header(conn, "authorization") == ["Bearer api-key-144"]
+        assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == []
         assert Plug.Conn.get_req_header(conn, "x-request-id") == ["request-144"]
 
         Req.Test.json(conn, %{"rankingRules" => ["words"]})
@@ -76,7 +78,8 @@ defmodule Scrypath.Meilisearch.ClientTest do
 
       Req.Test.stub(stub, fn conn ->
         assert conn.host == "configured.example.test"
-        assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == ["configured-key"]
+        assert Plug.Conn.get_req_header(conn, "authorization") == ["Bearer configured-key"]
+        assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == []
         Req.Test.json(conn, %{})
       end)
 
@@ -87,7 +90,29 @@ defmodule Scrypath.Meilisearch.ClientTest do
                  req_options: [
                    plug: {Req.Test, stub},
                    base_url: "https://untrusted.example.test",
-                   headers: [{"x-meili-api-key", "untrusted-key"}]
+                   auth: {:bearer, "untrusted-auth-option"},
+                   headers: [
+                     {"Authorization", "Bearer untrusted-header"},
+                     {"x-meili-api-key", "untrusted-key"}
+                   ]
+                 ]
+               )
+    end
+
+    test "without a configured API key, a caller's own authorization header is sent" do
+      stub = Module.concat(__MODULE__, GetSettingsCallerAuthorizationStub)
+
+      Req.Test.stub(stub, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "authorization") == ["Bearer caller-token"]
+        Req.Test.json(conn, %{})
+      end)
+
+      assert {:ok, %{}} =
+               Client.get_settings("posts_v2",
+                 meilisearch_url: "http://localhost:7700",
+                 req_options: [
+                   plug: {Req.Test, stub},
+                   headers: [{"authorization", "Bearer caller-token"}]
                  ]
                )
     end

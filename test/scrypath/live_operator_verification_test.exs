@@ -79,7 +79,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
                backend: Scrypath.Meilisearch,
                index_prefix: prefix,
                sync_mode: :manual,
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     assert :ok = MeilisearchIntegration.wait_for_search_count!(QueryablePost, live_index, 1)
@@ -100,7 +101,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
             backend: Scrypath.Meilisearch,
             index_prefix: prefix,
             sync_mode: :manual,
-            meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+            meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+            meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
           )
         )
       end,
@@ -139,7 +141,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
                batch_size: 1,
                index_prefix: prefix,
                cutover?: false,
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     assert MeilisearchIntegration.index_exists?(target_index)
@@ -155,7 +158,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
                  index_prefix: prefix,
                  sync_mode: :manual,
                  target_index: target_index,
-                 meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+                 meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+                 meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
                ) do
             {:ok,
              %Scrypath.Operator.Reconcile{
@@ -275,7 +279,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
           index_prefix: prefix,
           sync_mode: :manual,
           target_index: target_index,
-          meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+          meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+          meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
         )
       end)
 
@@ -318,7 +323,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
                batch_size: 1,
                sync_mode: :manual,
                index_prefix: prefix,
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     first_terminal = assert_repair_task!(first_task, live_index, task_config)
@@ -353,7 +359,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
                batch_size: 1,
                sync_mode: :manual,
                index_prefix: prefix,
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     refute repeat_task.uid == first_task.uid
@@ -430,7 +437,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
           batch_size: 1,
           sync_mode: :manual,
           index_prefix: prefix,
-          meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+          meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+          meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
         )
       end)
 
@@ -457,6 +465,7 @@ defmodule Scrypath.LiveOperatorVerificationTest do
       index_prefix: prefix,
       sync_mode: :manual,
       meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+      meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key(),
       inline_poll_interval: 100,
       inline_timeout: 10_000
     ]
@@ -465,6 +474,7 @@ defmodule Scrypath.LiveOperatorVerificationTest do
   defp task_options do
     [
       meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+      meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key(),
       inline_poll_interval: 100,
       inline_timeout: 10_000,
       task_history_limit: 100
@@ -476,7 +486,8 @@ defmodule Scrypath.LiveOperatorVerificationTest do
       backend: Scrypath.Meilisearch,
       index_prefix: prefix,
       page: [number: 1, size: 20],
-      meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+      meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+      meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
     ]
   end
 

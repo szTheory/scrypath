@@ -12,6 +12,14 @@ defmodule Scrypath.TestSupport.MeilisearchIntegration do
     System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://127.0.0.1:7700"
   end
 
+  # Set in CI, where the server runs with a master key, so the live suites prove authentication.
+  def meilisearch_api_key do
+    case System.get_env("SCRYPATH_MEILISEARCH_API_KEY") do
+      blank when blank in [nil, ""] -> nil
+      key -> key
+    end
+  end
+
   def repo_database_path do
     Path.join(System.tmp_dir!(), "scrypath-integration-#{System.unique_integer([:positive])}.db")
   end
@@ -187,6 +195,7 @@ defmodule Scrypath.TestSupport.MeilisearchIntegration do
   defp client_config do
     [
       meilisearch_url: meilisearch_url!(),
+      meilisearch_api_key: meilisearch_api_key(),
       inline_poll_interval: 100,
       inline_timeout: @timeout
     ]
@@ -197,10 +206,16 @@ defmodule Scrypath.TestSupport.MeilisearchIntegration do
   end
 
   defp request(method, path) do
+    authorization =
+      case meilisearch_api_key() do
+        nil -> []
+        key -> [{"authorization", "Bearer " <> key}]
+      end
+
     req =
       Req.new(
         base_url: meilisearch_url!(),
-        headers: [{"content-type", "application/json"}]
+        headers: [{"content-type", "application/json"}] ++ authorization
       )
 
     case Req.request(req, method: method, url: path) do

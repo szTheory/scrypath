@@ -49,7 +49,8 @@ defmodule Scrypath.Meilisearch.SettingsHotApplyIntegrationTest do
              Scrypath.sync_record(QueryablePost, post,
                backend: Scrypath.Meilisearch,
                index_prefix: prefix,
-               meilisearch_url: url
+               meilisearch_url: url,
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     assert :ok = MeilisearchIntegration.wait_for_search_count!(QueryablePost, live_index, 1)
@@ -59,6 +60,7 @@ defmodule Scrypath.Meilisearch.SettingsHotApplyIntegrationTest do
                acknowledge_live_index: true,
                backend: Scrypath.Meilisearch,
                meilisearch_url: url,
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key(),
                index_prefix: prefix,
                sync_mode: :inline,
                inline_poll_interval: 100,
