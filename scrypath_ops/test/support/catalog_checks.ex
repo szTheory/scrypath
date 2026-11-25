@@ -8,7 +8,7 @@ defmodule ScrypathOps.Test.CatalogChecks do
       theme, so a story never lists a state twice.
     * `dom_problems/2` finds broken DOM hygiene in one rendered story: a duplicate id, an ARIA
       reference to nothing (or the literal `"false"`), a control with no accessible name, and, for a
-      surface-tier or jobs-tier story (each renders a whole page inside the shell), anything but
+      screen-tier or flows-tier story (each renders a whole page inside the shell), anything but
       exactly one main landmark.
     * `coverage_problems/4` finds a component or LiveView route that no story shows and that is not
       listed, with a reason, in the test's literal `@no_story` map, and an `@no_story` key that has
@@ -29,7 +29,7 @@ defmodule ScrypathOps.Test.CatalogChecks do
 
   @type digest_result ::
           {path :: String.t(), variation_id :: String.t(), theme :: String.t(), String.t()}
-  @type tier :: :primitive | :pattern | :area | :surface | :job | :other
+  @type tier :: :primitive | :pattern | :area | :screen | :flow | :other
 
   @doc """
   SHA-256 of the canonical tree of the story's own markup (`[data-phx-main] > *`) in a rendered
@@ -63,15 +63,15 @@ defmodule ScrypathOps.Test.CatalogChecks do
     |> Enum.sort()
   end
 
-  @doc "The tier a story path belongs to, from its first segment (`/surfaces/failed_sync` is `:surface`)."
+  @doc "The tier a story path belongs to, from its first segment (`/screens/failed_sync` is `:screen`)."
   @spec tier(String.t()) :: tier()
   def tier(path) do
     case path |> String.trim_leading("/") |> String.split("/", parts: 2) do
       ["primitives" | _] -> :primitive
       ["patterns" | _] -> :pattern
       ["areas" | _] -> :area
-      ["surfaces" | _] -> :surface
-      ["jobs" | _] -> :job
+      ["screens" | _] -> :screen
+      ["flows" | _] -> :flow
       _ -> :other
     end
   end
@@ -83,7 +83,7 @@ defmodule ScrypathOps.Test.CatalogChecks do
     * `{:dangling_aria, attribute, token}` - an `aria-labelledby`, `aria-describedby` or `aria-controls`
       token that is not an id in the story, including the literal `"false"` a boolean left behind
     * `{:unnamed_control, tag}` - a button, link, input, select or textarea with no accessible name
-    * `{:main_count, n}` - for tiers `:surface` and `:job` only, when the story has `n` main
+    * `{:main_count, n}` - for tiers `:screen` and `:flow` only, when the story has `n` main
       landmarks, not one
 
   A control is named by its own text (ignoring `aria-hidden` subtrees), `aria-label`,
@@ -115,7 +115,7 @@ defmodule ScrypathOps.Test.CatalogChecks do
     * `components` - every `{module, name}` function component of the app
     * `routes` - every LiveView module the router serves
     * `story_index` - `%{components: [{module, name}], routes: [module]}`: the functions stories
-      render, and the LiveViews that surface-tier and jobs-tier stories cover
+      render, and the LiveViews that screen-tier and flows-tier stories cover
     * `no_story` - `%{key => reason}`: what is knowingly not storied, each with a one-line reason
 
   Reports, in a stable order:
@@ -180,7 +180,7 @@ defmodule ScrypathOps.Test.CatalogChecks do
 
     * the adopter, role and job are registered (`{:unknown_adopter, name}`, `{:unknown_role, id}`,
       `{:bad_job, id}`), and the job is the story's own `job/0` (`{:job_mismatch, note, story}`)
-    * a jobs-tier story file names its job: `JOB-03` needs `job_03` in the path
+    * a flows-tier story file names its job: `JOB-03` needs `job_03` in the path
       (`{:job_not_in_path, job, path}`)
     * a `Mounted` file exists (`{:missing_test, path}`) and contains the variation's scenario id (the
       longest registered scenario id its own id starts with) or, when the note declares a `Claim`,
@@ -244,7 +244,7 @@ defmodule ScrypathOps.Test.CatalogChecks do
   end
 
   defp job_in_path(job, story_path) do
-    if tier(story_path) == :job do
+    if tier(story_path) == :flow do
       needle = job |> String.downcase() |> String.replace("-", "_")
       if String.contains?(story_path, needle), do: [], else: [{:job_not_in_path, job, story_path}]
     else
@@ -458,9 +458,9 @@ defmodule ScrypathOps.Test.CatalogChecks do
 
   # ── Landmarks ──────────────────────────────────────────────────────────────
 
-  # A surface story and a jobs-tier story each render a whole page inside the operator shell, so each
+  # A screen story and a flows-tier story each render a whole page inside the operator shell, so each
   # has exactly one main landmark. Areas, patterns and primitives render fragments and have none.
-  defp main_problems(elements, tier) when tier in [:surface, :job] do
+  defp main_problems(elements, tier) when tier in [:screen, :flow] do
     count =
       Enum.count(elements, fn {{tag, attrs, _children}, _ancestors} ->
         tag == "main" or attr(attrs, "role") == "main"

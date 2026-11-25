@@ -1,6 +1,6 @@
 defmodule ScrypathOpsWeb.OpsUi do
   @moduledoc """
-  Shared function components for `/ops` surfaces: page chrome, panels, and optional scaffold.
+  Shared function components for `/ops` screens: page chrome, panels, and optional scaffold.
   """
   use Phoenix.Component
 
@@ -205,7 +205,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
-  Contextual refresh action for operator status surfaces.
+  Contextual refresh action for operator status screens.
 
   An outline button with two words and no glyph: `label` while idle and `busy_label` while the
   click is in flight. Both words are always rendered and the stylesheet swaps them on
@@ -622,7 +622,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
-  Contextual breadcrumb trail for ScrypathOps surfaces.
+  Contextual breadcrumb trail for ScrypathOps screens.
 
   A short context trail — `<group> › <page>` — not a map of the whole product (that's
   the primary shell nav's job). Siblings are deliberately omitted; the group label
@@ -659,7 +659,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc """
   Unified "Next step" page-footer handoff.
 
-  Every triage/explore surface ends with the same affordance so operators learn that
+  Every triage/explore screen ends with the same affordance so operators learn that
   the bottom of the page tells them where to go next. One consistent grammar: an
   optional muted completion-condition, then an imperative link with a trailing arrow.
   Pass 1–2 `:step` slots (primary first) for branch points.
@@ -1714,7 +1714,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Pure client-side: every item is a live-navigation link, so the palette needs no
   server event. The `CommandPalette` JS hook owns open/close, fuzzy filter, arrow
   navigation, `?` for the cheat-sheet, and `r` to click the page's `[data-ops-refresh]`
-  control. Rendered once in the `:ops` shell so it is available on every surface.
+  control. Rendered once in the `:ops` shell so it is available on every screen.
   """
   attr(:mount_path, :string, required: true)
 

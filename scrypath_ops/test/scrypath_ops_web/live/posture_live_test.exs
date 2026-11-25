@@ -970,7 +970,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   # on the page, and the whole page, must canonicalize equal to the shared components' own output for
   # the page's own view-model (summary, ranked rows, snapshot instant). The stories render the same
   # functions, so this is what lets a story claim to show the page.
-  describe "seam: health_schema_row and surface (story output equals production output)" do
+  describe "seam: health_schema_row and screen (story output equals production output)" do
     for scenario_id <- [
           :shopadelic_failed_journey,
           :shopadelic_settings_aligned,
@@ -1023,7 +1023,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
           assert HtmlCanon.canon(mounted_row) == HtmlCanon.canon(component_row)
         end
 
-        surface_assigns = [
+        screen_assigns = [
           mount_path: assigns.mount_path,
           flash: assigns.flash,
           shell: assigns.shell,
@@ -1036,19 +1036,19 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
         ]
 
         page = LazyHTML.query(mounted, "[data-phx-main] > *")
-        component_page = surface_component(surface_assigns)
+        component_page = screen_component(screen_assigns)
 
         assert Enum.count(page) > 0
         assert HtmlCanon.canon(page) == HtmlCanon.canon(component_page)
 
         # Control: the comparison can fail. A different mount path changes every shell link.
-        changed_page = surface_component(Keyword.put(surface_assigns, :mount_path, "/elsewhere"))
+        changed_page = screen_component(Keyword.put(screen_assigns, :mount_path, "/elsewhere"))
         refute HtmlCanon.canon(page) == HtmlCanon.canon(changed_page)
       end
     end
   end
 
-  defp surface_component(assigns), do: row_component(&SearchHealth.surface/1, assigns)
+  defp screen_component(assigns), do: row_component(&SearchHealth.screen/1, assigns)
 
   # Renders a function component to a parsed fragment.
   defp row_component(component, assigns) do

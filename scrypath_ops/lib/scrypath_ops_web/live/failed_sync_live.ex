@@ -491,7 +491,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     assigns = assign(assigns, :view, view(assigns))
 
     ~H"""
-    <FailedSync.surface
+    <FailedSync.screen
       view={@view}
       mount_path={@mount_path}
       flash={@flash}

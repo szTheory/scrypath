@@ -925,7 +925,11 @@
       "html:has(#psb-main) { background-color: var(--psb-color-sidebar); color-scheme: normal; }",
       "@media (min-width: 1024px) {",
       "  #psb-main { margin: 0; border-width: 0 0 0 1px; border-radius: 0; box-shadow: none; }",
-      "}"
+      "}",
+      // A whole screen or flow is read by looking at it, so drop the code block under each variation.
+      // The library names each story's wrapper after its module (`screens` and `flows` tiers).
+      '[id^="story-variations-scrypath_ops_catalog_stories_screens_"] .psb-variation-block > [id$="-code"],',
+      '[id^="story-variations-scrypath_ops_catalog_stories_flows_"] .psb-variation-block > [id$="-code"] { display: none; }'
     ].join("\n");
     document.head.appendChild(style);
   })();

@@ -2,7 +2,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   @moduledoc """
   Intent-first landing for `/ops`.
 
-  Shows the current fleet observation and routes operators to the matching surface.
+  Shows the current fleet observation and routes operators to the matching screen.
   The deep per-schema health table lives on `ScrypathOpsWeb.PostureLive`.
   """
 

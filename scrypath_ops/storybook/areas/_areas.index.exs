@@ -1,5 +1,5 @@
 defmodule ScrypathOps.Catalog.Indexes.Areas do
-  # Tier 3 of 5 (primitives, patterns, areas, surfaces, jobs): one part of a page, built from
+  # Tier 3 of 5 (primitives, patterns, areas, screens, flows): one part of a page, built from
   # patterns and primitives, such as a verdict or one failed row.
   use PhoenixStorybook.Index
 

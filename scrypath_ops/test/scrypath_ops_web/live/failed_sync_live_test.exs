@@ -1115,7 +1115,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   # components' own output for the page's own view-model. The stories render the same functions, so
   # this is what lets a story claim to show the page. The four page states are all reached: ready,
   # no schemas, missing backend and an unavailable schema.
-  describe "seam: failed_summary, failed_filters and surface (story output equals production output)" do
+  describe "seam: failed_summary, failed_filters and screen (story output equals production output)" do
     for {scenario_id, query, state} <- [
           {:shopadelic_failed_journey, "", :ready},
           {:shopadelic_failed_journey, "?cause=transport", :ready},
@@ -1172,7 +1172,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
           end
         end
 
-        surface_assigns = [
+        screen_assigns = [
           view: page_view,
           mount_path: assigns.mount_path,
           flash: assigns.flash,
@@ -1182,7 +1182,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         ]
 
         page = LazyHTML.query(mounted, "[data-phx-main] > *")
-        component_page = component_fragment(&FailedSync.surface/1, surface_assigns)
+        component_page = component_fragment(&FailedSync.screen/1, screen_assigns)
 
         assert Enum.count(page) > 0
         assert HtmlCanon.canon(page) == HtmlCanon.canon(component_page)
@@ -1190,8 +1190,8 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         # Control: the comparison can fail. A different mount path changes every shell link.
         changed_page =
           component_fragment(
-            &FailedSync.surface/1,
-            Keyword.put(surface_assigns, :mount_path, "/elsewhere")
+            &FailedSync.screen/1,
+            Keyword.put(screen_assigns, :mount_path, "/elsewhere")
           )
 
         refute HtmlCanon.canon(page) == HtmlCanon.canon(changed_page)

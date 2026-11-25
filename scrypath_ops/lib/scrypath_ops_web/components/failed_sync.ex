@@ -10,7 +10,7 @@ defmodule ScrypathOpsWeb.Components.FailedSync do
   LiveView, where `Gating` decides whether the operator may act.
 
   Smallest first: `failed_filters/1` and `retry_receipt/1` are patterns reused inside the areas;
-  `failed_summary/1`, `failed_row/1` and `delete_confirmation/1` are areas; `surface/1` is the whole
+  `failed_summary/1`, `failed_row/1` and `delete_confirmation/1` are areas; `screen/1` is the whole
   page inside the operator shell.
   """
   use Phoenix.Component
@@ -418,7 +418,7 @@ defmodule ScrypathOpsWeb.Components.FailedSync do
       "when the work was last loaded, shown by the refresh control; `nil` before the first load"
   )
 
-  def surface(assigns) do
+  def screen(assigns) do
     ~H"""
     <Layouts.app
       mount_path={@mount_path}

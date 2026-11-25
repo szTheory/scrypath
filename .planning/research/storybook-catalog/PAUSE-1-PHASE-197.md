@@ -12,7 +12,7 @@ Phase 197 took one job, JOB-03 (the paged on-call engineer, ROLE-OPS: search loo
 ## The packet
 
 1. **Where and which build:** http://127.0.0.1:4013/storybook/welcome, built from `main@33aac70fa7d6` at writing (the Phase 197 code PR, [#177](https://github.com/szTheory/scrypath/pull/177); the checkout is then fast-forwarded to this note's docs-only commit and the landing page shows the current sha). It is port 4013 and not the planned 4003 because another project holds 4003; see "Port deviation" below, where the decision is yours. The landing page prints the current `main@sha`, the served HEAD, the checkout and the frozen time, and `npm run ui:preflight` refuses a storybook that is behind `main`.
-2. **UI changed:** `git diff --stat 33aac70f^..33aac70f -- scrypath_ops/lib scrypath_ops/storybook fixtures` is 32 files, +3703 -1535. Search health, Failed sync and the two recovery areas of Sync and index now render from shared components that the stories draw with the same code the real screens use (stories: `surfaces/search_health`, `surfaces/failed_sync`, `areas/*`, `patterns/*`, `jobs/job_03_on_call_recovers_failed_sync`, plus `welcome`). The real screens did not change by the parity captures (details under "What was checked"), with two exceptions that are the two fixes: an operator whose sudo went stale now returns to the page they left after confirming (D1), and Sync and index shows a closed "could not be checked" state instead of crashing when a recovery link cannot be resolved (D3).
+2. **UI changed:** `git diff --stat 33aac70f^..33aac70f -- scrypath_ops/lib scrypath_ops/storybook fixtures` is 32 files, +3703 -1535. Search health, Failed sync and the two recovery areas of Sync and index now render from shared components that the stories draw with the same code the real screens use (stories: `screens/search_health`, `screens/failed_sync`, `areas/*`, `patterns/*`, `jobs/job_03_on_call_recovers_failed_sync`, plus `welcome`). The real screens did not change by the parity captures (details under "What was checked"), with two exceptions that are the two fixes: an operator whose sudo went stale now returns to the page they left after confirming (D1), and Sync and index shows a closed "could not be checked" state instead of crashing when a recovery link cannot be resolved (D3).
 3. **60-second tour:** open the welcome page and read "Start here" (what the screens are, the five tiers, the frozen time 2026-11-20 14:00 UTC, "nothing here is an approved design"). Open the Job story (link 1 below), then flip it to the retry-queued state. Open Search health in light, then dark (links 2 and 3). Open the three Failed sync rows (links 4 to 6). Open the three recovery states (links 7 to 9). Shrink the window to a phone width on any one of them.
 4. **Where behavior lives:** the storybook shows static renders (buttons do nothing). Clicking, retry and navigation are in the 4002 preview (http://127.0.0.1:4002/admin/search, refreshed to the same `main`, data intact) and in the mounted journey test.
 5. **Reply `ok`, or give rows** in the table below (storybook path, variation id, theme, viewport, your words).
@@ -23,9 +23,9 @@ Every link below was fetched on 2026-11-22 against the running storybook: the st
 
 | # | Look at | Link | The question it answers |
 |---|---------|------|-------------------------|
-| 1 | The Job story, arriving from Search health | http://127.0.0.1:4013/storybook/jobs/job_03_on_call_recovers_failed_sync?variation_id=shopadelic_failed_journey_arrived_from_health&theme=light | Can the on-call engineer tell which record failed and what to do next? (second variation: `shopadelic_failed_journey_retry_queued`, the same page after Retry) |
-| 2 | Search health, Shopadelic degraded, light | http://127.0.0.1:4013/storybook/surfaces/search_health?variation_id=shopadelic_failed_journey&theme=light | Does the verdict read as "something failed, here is where to go"? |
-| 3 | The same, dark | http://127.0.0.1:4013/storybook/surfaces/search_health?variation_id=shopadelic_failed_journey&theme=dark | Same page, dark: anything that stops reading in dark? |
+| 1 | The Flow story, arriving from Search health | http://127.0.0.1:4013/storybook/flows/job_03_on_call_recovers_failed_sync?variation_id=shopadelic_failed_journey_arrived_from_health&theme=light | Can the on-call engineer tell which record failed and what to do next? (second variation: `shopadelic_failed_journey_retry_queued`, the same page after Retry) |
+| 2 | Search health, Shopadelic degraded, light | http://127.0.0.1:4013/storybook/screens/search_health?variation_id=shopadelic_failed_journey&theme=light | Does the verdict read as "something failed, here is where to go"? |
+| 3 | The same, dark | http://127.0.0.1:4013/storybook/screens/search_health?variation_id=shopadelic_failed_journey&theme=dark | Same page, dark: anything that stops reading in dark? |
 | 4 | Failed row, retryable | http://127.0.0.1:4013/storybook/areas/failed_row?variation_id=shopadelic_failed_journey_retryable&theme=light | Is Retry obvious on a row that can be retried? |
 | 5 | Failed row, ineligible | http://127.0.0.1:4013/storybook/areas/failed_row?variation_id=shopadelic_failed_journey_ineligible_task&theme=light | Is it clear why this row has no Retry? |
 | 6 | Failed row, very long error | http://127.0.0.1:4013/storybook/areas/failed_row?variation_id=shopadelic_hostile_ids_long_error&theme=light | A 729-character backend error with hostile ids: readable, or a wall of text? |
@@ -33,9 +33,9 @@ Every link below was fetched on 2026-11-22 against the running storybook: the st
 | 8 | Recovery: verified | http://127.0.0.1:4013/storybook/areas/recovery_status?variation_id=shopadelic_failed_journey_verified&theme=light | Does verified look different enough from the pending state above? |
 | 9 | Recovery: unavailable (the new D3 state) | http://127.0.0.1:4013/storybook/areas/recovery_status?variation_id=shopadelic_failed_journey_unavailable&theme=light | When the recovery link cannot be resolved, does the page say so calmly, and is "Refresh recovery status" still the right button? |
 
-Also worth a glance: `surfaces/failed_sync` (http://127.0.0.1:4013/storybook/surfaces/failed_sync?variation_id=shopadelic_failed_journey&theme=light, 200) for the whole page, and `patterns/retry_receipt`. The storybook sidebar and toolbar belong to the upstream storybook, not to Scrypath.
+Also worth a glance: `screens/failed_sync` (http://127.0.0.1:4013/storybook/screens/failed_sync?variation_id=shopadelic_failed_journey&theme=light, 200) for the whole page, and `patterns/retry_receipt`. The storybook sidebar and toolbar belong to the upstream storybook, not to Scrypath.
 
-Deep-link check results (page / iframe): welcome 200; links 1 to 9 each 200 / 200; the extra `surfaces/failed_sync` 200 / 200; the second Job variation 200 / 200; the three F1 links under Findings 200 / 200.
+Deep-link check results (page / iframe): welcome 200; links 1 to 9 each 200 / 200; the extra `screens/failed_sync` 200 / 200; the second Job variation 200 / 200; the three F1 links under Findings 200 / 200.
 
 ### Copy defects the fixtures expose (kind: product)
 
@@ -51,7 +51,7 @@ From the plan summaries, not re-checked here in a browser:
 - A retrying row still offers Retry, as the journey asserts; after Retry the row keeps its Failed status next to "Retry queued" because the original job is retained.
 - The unavailable state still offers "Refresh recovery status", though a refresh with an unresolved handle returns the same answer. Whether to hide it there is a product call.
 - The Recovery evidence line prints the full module name (`ScrypathFixtures.Shopadelic.Product`) after `Schema:`.
-- The shell links inside the surface stories point at `/ops/...`, which the storybook does not serve (they go nowhere there), and the shell's theme control sits inside the story frame beside the storybook's own toggle. Both come from rendering the real shell.
+- The shell links inside the screen stories point at `/ops/...`, which the storybook does not serve (they go nowhere there), and the shell's theme control sits inside the story frame beside the storybook's own toggle. Both come from rendering the real shell.
 - The blank evidence line ("Queue job · attempt · Active index" with empty values) that the old render would have shown for an unresolved handle is gone: D3 removed the line instead of printing blanks.
 
 ## Your feedback
@@ -118,7 +118,7 @@ The probe compares the computed styles of a story with the same screen rendered 
 
 - **Real screens unchanged by the extraction:** a canonical-tree comparison of 54 captured real pages (11 scenarios times two pages, 16 `phase173` pages, 16 copy surfaces) against the commit before: 0 differences, with a planted text change failing exactly the pages that contain it. Five new copy surfaces for the new states exist only on the new side.
 - **Stories draw the same code:** a story's output equals the real screen's output by the seam tests, and one catalog contract test (ledger row 11 of 12 in `ops-ui`) renders every variation in light and dark, checks structure, coverage, provenance and copy rules. Hosted cost of that test is within noise (finding 30).
-- **The storybook is stable across a restart:** the canonical iframe documents of `surfaces/failed_sync` (light and dark) and `surfaces/search_health` (light) were identical before and after a stop and start (compared as canonical trees; the raw HTML differs because attribute order and session tokens change per start, which is why raw HTML is never compared).
+- **The storybook is stable across a restart:** the canonical iframe documents of `screens/failed_sync` (light and dark) and `screens/search_health` (light) were identical before and after a stop and start (compared as canonical trees; the raw HTML differs because attribute order and session tokens change per start, which is why raw HTML is never compared).
 - **Not checked by anything automatic:** whether it looks and reads right. No design review by an independent reviewer happened, and none is claimed.
 
 ## Port deviation (decision for you)

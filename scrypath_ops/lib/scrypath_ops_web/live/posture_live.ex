@@ -212,7 +212,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <SearchHealth.surface
+    <SearchHealth.screen
       mount_path={@mount_path}
       flash={@flash}
       shell={@shell}
@@ -268,7 +268,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           </select>
         </form>
       </:fixture_controls>
-    </SearchHealth.surface>
+    </SearchHealth.screen>
     """
   end
 end
