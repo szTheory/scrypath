@@ -2,6 +2,22 @@
 
 The maintainer approved this order and these working rules after a research fan-out and a grilling round. Pick up the first unfinished item. `STATE.md` records progress.
 
+## v1.50 proposal (2026-11-25, prepared upstream; the maintainer chooses)
+
+Four research notes and a synthesis are in [research/v1.50-prep/](../research/v1.50-prep/SYNTHESIS.md). The prep found that a published Scrypath cannot authenticate to a Meilisearch server with a master key (reproduced, then fixed outside the milestone; its release needs the maintainer's yes).
+
+**Recommended: keep v1.50 "Adopter-ready", and lead it with making the documented path work.** Confidence 0.8.
+
+| Step | Content | Plans |
+|---|---|---|
+| 199 Documented path works | Reproduce first; golden path and guides, `sortable:` settings (F4), Oban queue observation (F5, new), task history past 1,000 (F1) | 2 to 3 |
+| 200 Fresh-consumer walk | Published package and HexDocs only, keyed production-mode server | 1 |
+| 201 Testing guide | "Testing your app", no new API, walk findings; **cut line**; release | 2 |
+
+Highlight, crop and a paging guard are not built unless a grilling session asks. About 5 to 6 plans (recorded estimate 3 to 5); stop and re-ask beyond 7.
+
+**Decisions waiting on the maintainer:** root `lib/` changes in 199; release 0.3.21 for the authentication fix; and whether the AI-agent diagnosis slice (SEED-005) becomes v1.51, ahead of catalog breadth, which moves to v1.52. The last one reorders the adopted roadmap, so nothing changes until the maintainer says so.
+
 ## v1.49 closeout input for the next milestone (2026-11-25)
 
 The storybook review is closed and recorded in [PAUSE-2-FEEDBACK.md](../research/storybook-catalog/PAUSE-2-FEEDBACK.md); its "For v1.50 input" list and the [v1.49 audit](../milestones/v1.49-MILESTONE-AUDIT.md) are inputs to the next milestone choice. SEED-005 (AI-operable Scrypath) is a candidate to weigh, not approved scope.

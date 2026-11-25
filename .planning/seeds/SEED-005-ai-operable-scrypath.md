@@ -59,6 +59,7 @@ This is an idea to remember and weigh later. It is not approved scope, not a shi
 
 ## Related
 
+- [v1.50 prep, note D](../research/v1.50-prep/D-agent-cli.md) (2026-11-25): what exists today, the release and Mix footgun, and a recommended read-only first slice.
 - `PROJECT.md`, "Operator audience and automation direction" (2026-10-06).
 - `reference/OPERATOR-UI-QUALITY.md` (roles, jobs and the internal-to-user language map).
 - The v1.49 Pause 1 note, `research/storybook-catalog/PAUSE-1-PHASE-197.md` (findings F1 to F4 are about what the library can and cannot show, which an agent would hit as well).
