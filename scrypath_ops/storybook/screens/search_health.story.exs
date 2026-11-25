@@ -1,5 +1,5 @@
-defmodule ScrypathOps.Catalog.Stories.Surfaces.SearchHealth do
-  # The whole Search health page inside the operator shell, over `SearchHealth.surface/1`, the one
+defmodule ScrypathOps.Catalog.Stories.Screens.SearchHealth do
+  # The whole Search health page inside the operator shell, over `SearchHealth.screen/1`, the one
   # function the LiveView renders. A static render: buttons and links do nothing here (the mounted
   # behavior is the journey test and the 4002 preview).
   #
@@ -12,8 +12,10 @@ defmodule ScrypathOps.Catalog.Stories.Surfaces.SearchHealth do
 
   @mounted "Mounted scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs"
 
-  def function, do: &ScrypathOpsWeb.Components.SearchHealth.surface/1
+  def function, do: &ScrypathOpsWeb.Components.SearchHealth.screen/1
   def container, do: :iframe
+  # Full width, and the catalog hides the code pane beside a whole screen (see storybook.js).
+  def layout, do: :one_column
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.PostureLive]
 

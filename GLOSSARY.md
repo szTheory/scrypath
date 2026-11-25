@@ -16,20 +16,20 @@ _Avoid_: digital twin, profile, persona (on its own), tenant
 One rendered UI situation in the ScrypathOps storybook. Each variation cites an adopter twin, an operator persona and a `JOB-*`.
 _Avoid_: example, demo, fixture page
 
-**Primitive** / **Pattern** / **Area** / **Surface** / **Job** (story levels):
+**Primitive** / **Pattern** / **Area** / **Screen** / **Flow** (story levels):
 The levels of the story tree, from smallest to largest:
 - **Primitive:** a single component.
 - **Pattern:** a small group of components that work together.
-- **Area:** one region of a surface.
-- **Surface:** a whole screen.
-- **Job:** one surface state in one persona's `JOB-*` situation.
+- **Area:** one region of a screen.
+- **Screen:** a full ScrypathOps page inside the operator shell.
+- **Flow:** one screen state in one persona's `JOB-*` situation. A flow story is one step of the user flow for that job.
 
-_Avoid_: section (for surface), page (for job)
+_Avoid_: surface (for screen), section (for screen), page (for flow), job (for flow; `JOB-*` names the persona's job, not the story level)
 
-## Surfaces
+## Screens
 
 **Control room**:
-The ScrypathOps home: overall status, plus a way into each surface.
+The ScrypathOps home: overall status, plus a way into each screen.
 
 **Search health**:
 The per-schema view of whether search is usable right now.
@@ -38,11 +38,11 @@ The per-schema view of whether search is usable right now.
 The list of sync work that didn't complete, with its evidence and any recovery the operator is allowed to take.
 
 **Sync and index**:
-The surface for comparing index settings, promoting an index and checking document visibility.
+The screen for comparing index settings, promoting an index and checking document visibility.
 _Avoid_: Sync and drift (former name)
 
 **Search**:
-The surface for running a bounded query against selected schemas and inspecting per-schema results. Saved searches live here.
+The screen for running a bounded query against selected schemas and inspecting per-schema results. Saved searches live here.
 
 **Saved search**:
 A stored search definition that can be rerun. It may hold several schema/query entries. It is not a stored result, a pass/fail test, a scheduled job or a completed run.
@@ -57,7 +57,7 @@ The app-side lookup of matching Ecto records after a search returns. It is not a
 _Avoid_: hydration (in UI copy)
 
 **Help**:
-The surface explaining how to use ScrypathOps and where to go next.
+The screen explaining how to use ScrypathOps and where to go next.
 
 ## Sync and evidence
 

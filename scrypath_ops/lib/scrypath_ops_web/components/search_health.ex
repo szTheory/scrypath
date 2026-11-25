@@ -8,7 +8,7 @@ defmodule ScrypathOpsWeb.Components.SearchHealth do
   `ScrypathOps.Posture.build/3`, which is what lets a story build one with no process running.
 
   Three levels, smallest first: `health_verdict/1` (the answer at the top), `health_schema_row/1`
-  (one schema's card) and `surface/1` (the whole page inside the operator shell).
+  (one schema's card) and `screen/1` (the whole page inside the operator shell).
   """
   use Phoenix.Component
   import ScrypathOpsWeb.OpsUi
@@ -357,7 +357,7 @@ defmodule ScrypathOpsWeb.Components.SearchHealth do
   attr(:auto_refresh, :boolean, default: false)
   slot(:fixture_controls, doc: "fixture scenario selector, rendered under the trail")
 
-  def surface(assigns) do
+  def screen(assigns) do
     ~H"""
     <Layouts.app
       mount_path={@mount_path}

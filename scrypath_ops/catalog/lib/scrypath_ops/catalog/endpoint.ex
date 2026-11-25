@@ -1,7 +1,7 @@
 defmodule ScrypathOps.Catalog.Endpoint do
   @moduledoc false
 
-  # The review surface for the component catalog (`mix scrypath_ops.catalog.serve`): a small
+  # The review server for the component catalog (`mix scrypath_ops.catalog.serve`): a small
   # endpoint with no Repo, no code reloader and no watchers, so it answers the same way whether or
   # not a database is running. It exists only in dev and test (`catalog/lib`), binds loopback in
   # `config/dev.exs`, and serves nothing but the storybook and its static files.

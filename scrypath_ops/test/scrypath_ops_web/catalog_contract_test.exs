@@ -43,7 +43,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   # nothing, fails as stale, so this map can only shrink as stories arrive. The reasons are shared
   # through attributes for groups; every key is still listed here, one line each.
   @primitive_not_storied "primitive not storied yet: Phase 198 or later"
-  @shell_helper "app shell piece: rendered inside every surface story, not storied alone"
+  @shell_helper "app shell piece: rendered inside every screen story, not storied alone"
   @search_deferred "Search screen deferred (Phase 197 CONTEXT, Deferred Ideas): Phase 198 or v1.51"
   @no_story %{
     {ScrypathOpsWeb.OpsUi, :ops_action_group} => @primitive_not_storied,
@@ -109,7 +109,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     ScrypathOpsWeb.HelpLive =>
       "Help deferred (Phase 197 CONTEXT, Deferred Ideas): Phase 198 or v1.51",
     ScrypathOpsWeb.SyncDriftLive =>
-      "Sync and index as a whole surface deferred (Phase 197 CONTEXT); its two recovery areas are storied"
+      "Sync and index as a whole screen deferred (Phase 197 CONTEXT); its two recovery areas are storied"
   }
 
   # One render of every variation in both themes, shared by the checks below. The LiveViews it starts
@@ -274,10 +274,10 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       assert Enum.any?(notes, &(&1 =~ " · Claim: "))
     end
 
-    test "the Job story's file name carries its job id and it names the journey test as its proof" do
-      assert {"/jobs/job_03_on_call_recovers_failed_sync", story} =
+    test "the flow story's file name carries its job id and it names the journey test as its proof" do
+      assert {"/flows/job_03_on_call_recovers_failed_sync", story} =
                Enum.find(loaded_stories(), fn {path, _story} ->
-                 CatalogChecks.tier(path) == :job
+                 CatalogChecks.tier(path) == :flow
                end)
 
       assert story.job() == "JOB-03"
@@ -390,7 +390,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       assert CatalogChecks.coverage_problems(components, routes, without_story, @no_story) ==
                [{:uncovered, failed_row}]
 
-      # A route only a surface or jobs story covers: drop that coverage and it is uncovered.
+      # A route only a screen or flows story covers: drop that coverage and it is uncovered.
       assert ScrypathOpsWeb.FailedSyncLive in index.routes
       no_routes = %{index | routes: List.delete(index.routes, ScrypathOpsWeb.FailedSyncLive)}
 
@@ -414,7 +414,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
     test "provenance_problems/4 reports each planted cause as its own tagged problem" do
       story = ScrypathOpsWeb.CatalogContractTest.PlantedJobStory
-      path = "/jobs/job_03_planted"
+      path = "/flows/job_03_planted"
       real = known_provenance()
       journey = File.read!(Path.join(@repo_root, @journey_test))
       claim = "an unresolved recovery handle renders a closed unavailable state"
@@ -449,7 +449,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       assert check.(
                bad_job,
                real,
-               "/jobs/job_99_planted",
+               "/flows/job_99_planted",
                ScrypathOpsWeb.CatalogContractTest.PlantedJob99Story
              ) == [{:bad_job, "JOB-99"}]
 
@@ -460,13 +460,13 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
                  note: String.replace(note.("render only"), "JOB-03", "JOB-02")
                ),
                real,
-               "/jobs/job_02_planted",
+               "/flows/job_02_planted",
                story
              ) == [{:job_mismatch, "JOB-02", "JOB-03"}]
 
-      # A jobs-tier file name that does not carry the job id.
-      assert check.(variation.("render only", []), real, "/jobs/job_02_planted", story) ==
-               [{:job_not_in_path, "JOB-03", "/jobs/job_02_planted"}]
+      # A flows-tier file name that does not carry the job id.
+      assert check.(variation.("render only", []), real, "/flows/job_02_planted", story) ==
+               [{:job_not_in_path, "JOB-03", "/flows/job_02_planted"}]
 
       # A Mounted test file that does not exist.
       missing = "scrypath_ops/test/scrypath_ops_web/live/no_such_test.exs"
@@ -561,7 +561,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       }
 
       assert CatalogChecks.provenance_problems(
-               "/jobs/job_03_planted",
+               "/flows/job_03_planted",
                story,
                variation,
                known_provenance()
@@ -592,7 +592,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
       {_path, _id, _theme, {:ok, html}} =
         Enum.find(rendered, fn {path, id, theme, _doc} ->
-          path == "/surfaces/failed_sync" and id == "shopadelic_failed_journey" and
+          path == "/screens/failed_sync" and id == "shopadelic_failed_journey" and
             theme == "light"
         end)
 
@@ -609,27 +609,27 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
                [{:copy, "control-room-casing", casing}]
     end
 
-    test "dom_problems/2 counts main landmarks for a jobs-tier story, and a plant into the real job render fails",
+    test "dom_problems/2 counts main landmarks for a flows-tier story, and a plant into the real job render fails",
          %{rendered: rendered} do
-      assert CatalogChecks.dom_problems(page("<p>No landmark</p>"), :job) == [{:main_count, 0}]
+      assert CatalogChecks.dom_problems(page("<p>No landmark</p>"), :flow) == [{:main_count, 0}]
 
-      assert CatalogChecks.dom_problems(page("<main>A</main><main>B</main>"), :job) == [
+      assert CatalogChecks.dom_problems(page("<main>A</main><main>B</main>"), :flow) == [
                {:main_count, 2}
              ]
 
-      assert CatalogChecks.dom_problems(page("<main>A</main>"), :job) == []
+      assert CatalogChecks.dom_problems(page("<main>A</main>"), :flow) == []
 
-      path = "/jobs/job_03_on_call_recovers_failed_sync"
+      path = "/flows/job_03_on_call_recovers_failed_sync"
 
       {^path, _id, _theme, {:ok, html}} =
         Enum.find(rendered, fn {p, _id, theme, _doc} -> p == path and theme == "light" end)
 
-      # Control: the real Job story renders one main.
-      assert CatalogChecks.dom_problems(html, :job) == []
+      # Control: the real flow story renders one main.
+      assert CatalogChecks.dom_problems(html, :flow) == []
 
       without_main = Regex.replace(~r/<(\/?)main\b/, html, "<\\1div")
       refute without_main == html
-      assert CatalogChecks.dom_problems(without_main, :job) == [{:main_count, 0}]
+      assert CatalogChecks.dom_problems(without_main, :flow) == [{:main_count, 0}]
     end
   end
 
@@ -686,15 +686,15 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
           "/storybook/iframe/patterns/failed_filters?variation_id=shopadelic_failed_journey_mixed_causes&theme=light"
         )
 
-      {:ok, _view, surface} =
+      {:ok, _view, screen} =
         live(
           conn,
-          "/storybook/iframe/surfaces/failed_sync?variation_id=shopadelic_failed_journey&theme=light"
+          "/storybook/iframe/screens/failed_sync?variation_id=shopadelic_failed_journey&theme=light"
         )
 
       # Controls: the real renders are clean, so each failure below comes from the edit.
       assert CatalogChecks.dom_problems(filters, :pattern) == []
-      assert CatalogChecks.dom_problems(surface, :surface) == []
+      assert CatalogChecks.dom_problems(screen, :screen) == []
 
       # The cause chips are checkboxes named only by their wrapping label: without the labels none is
       # named.
@@ -714,10 +714,10 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
       # The summary section is labelled by the verdict heading's id: rename the id and the reference
       # dangles.
-      renamed = String.replace(surface, ~s(id="failed-sync-summary-heading"), ~s(id="renamed"))
-      refute renamed == surface
+      renamed = String.replace(screen, ~s(id="failed-sync-summary-heading"), ~s(id="renamed"))
+      refute renamed == screen
 
-      assert CatalogChecks.dom_problems(renamed, :surface) ==
+      assert CatalogChecks.dom_problems(renamed, :screen) ==
                [{:dangling_aria, "aria-labelledby", "failed-sync-summary-heading"}]
     end
 
@@ -748,20 +748,20 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       assert CatalogChecks.dom_problems(page(~s(<input type="checkbox" name="a">)), :area) ==
                [{:unnamed_control, "input"}]
 
-      assert CatalogChecks.dom_problems(page("<p>No landmark</p>"), :surface) ==
+      assert CatalogChecks.dom_problems(page("<p>No landmark</p>"), :screen) ==
                [{:main_count, 0}]
 
-      assert CatalogChecks.dom_problems(page("<main>A</main><main>B</main>"), :surface) ==
+      assert CatalogChecks.dom_problems(page("<main>A</main><main>B</main>"), :screen) ==
                [{:main_count, 2}]
 
       assert CatalogChecks.dom_problems(
                page(~s(<main>A</main><div role="main">B</div>)),
-               :surface
+               :screen
              ) ==
                [{:main_count, 2}]
     end
 
-    test "dom_problems/2 accepts the ways a control is really named, and only checks mains on surfaces" do
+    test "dom_problems/2 accepts the ways a control is really named, and only checks mains on screens" do
       # A checkbox named only by its wrapping label (the Failed sync cause chips).
       assert CatalogChecks.dom_problems(
                page(~s(<label><input type="checkbox" name="a"><span>Cause</span></label>)),
@@ -793,19 +793,19 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
       # An id that resolves, and exactly one main, are clean.
       assert CatalogChecks.dom_problems(
                page(~s(<main><h2 id="t">T</h2><section aria-labelledby="t">S</section></main>)),
-               :surface
+               :screen
              ) == []
 
-      # Mains are only counted for surface-tier stories.
+      # Mains are only counted for screen-tier stories.
       assert CatalogChecks.dom_problems(page("<p>No landmark</p>"), :area) == []
     end
 
     test "tier/1 reads the story path's first segment" do
-      assert CatalogChecks.tier("/surfaces/failed_sync") == :surface
+      assert CatalogChecks.tier("/screens/failed_sync") == :screen
       assert CatalogChecks.tier("/areas/failed_row") == :area
       assert CatalogChecks.tier("/patterns/failed_filters") == :pattern
       assert CatalogChecks.tier("/primitives/ops_button") == :primitive
-      assert CatalogChecks.tier("/jobs/job_03") == :job
+      assert CatalogChecks.tier("/flows/job_03") == :flow
       assert CatalogChecks.tier("/welcome") == :other
     end
   end
@@ -892,8 +892,8 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
             "Primitives",
             "Patterns",
             "Areas",
-            "Surfaces",
-            "Jobs",
+            "Screens",
+            "Flows",
             "on-call engineer (ROLE-OPS)",
             "JOB-03",
             "journey test",
@@ -1355,8 +1355,8 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
         do: {entry.path, story}
   end
 
-  # What stories show: the function each component story renders, and the LiveViews that surface and
-  # jobs stories cover. Area and pattern stories name a LiveView for traceability only.
+  # What stories show: the function each component story renders, and the LiveViews that screen and
+  # flow stories cover. Area and pattern stories name a LiveView for traceability only.
   defp story_index do
     stories = loaded_stories()
 
@@ -1368,7 +1368,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
     routes =
       for {path, story} <- stories,
-          CatalogChecks.tier(path) in [:surface, :job],
+          CatalogChecks.tier(path) in [:screen, :flow],
           function_exported?(story, :covers, 0),
           route <- story.covers(),
           do: route

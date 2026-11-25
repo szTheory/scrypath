@@ -1,5 +1,5 @@
-defmodule ScrypathOps.Catalog.Stories.Surfaces.FailedSync do
-  # The whole Failed sync page inside the operator shell, over `FailedSync.surface/1`, the one function
+defmodule ScrypathOps.Catalog.Stories.Screens.FailedSync do
+  # The whole Failed sync page inside the operator shell, over `FailedSync.screen/1`, the one function
   # the LiveView renders. A static render: buttons and links do nothing here (the mounted behavior is
   # the journey test and the 4002 preview).
   #
@@ -14,8 +14,10 @@ defmodule ScrypathOps.Catalog.Stories.Surfaces.FailedSync do
 
   @seam "Mounted scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs"
 
-  def function, do: &ScrypathOpsWeb.Components.FailedSync.surface/1
+  def function, do: &ScrypathOpsWeb.Components.FailedSync.screen/1
   def container, do: :iframe
+  # Full width, and the catalog hides the code pane beside a whole screen (see storybook.js).
+  def layout, do: :one_column
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.FailedSyncLive]
 

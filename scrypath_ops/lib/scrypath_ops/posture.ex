@@ -207,7 +207,7 @@ defmodule ScrypathOps.Posture do
         navigate: "#{mount_path}/sync-and-index"
       },
       %{
-        text: "Use search playground only after triage surfaces are quiet.",
+        text: "Run test searches once Search health and Failed sync show no problems.",
         navigate: "#{mount_path}/search"
       }
     ]

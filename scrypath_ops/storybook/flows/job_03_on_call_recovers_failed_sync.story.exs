@@ -1,11 +1,11 @@
-defmodule ScrypathOps.Catalog.Stories.Jobs.Job03OnCallRecoversFailedSync do
+defmodule ScrypathOps.Catalog.Stories.Flows.Job03OnCallRecoversFailedSync do
   # JOB-03 (Search looks unhealthy or sync work fails), the paged on-call engineer (ROLE-OPS), on
-  # Shopadelic data: the Failed sync surface in the two states the engineer sees on the way to a
-  # verified retry. A Job story is one surface state in one persona's situation; the walk across
+  # Shopadelic data: the Failed sync screen in the two states the engineer sees on the way to a
+  # verified retry. A flow story is one screen state in one persona's situation; the walk across
   # screens (Search health, Failed sync, Sync and index and back) is the journey test, which is the
   # proof each caption below names.
   #
-  # The surface is the real `FailedSync.surface/1` the page renders, a static render: buttons and
+  # The screen is the real `FailedSync.screen/1` the page renders, a static render: buttons and
   # links do nothing here. `variations/0` runs when the storybook backend compiles with no application
   # started, so it only calls pure code (`Scrypath.failed_sync_work/2` over the scenario's own options,
   # then `ScrypathOps.FailedSyncView.build/4`).
@@ -21,8 +21,10 @@ defmodule ScrypathOps.Catalog.Stories.Jobs.Job03OnCallRecoversFailedSync do
 
   @journey "Mounted scrypath_ops/test/scrypath_ops_web/live/catalog_journey_test.exs"
 
-  def function, do: &ScrypathOpsWeb.Components.FailedSync.surface/1
+  def function, do: &ScrypathOpsWeb.Components.FailedSync.screen/1
   def container, do: :iframe
+  # Full width, and the catalog hides the code pane beside a whole screen (see storybook.js).
+  def layout, do: :one_column
   def job, do: "JOB-03"
   def covers, do: [ScrypathOpsWeb.FailedSyncLive]
 

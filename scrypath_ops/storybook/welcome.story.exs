@@ -87,9 +87,9 @@ defmodule ScrypathOps.Catalog.Stories.Welcome do
           <li><strong>Primitives</strong>: a single component.</li>
           <li><strong>Patterns</strong>: a small group of components that work together.</li>
           <li><strong>Areas</strong>: one region of a screen.</li>
-          <li><strong>Surfaces</strong>: a whole screen.</li>
+          <li><strong>Screens</strong>: a full page inside the operator shell.</li>
           <li>
-            <strong>Jobs</strong>: one screen state in one persona's situation, named by a JOB id.
+            <strong>Flows</strong>: one screen state in one persona's situation, named by a JOB id.
           </li>
         </ol>
       </section>
