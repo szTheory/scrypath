@@ -25,7 +25,7 @@ No milestone is active. v1.49 Catalog foundation is closed and archived ([audit]
 
 v1.48 Discovery and onboarding is archived ([audit](milestones/v1.48-MILESTONE-AUDIT.md), `tech_debt`, no unsatisfied requirement; the optional website phase was cut at the entry-point checkpoint, see [research/v1.48-prep/CHECKPOINT.md](research/v1.48-prep/CHECKPOINT.md)).
 
-`deep-quality` is an advisory red. Besides the known cause (cloak and cloak_ecto via optional sigra, until sigra ships without a hard `cloak_ecto` requirement), it reports unpatched advisories for flop, db_connection and phoenix, listed in the v1.49 audit. The audit stays fail-closed. The v1.45 archive keeps its documented debt and historical verification overrides.
+`deep-quality` is an advisory red. Besides the known cause (cloak and cloak_ecto via optional sigra, until sigra ships without a hard `cloak_ecto` requirement), the flop, db_connection and phoenix advisories listed in the v1.49 audit were patched on 2026-11-25, and the retired sigra 1.20.0 release is reported too. The audit stays fail-closed. The v1.45 archive keeps its documented debt and historical verification overrides.
 
 ## Phases
 

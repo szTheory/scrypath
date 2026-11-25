@@ -97,14 +97,15 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 
 ### Pending Todos
 
-- Patch the dependency advisories listed in the [v1.49 audit](milestones/v1.49-MILESTONE-AUDIT.md) (flop, db_connection, phoenix).
+- Done 2026-11-25: the flop, db_connection and phoenix advisories in the [v1.49 audit](milestones/v1.49-MILESTONE-AUDIT.md) are patched. Run the next-milestone prep.
+- sigra 1.20.0 is retired upstream in favor of `~> 1.5.0`; moving to it is a downgrade that does not remove the cloak advisories, so it is not taken yet.
 - Handed to the maintainer and not started: F1, F2, D2, F3, F4 and the review items listed in the audit.
 
 ### Blockers/Concerns
 
 None blocking. Standing conditions (not blockers):
 
-- `deep-quality` is an advisory red: the known cloak cause (optional sigra) and, since 2026-11-24, unpatched flop, db_connection and phoenix advisories. The audit stays fail-closed with no exception.
+- `deep-quality` is an advisory red: the known cloak and cloak_ecto cause through optional sigra, plus the retired sigra 1.20.0 release, both in `scrypath_ops` only. The other three dependency graphs are clean. The audit stays fail-closed with no exception.
 - The retained UI preview (`.planning/UI-PREVIEW.json`) records pre-squash commits; refresh to current main before the first phase that needs rendered ops evidence (expected v1.48). v1.47's checks do not need it.
 - Housekeeping before v1.48 (2026-11-21): #157 fixed the axe `label-content-name-mismatch` markup (command hint and timestamp copy buttons now take their accessible name from visible text), the vacuous `operator.spec.ts` regex and two unqualified doc lines; #158 fixed the README HexDocs self-links. Dependabot #129 (axe 4.14.0, verified green locally on a merge with #157), #150 and #151 merge one at a time on green.
 - Unrelated dirty `.planning/config.json` and `.planning/state.json` edits stay out of owned commits.
