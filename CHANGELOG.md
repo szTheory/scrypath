@@ -9,7 +9,7 @@ Release Please manages versioned entries after this baseline.
 
 ### Bug Fixes
 
-* authenticate to Meilisearch with a bearer token ([#189](https://github.com/szTheory/scrypath/issues/189)) ([aff9f6e](https://github.com/szTheory/scrypath/commit/aff9f6e6a7e5d0e6221ad123f27b61738488f115))
+* Scrypath can now use a Meilisearch server that has a master key. Earlier releases sent the API key in a header Meilisearch does not read, so every request failed with `401 missing_authorization_header`. The key is now sent as `Authorization: Bearer <key>`. A configured key takes precedence over headers or `:auth` passed in `req_options`; without a configured key, your own headers are left alone ([#189](https://github.com/szTheory/scrypath/issues/189)) ([aff9f6e](https://github.com/szTheory/scrypath/commit/aff9f6e6a7e5d0e6221ad123f27b61738488f115))
 
 ## [0.3.20](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.19...scrypath-v0.3.20) (2026-11-21)
 
