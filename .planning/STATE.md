@@ -1,19 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.49
-milestone_name: Catalog foundation
-status: Awaiting next milestone
-stopped_at: v1.49 closed and archived 2026-11-25; next milestone not yet chosen
-last_updated: "2026-11-25T21:26:19.431Z"
+milestone: v1.50
+milestone_name: Adopter-ready
+status: planning
+last_updated: "2026-11-26T01:08:13.804Z"
 last_activity: 2026-11-25
-last_activity_desc: Milestone v1.49 completed and archived
-state_head: b70fc79a7b19486886c26cb63d9850d334ec9d94
 progress:
-  total_phases: 4
-  completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -23,14 +20,15 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-25.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Between milestones. v1.50 Adopter-ready is next in the adopted order and is not yet opened.
+**Current focus:** v1.50 Adopter-ready; Phase 199 (the documented path works) is next.
 
 ## Current Position
 
-Phase: Milestone v1.49 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-25 — Milestone v1.49 completed and archived
+Status: Defining requirements
+Last activity: 2026-11-25 — Milestone v1.50 started
+
 
 ## Performance Metrics
 
@@ -97,7 +95,7 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 
 ### Pending Todos
 
-- Done 2026-11-25: the flop, db_connection and phoenix advisories in the [v1.49 audit](milestones/v1.49-MILESTONE-AUDIT.md) are patched. Run the next-milestone prep.
+- Done 2026-11-25: the flop, db_connection and phoenix advisories are patched (#188), the Meilisearch authentication fix shipped (#189, release 0.3.21), and the v1.50 prep is adopted.
 - sigra 1.20.0 is retired upstream in favor of `~> 1.5.0`; moving to it is a downgrade that does not remove the cloak advisories, so it is not taken yet.
 - Handed to the maintainer and not started: F1, F2, D2, F3, F4 and the review items listed in the audit.
 
