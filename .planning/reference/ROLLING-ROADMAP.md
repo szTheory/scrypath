@@ -2,7 +2,11 @@
 
 The maintainer approved this order and these working rules after a research fan-out and a grilling round. Pick up the first unfinished item. `STATE.md` records progress.
 
-## v1.50 proposal (2026-11-25, prepared upstream; the maintainer chooses)
+## v1.50 proposal (2026-11-25, prepared upstream; ADOPTED 2026-11-25: "yes to all follow ur recs"; v1.50 is open)
+
+**Order now adopted:** v1.50 Adopter-ready (active), v1.51 agent diagnosis (SEED-005 first slice: one read-only, versioned diagnosis report), v1.52 catalog breadth, v1.53 announce-ready. This replaces the earlier order in the tables below. 0.3.21 (the authentication fix) was released the same day.
+
+**Planted 2026-11-25, no slot:** [SEED-006](../seeds/SEED-006-connected-cli-and-operator-api.md), a `gh`-like CLI that signs in to a running app's operator API for people and LLM agents; the maintainer wants the operator UI in good shape first.
 
 Four research notes and a synthesis are in [research/v1.50-prep/](../research/v1.50-prep/SYNTHESIS.md). The prep found that a published Scrypath cannot authenticate to a Meilisearch server with a master key (reproduced, then fixed outside the milestone; its release needs the maintainer's yes).
 
