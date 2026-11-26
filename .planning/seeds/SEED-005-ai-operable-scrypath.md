@@ -1,7 +1,7 @@
 ---
 slug: ai-operable-scrypath
 title: Let an AI or LLM agent diagnose and, behind explicit guards, repair Scrypath search problems through a CLI
-status: planted
+status: scheduled
 created: 2026-11-23
 updated: 2026-11-23
 trigger_when: the next milestone after v1.49 is being chosen; or the CLI, the operator API or the failure and recovery model is being changed; or an adopter asks how to hand a search incident to an agent or to automation; or a retro of a real incident shows the same manual diagnosis steps repeated
@@ -9,6 +9,10 @@ planted_during: v1.49 Catalog foundation (Pause 2)
 ---
 
 # Seed: AI-operable Scrypath (diagnose first, repair behind guards, through a CLI)
+
+## Decision (2026-11-25)
+
+The maintainer made the first slice the milestone after v1.50 (v1.51): one read-only, versioned diagnosis report, as a Mix task plus a release-callable function. Actions, an MCP server and anything that writes stay out of that slice. See [v1.50 prep note D](../research/v1.50-prep/D-agent-cli.md).
 
 ## Trigger
 
@@ -59,6 +63,7 @@ This is an idea to remember and weigh later. It is not approved scope, not a shi
 
 ## Related
 
+- [SEED-006](SEED-006-connected-cli-and-operator-api.md) (2026-11-25): the follow-on idea, a CLI that signs in to a deployed app's operator API.
 - [v1.50 prep, note D](../research/v1.50-prep/D-agent-cli.md) (2026-11-25): what exists today, the release and Mix footgun, and a recommended read-only first slice.
 - `PROJECT.md`, "Operator audience and automation direction" (2026-10-06).
 - `reference/OPERATOR-UI-QUALITY.md` (roles, jobs and the internal-to-user language map).

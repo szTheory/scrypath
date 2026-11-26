@@ -30,9 +30,16 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **Discovery and onboarding direction (maintainer, 2026-11-20):** The README, website, HexDocs and guides must form one coherent journey for people meeting Scrypath for the first time, people starting to use it, and people returning to troubleshoot or dig deeper. Each surface has one job, content is owned once and linked rather than restated, link lists stay short, and onboarding the library is a product surface in its own right. The README is currently too long, especially "Choose a route"; the website is an old-identity starting point that should be refreshed goal-first (Impeccable for design, `ux-writing` for copy, brand voice, honest claims) with permanent upkeep guards. The first slice of it became the v1.48 milestone on 2026-11-21 (below); the rest stays direction, not approved scope. See `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`, `seeds/SEED-004-website-refresh.md` and the README todo. Read it before changing any of those surfaces.
 
-## Current Milestone
+## Current Milestone: v1.50 Adopter-ready
 
-None open. v1.49 Catalog foundation closed on 2026-11-25; see [its archive](milestones/v1.49-ROADMAP.md).
+**Goal:** A new adopter can follow the published docs against a secured Meilisearch and get working search, honest status and a way to test it.
+
+**Target features:**
+- The documented path works: reproduce, then fix the golden path's filtered and sorted search, `sortable:` settings, unread Oban queues and task history past 1,000 (Phase 199).
+- A blind fresh-consumer walk from the published package and HexDocs, recorded as maintainer-side friction evidence (Phase 200).
+- A "Testing your app" guide with no new public API, plus the walk's documentation fixes; cut line (Phase 201).
+
+**Decision source:** the maintainer's "yes to all follow ur recs" on 2026-11-25 to [research/v1.50-prep/SYNTHESIS.md](research/v1.50-prep/SYNTHESIS.md): root `lib/` fixes are in scope; Hex 0.3.21 (the Meilisearch authentication fix) was released first; the AI-agent diagnosis slice (SEED-005) is v1.51 and catalog breadth moves to v1.52. About 5 to 6 plans; stop and re-ask beyond 7.
 
 ## Current State
 
@@ -48,7 +55,7 @@ The [v1.46 audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no un
 
 ## Next Milestone Goals
 
-Not yet chosen. The adopted order puts v1.50 Adopter-ready next ("Testing your app" guide, a fresh-consumer walk, then maybe highlight/crop or a paging guard after an API-grilling session), then catalog breadth and announce-readiness; see `reference/ROLLING-ROADMAP.md`. Inputs from the v1.49 review are listed there. Each boundary is prepared upstream before the maintainer is asked what is next.
+v1.50 Adopter-ready is the active milestone (above). Then v1.51 agent diagnosis (SEED-005: one read-only, versioned diagnosis report first), v1.52 catalog breadth, v1.53 announce-readiness; see `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 ## Archived history
 
@@ -217,9 +224,9 @@ Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** (fresh `REQUI
 
 ## Release Train Posture
 
-- **Active milestone:** None open. v1.49 Catalog foundation is closed and archived. v1.45 keeps its qualified historical verification overrides. Hex publication remains a separate maintainer yes. Older dated readiness and approval limits retain their original cutoffs.
+- **Active milestone:** v1.50 Adopter-ready (opened 2026-11-25). v1.49 is closed and archived. v1.45 keeps its qualified historical verification overrides. Hex publication remains a separate maintainer yes. Older dated readiness and approval limits retain their original cutoffs.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Current goals:** Prepare and choose the next milestone (the v1.49 audit's flop, db_connection and phoenix advisories are patched). No Hex release without the maintainer's explicit yes.
+- **Current goals:** Make the documented adopter path work, walk it blind, and document testing. No Hex release without the maintainer's explicit yes.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new product UI surfaces, and unrelated workflow expansion remain out of scope. The one recorded exception is the ScrypathOps component catalog (phoenix_storybook, a maintainer decision of 2026-10-25, ADR 0001): it is a dev and test review surface inside `scrypath_ops/`, never part of the Hex package or a production route, and it is not a new product UI surface.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
@@ -275,6 +282,8 @@ measured pure hot paths did not justify speculative optimization.
 
 | Decision | Outcome |
 |----------|---------|
+| Lead v1.50 Adopter-ready with fixing the documented path, including root `lib/` changes. | Maintainer, 2026-11-25. Highlight, crop and a paging guard are not built without a grilling session. |
+| Make the read-only AI-agent diagnosis slice v1.51, ahead of catalog breadth. | Maintainer, 2026-11-25; supersedes the earlier order. Its scope-guard wording is written when v1.51 opens. |
 | Keep phoenix_storybook after the cold CI cost trigger tripped. | v1.49 Phase 195: maintainer's choice against a tripped sample, recorded in ADR 0001, not a pass. |
 | Cut Phase 198 and keep the fixtures project separate. | v1.49, 2026-11-22: revisit the fold at the phase173 port or v1.51; remaining breadth is CATB-01. |
 | Name catalog tiers Primitives, Patterns, Areas, Screens and Flows, and show code only for primitives. | ✓ v1.49 maintainer storybook review, 2026-11-25. |
@@ -492,7 +501,7 @@ clause and the Multi uniqueness exception).
 
 ### Active
 
-None defined. v1.49's requirements are archived in [the v1.49 requirements archive](milestones/v1.49-REQUIREMENTS.md) (SCALE-01 to SCALE-03 were cut, not met); v1.48's are in [the v1.48 archive](milestones/v1.48-REQUIREMENTS.md); v1.47's 18 are in [the v1.47 archive](milestones/v1.47-REQUIREMENTS.md); the next milestone defines its own. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
+v1.50's active requirements are in `.planning/REQUIREMENTS.md`. v1.49's requirements are archived in [the v1.49 requirements archive](milestones/v1.49-REQUIREMENTS.md) (SCALE-01 to SCALE-03 were cut, not met); v1.48's are in [the v1.48 archive](milestones/v1.48-REQUIREMENTS.md); v1.47's 18 are in [the v1.47 archive](milestones/v1.47-REQUIREMENTS.md); the next milestone defines its own. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
 
 ### Out of Scope
 
@@ -522,4 +531,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-25 after the v1.49 milestone.*
+*Last updated: 2026-11-25 after v1.50 milestone start.*
