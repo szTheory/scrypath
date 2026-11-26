@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.21](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.20...scrypath-v0.3.21) (2026-11-26)
+
+
+### Bug Fixes
+
+* authenticate to Meilisearch with a bearer token ([#189](https://github.com/szTheory/scrypath/issues/189)) ([aff9f6e](https://github.com/szTheory/scrypath/commit/aff9f6e6a7e5d0e6221ad123f27b61738488f115))
+
 ## [0.3.20](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.19...scrypath-v0.3.20) (2026-11-21)
 
 
