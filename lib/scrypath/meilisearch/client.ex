@@ -167,15 +167,22 @@ defmodule Scrypath.Meilisearch.Client do
       config
       |> Keyword.get(:req_options, [])
       |> Keyword.delete(:base_url)
-      |> Keyword.update(:headers, [], &drop_meilisearch_auth_header/1)
+      |> Keyword.update(:headers, [], &drop_header(&1, "x-meili-api-key"))
       |> Keyword.put(:base_url, base_url!(config))
 
-    request = Req.new(options)
+    authenticate(options, Config.meilisearch_api_key(config))
+  end
 
-    case Config.meilisearch_api_key(config) do
-      nil -> request
-      api_key -> Req.Request.put_header(request, "x-meili-api-key", api_key)
-    end
+  # A configured key always wins over `req_options`. Without one, the caller's own headers and
+  # `:auth` are left alone.
+  defp authenticate(options, nil), do: Req.new(options)
+
+  defp authenticate(options, api_key) do
+    options
+    |> Keyword.delete(:auth)
+    |> Keyword.update!(:headers, &drop_header(&1, "authorization"))
+    |> Req.new()
+    |> Req.Request.put_header("authorization", "Bearer " <> api_key)
   end
 
   defp normalize_response({:ok, %Req.Response{status: status, body: body}})
@@ -227,10 +234,8 @@ defmodule Scrypath.Meilisearch.Client do
     |> then(&String.replace_prefix(&1, String.first(&1), String.downcase(String.first(&1))))
   end
 
-  defp drop_meilisearch_auth_header(headers) do
-    Enum.reject(headers, fn {key, _value} ->
-      String.downcase(to_string(key)) == "x-meili-api-key"
-    end)
+  defp drop_header(headers, name) do
+    Enum.reject(headers, fn {key, _value} -> String.downcase(to_string(key)) == name end)
   end
 
   defp base_url!(config) do

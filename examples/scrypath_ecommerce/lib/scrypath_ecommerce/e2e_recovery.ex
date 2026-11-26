@@ -420,7 +420,7 @@ defmodule ScrypathEcommerce.E2ERecovery do
     request =
       case Scrypath.Config.meilisearch_api_key(config) do
         nil -> request
-        key -> Req.Request.put_header(request, "x-meili-api-key", key)
+        key -> Req.Request.put_header(request, "authorization", "Bearer " <> key)
       end
 
     case Req.get(request, url: path) do

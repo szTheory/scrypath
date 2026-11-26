@@ -46,7 +46,7 @@ defmodule ScrypathOps.DocumentObservationTest do
     Req.Test.stub(stub, fn conn ->
       assert conn.method == "GET"
       assert conn.request_path == "/indexes/articles/documents/a%2Fb%20%3F%23"
-      assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == ["secret"]
+      assert Plug.Conn.get_req_header(conn, "authorization") == ["Bearer secret"]
       json(conn, 200, %{"slug" => "a/b ?#", "title" => "Hello", "nested" => %{"enabled" => true}})
     end)
 
@@ -257,14 +257,15 @@ defmodule ScrypathOps.DocumentObservationTest do
       send(
         owner,
         {:observed_request, conn.host, conn.port, conn.request_path, conn.query_params,
-         Plug.Conn.get_req_header(conn, "x-meili-api-key")}
+         Plug.Conn.get_req_header(conn, "authorization")}
       )
 
       assert conn.host == "meili.example.test"
       assert conn.port == 7700
       assert conn.request_path == "/indexes/articles/documents/1"
       assert conn.query_params == %{"trace" => "kept"}
-      assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == ["configured-secret"]
+      assert Plug.Conn.get_req_header(conn, "authorization") == ["Bearer configured-secret"]
+      assert Plug.Conn.get_req_header(conn, "x-meili-api-key") == []
       json(conn, 200, %{"id" => 1, "title" => "Hello"})
     end)
 
@@ -272,7 +273,10 @@ defmodule ScrypathOps.DocumentObservationTest do
       plug: {Req.Test, stub},
       retry: false,
       base_url: "http://attacker.invalid/other",
-      headers: [{"x-meili-api-key", "attacker-secret"}],
+      headers: [
+        {"Authorization", "Bearer attacker-secret"},
+        {"x-meili-api-key", "attacker-secret"}
+      ],
       params: [trace: "kept"]
     ]
 

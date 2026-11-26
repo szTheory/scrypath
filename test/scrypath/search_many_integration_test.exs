@@ -50,7 +50,8 @@ defmodule Scrypath.SearchManyIntegrationTest do
              Scrypath.sync_record(QueryablePost, post,
                backend: Scrypath.Meilisearch,
                index_prefix: prefix,
-               meilisearch_url: url
+               meilisearch_url: url,
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     assert :ok = MeilisearchIntegration.wait_for_search_count!(QueryablePost, live_index, 1)
@@ -58,6 +59,7 @@ defmodule Scrypath.SearchManyIntegrationTest do
     opts = [
       backend: Scrypath.Meilisearch,
       meilisearch_url: url,
+      meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key(),
       index_prefix: prefix,
       repo: IntegrationRepo
     ]

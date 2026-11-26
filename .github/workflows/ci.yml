@@ -256,7 +256,8 @@ jobs:
       meilisearch:
         image: getmeili/meilisearch:v1.15
         ports: [7700:7700]
-        env: {MEILI_NO_ANALYTICS: "true"}
+        # A throwaway key for this job's own container, so the live suites authenticate.
+        env: {MEILI_NO_ANALYTICS: "true", MEILI_ENV: production, MEILI_MASTER_KEY: ci-only-throwaway-master-key}
       postgres:
         image: postgres:16-alpine
         env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres}
@@ -269,6 +270,7 @@ jobs:
     env:
       SCRYPATH_INTEGRATION: "1"
       SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
+      SCRYPATH_MEILISEARCH_API_KEY: ci-only-throwaway-master-key
       SCRYPATH_POSTGRES_URL: postgres://postgres:postgres@127.0.0.1:5434
       MIX_ENV: test
       MIX_TARGET: host

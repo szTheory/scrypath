@@ -172,7 +172,7 @@ That fast path stays service-free and guards the current support/readiness contr
 
 The live branch maps directly to the GitHub Actions **`phoenix-example`** job contract. That job runs the path-backed command first, then the package-backed command in the same advisory job and shared service block. The package-backed mode stages an isolated example copy and verifies that Scrypath resolves from the locally tagged artifact; the example's ordinary `path:` dependency remains unchanged.
 
-Run the canonical backend verification (`mix verify.backend`) when you change Meilisearch integration. The historical `mix verify.phase5` remains the focused backfill/reindex/operator-docs wrapper:
+Run the canonical backend verification (`mix verify.backend`) when you change Meilisearch integration. CI runs it against a server with a master key; if your local server has one, set `SCRYPATH_MEILISEARCH_API_KEY` to it. The historical `mix verify.phase5` remains the focused backfill/reindex/operator-docs wrapper:
 
 ```sh
 docker compose up -d postgres meilisearch

@@ -343,17 +343,21 @@ defmodule ScrypathOps.DocumentObservation do
     safe_opts =
       req_opts
       |> Keyword.drop([:base_url, :url, :method, :auth])
-      |> Keyword.update(:headers, [], &drop_auth_headers/1)
+      |> Keyword.update(:headers, [], &drop_header(&1, "x-meili-api-key"))
       |> Keyword.put(:retry, false)
       |> Keyword.put(:connect_options, connect_options(req_opts))
       |> Keyword.put(:receive_timeout, min(Keyword.get(req_opts, :receive_timeout, 5_000), 5_000))
       |> Keyword.put(:base_url, base_url)
 
-    req = Req.new(safe_opts)
-
     case Keyword.get(runtime_opts, :meilisearch_api_key) do
-      key when is_binary(key) and key != "" -> Req.Request.put_header(req, "x-meili-api-key", key)
-      _ -> req
+      key when is_binary(key) and key != "" ->
+        safe_opts
+        |> Keyword.update!(:headers, &drop_header(&1, "authorization"))
+        |> Req.new()
+        |> Req.Request.put_header("authorization", "Bearer " <> key)
+
+      _ ->
+        Req.new(safe_opts)
     end
   end
 
@@ -366,9 +370,9 @@ defmodule ScrypathOps.DocumentObservation do
     )
   end
 
-  defp drop_auth_headers(headers) do
+  defp drop_header(headers, header) do
     Enum.reject(headers, fn
-      {name, _value} -> String.downcase(to_string(name)) == "x-meili-api-key"
+      {name, _value} -> String.downcase(to_string(name)) == header
       _ -> false
     end)
   end

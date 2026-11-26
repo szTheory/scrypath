@@ -706,7 +706,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
       |> Keyword.delete(:base_url)
       |> Keyword.update(:headers, [], fn headers ->
         Enum.reject(headers, fn {name, _} ->
-          String.downcase(to_string(name)) == "x-meili-api-key"
+          String.downcase(to_string(name)) in ["authorization", "x-meili-api-key"]
         end)
       end)
       |> Keyword.put(:base_url, Scrypath.Config.fetch_meilisearch_url!(config))
@@ -716,7 +716,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
     request =
       case Scrypath.Config.meilisearch_api_key(config) do
         nil -> request
-        key -> Req.Request.put_header(request, "x-meili-api-key", key)
+        key -> Req.Request.put_header(request, "authorization", "Bearer " <> key)
       end
 
     with {:ok, %Req.Response{status: status, body: body}} when status in 200..299 <-

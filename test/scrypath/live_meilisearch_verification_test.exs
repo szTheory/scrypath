@@ -56,7 +56,8 @@ defmodule Scrypath.LiveMeilisearchVerificationTest do
              Scrypath.sync_record(QueryablePost, post,
                backend: Scrypath.Meilisearch,
                index_prefix: prefix,
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     assert :ok = MeilisearchIntegration.wait_for_search_count!(QueryablePost, live_index, 1)
@@ -103,7 +104,8 @@ defmodule Scrypath.LiveMeilisearchVerificationTest do
                  searchableAttributes: ["title"],
                  sortableAttributes: ["inserted_at"]
                },
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     refute MeilisearchIntegration.index_exists?(live_index)
@@ -130,7 +132,8 @@ defmodule Scrypath.LiveMeilisearchVerificationTest do
                repo: IntegrationRepo,
                batch_size: 10,
                index_prefix: prefix,
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     assert :ok =
@@ -143,7 +146,8 @@ defmodule Scrypath.LiveMeilisearchVerificationTest do
     assert {:ok, %{"hits" => hits}} =
              Scrypath.Meilisearch.search(QueryableExternalPost, %{"q" => "", "limit" => 10},
                index_prefix: prefix,
-               meilisearch_url: MeilisearchIntegration.meilisearch_url!()
+               meilisearch_url: MeilisearchIntegration.meilisearch_url!(),
+               meilisearch_api_key: MeilisearchIntegration.meilisearch_api_key()
              )
 
     assert Enum.sort(Enum.map(hits, & &1["external_id"])) == ["ext-1", "ext-2"]
