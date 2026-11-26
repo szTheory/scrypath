@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v1.50
 milestone_name: Adopter-ready
 status: planning
-last_updated: "2026-11-26T01:08:13.804Z"
+last_updated: "2026-11-26T01:30:00.000Z"
 last_activity: 2026-11-25
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -24,17 +24,19 @@ See [PROJECT](PROJECT.md), updated 2026-11-25.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-11-25 — Milestone v1.50 started
+Phase: 199 of 199–201 (Documented path works)
+Plan: Not planned yet (estimate 2 to 3)
+Status: Ready to discuss
+Last activity: 2026-11-25 — v1.50 roadmap created (3 phases, 16 of 16 requirements mapped)
 
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
 **v1.47 plans:** 8 done (188.1: 1, 189: 3, 190: 2, 191: 2).
 **v1.48 plans:** 6 done (192: 4, 193: 2).
+**v1.50 plans:** about 5 to 6 estimated (199: 2 to 3, 200: 1, 201: about 2); stop and re-ask beyond 7.
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -58,6 +60,7 @@ Last activity: 2026-11-25 — Milestone v1.50 started
 
 Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalog/V1.46-PREP.md) and the [v1.47 prep notes](research/v1.47-prep/). Standing decisions:
 
+- v1.50 Adopter-ready roadmap (2026-11-25, from the adopted [v1.50 synthesis](research/v1.50-prep/SYNTHESIS.md)): 199 Documented path works (PATH-01 to PATH-06; reproduce first), 200 Fresh-consumer walk (WALK-01, WALK-02), 201 Testing guide (TEST-01 to TEST-03, REL-01); cut line after 201. FLOW-01 to FLOW-04 are mapped to 199 and stand for every phase. REL-01 is one requirement met at two release points, each only on the maintainer's explicit yes: release point 1 after Phase 199 (the walk must use a published Hex package and its HexDocs, so a git or path dependency does not count; if 199 ships nothing the walk uses 0.3.21; a declined release holds Phase 200), and release point 2 inside Phase 201 before the failed walk tasks are rerun. No phase carries a UI hint: no ScrypathOps screen change is planned; a `scrypath_ops/` change still runs `mix verify.ops_ui`.
 - v1.48 Discovery and onboarding (opened 2026-11-21 as recommended; [v1.48 prep notes](research/v1.48-prep/), D is the tie-breaker): 192 docs truth and README, 193 HexDocs regroup plus guards, an entry-point checkpoint (record GitHub traffic referrers and hex.pm downloads; decides 194), optional 194 website content. Cut line after 193. The catalog is v1.49 (renumbered at its opening); the earlier "catalog is v1.48, Phases 192-196" wording in v1.47 notes is superseded. Hex 0.3.20 after Phase 192 needs the maintainer's explicit yes.
 - v1.49 Phase 195 (2026-11-21): storybook mounted dev/test-only and merged (PRs #171, #172). The cold `ops-ui` trigger tripped (620 s on the first main run against the 548 s line) and the maintainer chose to continue; see [GO-NO-GO.md](milestones/v1.49-milestones/v1.49-phases/195-mount-and-prove/GO-NO-GO.md). The plan's measure-then-merge order could not see the main-run cold number, so future gates should measure on the main-run cold sample after merge.
 - v1.49 Phase 196 (2026-11-22): `fixtures/scrypath_fixtures` merged (PRs #174, #175, plus review fixes): three adopters, 11 scenarios, 31 recorded Meilisearch v1.15.2 payloads, a DB-free check task with 31 invariants. Hosted cost was in the noise (warm minus control -3 s; first cold main run 469 s). Findings F3 and F4 are with the maintainer ([196-FINDINGS.md](milestones/v1.49-milestones/v1.49-phases/196-fixtures-and-three-adopters/196-FINDINGS.md)). Phase 197 planning starts with the fixtures fold evaluation (still no second consumer; the measured cost does not argue for folding).
@@ -97,7 +100,7 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 
 - Done 2026-11-25: the flop, db_connection and phoenix advisories are patched (#188), the Meilisearch authentication fix shipped (#189, release 0.3.21), and the v1.50 prep is adopted.
 - sigra 1.20.0 is retired upstream in favor of `~> 1.5.0`; moving to it is a downgrade that does not remove the cloak advisories, so it is not taken yet.
-- Handed to the maintainer and not started: F1, F2, D2, F3, F4 and the review items listed in the audit.
+- Handed to the maintainer and not started: F1, F2, D2, F3, F4 and the review items listed in the audit. F1 and F4 are now in scope as v1.50 Phase 199 (PATH-03, PATH-05), alongside F5 (PATH-04); F2, D2 and F3 stay outside the phases.
 
 ### Blockers/Concerns
 
@@ -107,6 +110,7 @@ None blocking. Standing conditions (not blockers):
 - The retained UI preview (`.planning/UI-PREVIEW.json`) records pre-squash commits; refresh to current main before the first phase that needs rendered ops evidence (expected v1.48). v1.47's checks do not need it.
 - Housekeeping before v1.48 (2026-11-21): #157 fixed the axe `label-content-name-mismatch` markup (command hint and timestamp copy buttons now take their accessible name from visible text), the vacuous `operator.spec.ts` regex and two unqualified doc lines; #158 fixed the README HexDocs self-links. Dependabot #129 (axe 4.14.0, verified green locally on a merge with #157), #150 and #151 merge one at a time on green.
 - Unrelated dirty `.planning/config.json` and `.planning/state.json` edits stay out of owned commits.
+- v1.50 release points: the run stops after Phase 199 and inside Phase 201 for the maintainer's explicit yes to a Hex release; Phase 200 does not start until release point 1 is published and verified (or Phase 199 shipped nothing).
 
 ## Carried forward from v1.45
 
@@ -128,11 +132,10 @@ Four v1.49 verification overrides were chosen by the maintainer on 2026-11-25 (1
 ## Session Continuity
 
 Last session: 2026-11-25
-Stopped at: v1.49 closed and archived
-Acting next: the maintainer chooses the next milestone after the upstream prep
+Stopped at: v1.50 roadmap created (Phases 199 to 201)
+Acting next: the agent runs the discuss step for Phase 199; no maintainer action is needed until release point 1
 Resume file: None
 
 ## Operator Next Steps
 
-
-- Start the next milestone with /gsd-new-milestone
+- Discuss Phase 199 with /gsd-discuss-phase 199, then plan it with /gsd-plan-phase 199

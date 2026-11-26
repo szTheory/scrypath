@@ -57,6 +57,25 @@ Scope source: the maintainer's adoption on 2026-11-25 of [v1.50-prep/SYNTHESIS.m
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| PATH-01 | Phase 199 | Pending |
+| PATH-02 | Phase 199 | Pending |
+| PATH-03 | Phase 199 | Pending |
+| PATH-04 | Phase 199 | Pending |
+| PATH-05 | Phase 199 | Pending |
+| PATH-06 | Phase 199 | Pending |
+| WALK-01 | Phase 200 | Pending |
+| WALK-02 | Phase 200 | Pending |
+| TEST-01 | Phase 201 | Pending |
+| TEST-02 | Phase 201 | Pending |
+| TEST-03 | Phase 201 | Pending |
+| REL-01 | Phase 201 (met at two release points: after Phase 199, before the walk; and in Phase 201, before the rerun) | Pending |
+| FLOW-01 | Phase 199 (standing, every phase) | Pending |
+| FLOW-02 | Phase 199 (standing, every phase) | Pending |
+| FLOW-03 | Phase 199 (standing, every phase) | Pending |
+| FLOW-04 | Phase 199 (standing; performed after Phase 201, before the audit) | Pending |
+
+**Coverage:** 16 of 16 v1 requirements mapped to exactly one phase; no orphans, no duplicates.
 
 ---
 *Requirements defined: 2026-11-25*
+*Last updated: 2026-11-25 after the v1.50 roadmap was created*
